@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "93013656967",
+    "project_id": "savol-javob-android",
+    "storage_bucket": "savol-javob-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:93013656967:android:7fd85a67db4573f2403f22",
+        "android_client_info": {
+          "package_name": "com.normurodov_nazar.savol_javob"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "93013656967-7e0eo5rj7jr5cirt56irivhjefb86kri.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.normurodov_nazar.savol_javob",
+            "certificate_hash": "7ba1277b4a341571b66be31b41e7ca0155af4111"
+          }
+        },
+        {
+          "client_id": "93013656967-p8h63db7ngbmclv633f1im04t34j54v5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqnCXwR3UfVyLgStOpxT8h0_M_-nNCkzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "93013656967-p8h63db7ngbmclv633f1im04t34j54v5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

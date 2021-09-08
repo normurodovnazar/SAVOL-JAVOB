@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ANSWER-QUESTION</string>
+    <string name="login">Verification</string>
+    <string name="hint_for_phone">Enter your phone number</string>
+    <string name="verify">Verify</string>
+    <string name="tab_chat">Chat</string>
+    <string name="input_code">Input code if you receive\'d</string>
+    <string name="check">Check</string>
+    <string name="error">Error</string>
+    <string name="error_connection">Can not connect to Internet check and try again</string>
+    <string name="close">Close</string>
+    <string name="error_number">You have entered invalid number</string>
+    <string name="error_unknown">Unknown error.Error message:</string>
+    <string name="error_code">You have entered error code</string>
+    <string name="error_insert_number">Insert your number with \"+\" sign</string>
+    <string name="write_code">Write code first</string>
+    <string name="timeout">Sms code waiting timeout,try again</string>
+    <string name="wait">Wait ...</string>
+    <string name="your_name">Your name</string>
+    <string name="your_surname">Your surname</string>
+    <string name="add_imagea">Choose image</string>
+    <string name="change_image">Change image</string>
+    <string name="name_surname_url_required">Name,surname and image are required</string>
+    <string name="choose_image">Change image</string>
+    <string name="unknown">Unknown</string>
+    <string name="cannot_delete_existing_file">Cannot delete existing file</string>
+    <string name="file_not_exists">File is not exists,try again</string>
+    <string name="error_on_creating_image_file">Error on creating image file.Try again</string>
+    <string name="permissionDenied">Permission denied</string>
+</resources>

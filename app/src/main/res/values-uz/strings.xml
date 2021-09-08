@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SAVOL-JAVOB</string>
+    <string name="login">Ilovaga kirish</string>
+    <string name="hint_for_phone">Telefon raqamingizni kiriting</string>
+    <string name="verify">Tasdiqlash</string>
+    <string name="tab_chat">Yozishmalar</string>
+    <string name="input_code">Sms kod kelgan bo\'lsa kiriting</string>
+    <string name="check">Tekshirish</string>
+    <string name="error">Xatolik</string>
+    <string name="error_connection">Tarmoqqa ulanib bo\'lmadi qayta urinib ko\'ring</string>
+    <string name="close">Yopish</string>
+    <string name="error_number">Siz kiritgan raqam xato</string>
+    <string name="error_unknown">Noma\'lum xatolik.Xatolik xabari:</string>
+    <string name="error_code">Siz kiritgan kod xato</string>
+    <string name="error_insert_number">O\'z raqamingizni \"+\" belgisi bilan kiriting</string>
+    <string name="write_code">Avval kodni yozing</string>
+    <string name="timeout">Sms kodni kutish muddati tugadi,qayta urinib ko\'ring</string>
+    <string name="wait">Kuting ...</string>
+    <string name="your_name">Ismingiz</string>
+    <string name="your_surname">Familiyangiz</string>
+    <string name="add_imagea">Rasm tanlash</string>
+    <string name="change_image">Rasmni o\'zgartirish</string>
+    <string name="name_surname_url_required">Ism,familiya va rasm bo\'lishi shart</string>
+    <string name="choose_image">Rasm o\'zgartirish</string>
+    <string name="unknown">Noma\'lum</string>
+    <string name="cannot_delete_existing_file">Mavjud faylni o\'chirib bo\'lmadi</string>
+    <string name="file_not_exists">Fayl mavjud emas,qayta urinib ko\'ring</string>
+    <string name="error_on_creating_image_file">Rasm uchun fayl hosil qilishda xatolik yuz berdi.Qayta urinib ko\'ring</string>
+    <string name="permissionDenied">Ruxsat berilmadi</string>
+</resources>
