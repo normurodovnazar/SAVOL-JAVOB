@@ -1,9 +1,10 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
 public class Keys {
-    public static final String p = "phone", logged = "logged",
-    users = "Users",appNumber = "App Number",name = "Name",surname = "Surname",imageUrl = "Image url",
-    verificationId = "verificationId",
+    public static final String p = "phone", logged = "logged",seen = "Seen",number = "Number",
+    users = "Users",appNumber = "AppNumber",name = "Name",surname = "Surname",imageUrl = "ImageUrl",uId = "User Id",chats = "Chats",
+    verificationId = "verificationId",myQuestionOpportunity = "QuestionOpportunity",myChats = "MyChats",numberOfMyPublishedQuestions = "numberOfMyPublishedQuestions",
+    numberOfMyAnswers = "numberOfMyAnswers",numberOfCorrectAnswers = "numberOfCorrectAnswers",numberOfIncorrectAnswers = "numberOfIncorrectAnswers",
             errorInternetWhenNumber = "A network error (such as timeout, interrupted connection or unreachable host) has occurred.",
             errorNumberInvalid = "The format of the phone number provided is incorrect. Please enter the phone number in a format that can be parsed into E.164 format. E.164 phone numbers are written in the format [+][country code][subscriber number including area code]. [ TOO_SHORT ]",
             errorRecaptcha = "",

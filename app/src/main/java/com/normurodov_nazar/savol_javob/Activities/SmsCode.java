@@ -1,4 +1,4 @@
-package com.normurodov_nazar.savol_javob;
+package com.normurodov_nazar.savol_javob.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +19,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.R;
 
 public class SmsCode extends AppCompatActivity {
 

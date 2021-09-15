@@ -1,4 +1,4 @@
-package com.normurodov_nazar.savol_javob;
+package com.normurodov_nazar.savol_javob.Activities;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,6 +32,7 @@ import com.google.firebase.auth.PhoneAuthProvider;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.R;
 
 import java.util.concurrent.TimeUnit;
 
@@ -186,9 +188,9 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
                         boolean bo = task1.getResult().exists();
                             Intent i;
                             if(!bo){
-                                i = new Intent(AuthUser.this,NewUser.class);
+                                i = new Intent(AuthUser.this, NewUser.class);
                             }else {
-                                i = new Intent(AuthUser.this,Home.class);
+                                i = new Intent(AuthUser.this, Home.class);
                             }
                             startActivity(i);
                             finish();
@@ -234,7 +236,8 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     @Override
     public void onClick(View view) {
-       if(!My.loading) onButtonClicked();
+       //if(!My.loading) onButtonClicked();
+
     }
 
     private void onButtonClicked() {

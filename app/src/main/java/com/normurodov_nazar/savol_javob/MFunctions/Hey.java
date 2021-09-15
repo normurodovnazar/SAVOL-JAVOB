@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -13,20 +14,24 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SnapshotMetadata;
+import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.MyDialog;
+import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
 import com.normurodov_nazar.savol_javob.R;
 
 import static com.normurodov_nazar.savol_javob.R.color;
 import static com.normurodov_nazar.savol_javob.R.string;
 
 public class Hey {
+
+    public static void print(String tag,String message){
+        Log.e(tag,message);
+    }
 
     public static MyDialog showAlertDialog(Context context, String message) {
         MyDialog dialog = new MyDialog(context, message);
@@ -38,6 +43,30 @@ public class Hey {
 
     public static MyDialog showUnknownError(Context context) {
         return showAlertDialog(context, context.getString(string.error_unknown) + context.getString(string.unknown));
+    }
+
+    public static MyDialogWithTwoButtons showSelectorDialog(Context context,String yes,String no,String info){
+        MyDialogWithTwoButtons dialog = new MyDialogWithTwoButtons(context,yes,no,info);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
+    }
+
+    public static ImageUploadingDialog uploadImageForProfile(Context context,String filePath,String uId){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uId,false);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
+    }
+
+    public static ImageUploadingDialog uploadImageToChat(Context context,String filePath,String uploadAs){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,true);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
     }
 
     public static void showUnknownErrorWithToast(Context context){

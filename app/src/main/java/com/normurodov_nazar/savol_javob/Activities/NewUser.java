@@ -1,6 +1,7 @@
-package com.normurodov_nazar.savol_javob;
+package com.normurodov_nazar.savol_javob.Activities;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -16,18 +17,14 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
@@ -39,7 +36,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     ImageView i;
     EditText name,surname;
     Button next,imageB;
-    String mName="",mSurname="",mImage;
+    String mName="",mSurname="",mImage = "",mFilePath = "";
     ActivityResultLauncher<Intent> imagePickLauncher;
     File originalFile;
     @Override
@@ -81,7 +78,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
 
     void orElse(){
         changeImageButtonAsDefault();
-        mImage=null;
+        mImage="";
         i.setImageResource(R.drawable.tab1_icon);
     }
 
@@ -122,7 +119,8 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                     i.setImageResource(R.drawable.tab1_icon);
                     Log.e("onActivityResult", "Result is not null:"+res.getPath());
                     i.setImageURI(res);
-                    mImage = res.getPath();
+                    mFilePath = res.getPath();
+
                 } else {
                     Log.e("onActivityResult", "Result is null");
                     Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
@@ -172,10 +170,16 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
             Hey.amIOnline().addOnCompleteListener(task -> {
                 if(!task.isSuccessful() || task.getResult() == null) throw new NullPointerException();
                 if(!task.getResult().getMetadata().isFromCache()){
-                    Map<String,String> data = new HashMap<>();
+                    Map<String,Object> data = new HashMap<>();
                     data.put(Keys.name,mName);
                     data.put(Keys.surname,mSurname);
                     data.put(Keys.imageUrl,mImage);
+                    data.put(Keys.myQuestionOpportunity,3);
+                    data.put(Keys.numberOfMyAnswers,0);
+                    data.put(Keys.numberOfMyPublishedQuestions,0);
+                    String[] chats = {};
+                    data.put(Keys.myChats,chats);
+                    data.put(Keys.numberOfCorrectAnswers,0);data.put(Keys.numberOfIncorrectAnswers,0);
                     FirebaseFirestore.getInstance().collection(Keys.users).document(My.uId).set(data).addOnCompleteListener(task1 -> {
                         Intent intent = new Intent(NewUser.this,Home.class);
                         if(task1.isSuccessful()){
