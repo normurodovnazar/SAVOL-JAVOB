@@ -18,7 +18,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Intent i = new Intent(this, Hey.isLoggedIn(getPreferences(MODE_PRIVATE)) ? Home.class : AuthUser.class),s = new Intent(this, Works.class);
-        startService(s);
         startActivity(i);finish();
     }
 }

@@ -33,4 +33,7 @@
     <string name="you_need_upload_image">Siz rasmni yuklashingiz kerak</string>
     <string name="ok">Ok</string>
     <string name="cancel">Bekor qilish</string>
+    <string name="personal">Shaxsiy</string>
+    <string name="pu_blic">Umumiy</string>
+    <string name="my_questions">Savollarim</string>
 </resources>

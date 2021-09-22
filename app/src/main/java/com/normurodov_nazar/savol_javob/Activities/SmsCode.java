@@ -77,7 +77,7 @@ public class SmsCode extends AppCompatActivity {
         b.setOnClickListener(v -> {
             if(!e.getText().toString().equals("")){
                 Hey.setButtonAsLoading(this,b);
-                check();
+                if(!My.loading) check();
             }else Toast.makeText(this, getString(R.string.write_code), Toast.LENGTH_SHORT).show();
         });
     }

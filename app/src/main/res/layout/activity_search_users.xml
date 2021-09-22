@@ -13,8 +13,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:paddingBottom="10dp"
-        android:background="@drawable/top_bg">
+        android:paddingBottom="10dp">
         <ImageView
             android:id="@+id/back"
             android:layout_marginStart="10dp"
@@ -23,7 +22,7 @@
             android:layout_height="35dp"
             android:src="@drawable/back"
             android:padding="5dp"
-            android:background="@drawable/home_ic_bg"
+            android:background="@drawable/icon_button_bg"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginLeft="10dp" />
@@ -37,7 +36,7 @@
             app:layout_constraintEnd_toStartOf="@id/search"
             app:layout_constraintTop_toTopOf="@id/back"
             app:layout_constraintBottom_toBottomOf="@id/back"
-            android:background="@drawable/search_bg"
+            android:background="@drawable/text_field_bg"
             android:hint="@string/search_users"
             android:gravity="center" />
 
@@ -48,7 +47,7 @@
             android:layout_marginEnd="10dp"
             android:src="@drawable/search_glass"
             android:padding="5dp"
-            android:background="@drawable/home_ic_bg"
+            android:background="@drawable/icon_button_bg"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/back"
             android:layout_marginRight="10dp" />

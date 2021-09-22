@@ -29,7 +29,7 @@
         android:layout_marginEnd="32dp"
         android:layout_marginRight="32dp"
         android:autofillHints="@string/hint_for_phone"
-        android:background="@drawable/phone_bg"
+        android:background="@drawable/text_field_bg"
         android:drawableStart="@drawable/phone_icon"
         android:drawableLeft="@drawable/phone_icon"
         android:drawablePadding="10dp"

@@ -75,9 +75,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
                 result -> {
                     Intent res = result.getData();
                     if(res != null){
-                        if(res.getBooleanExtra("a",false)){
-                            doUser();
-                        }else Hey.showUnknownError(this);
+                        if(res.getBooleanExtra("a",false)) doUser(); else Hey.showUnknownError(this);
                     }else {
                         Hey.showUnknownError(this);
                         setButtonAsDefault();
@@ -96,7 +94,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
                    a = new String[]{Manifest.permission.READ_SMS,Manifest.permission.READ_PHONE_NUMBERS,Manifest.permission.READ_PHONE_STATE};
                 }
                 requestPermissions(a,1);
-                n = manager.getLine1Number();
                 n = manager.getLine1Number();
                 if(n==null || n.equals("")) {
                     phone.setText(preferences.getString(p, "+"));
@@ -230,14 +227,13 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     private void codeSend(String id) {
         Intent i = new Intent(this, SmsCode.class);
         My.number=phone.getText().toString();
-        i.putExtra(verificationId,id);
+        i.putExtra(Keys.verificationId,id);
         launcher.launch(i);
     }
 
     @Override
     public void onClick(View view) {
-       //if(!My.loading) onButtonClicked();
-
+       if(!My.loading) onButtonClicked();
     }
 
     private void onButtonClicked() {

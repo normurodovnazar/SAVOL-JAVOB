@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -27,12 +29,13 @@ public class ImageUploadingDialog extends Dialog {
     Button b;
     UploadTask uploadTask;
     private final StorageReference storage;
+    String downloadUrl;
 
-    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean toChats) {
+    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean forProfile) {
         super(context);
         this.context = context;
         this.filePath = filePath;
-        storage = FirebaseStorage.getInstance().getReference().child(toChats ? Keys.chats : Keys.users).child(uploadAs);
+        storage = FirebaseStorage.getInstance().getReference().child(forProfile ? Keys.chats : Keys.users).child(uploadAs);
     }
 
     @Override
@@ -78,6 +81,17 @@ public class ImageUploadingDialog extends Dialog {
 
     private void finished() {
         Hey.print("a","finished");
+        storage.getDownloadUrl().addOnCompleteListener(task -> {
+            if(task.isSuccessful()) if(task.getResult()!=null)
+                downloadUrl = task.getResult().toString(); else unknownE(); else unknownE();
+            });
+    }
+
+    void unknownE(){
+        Hey.showUnknownError(context).setOnDismissListener(dialog -> {
+            dismiss();
+            ImageUploadingDialog.this.dismiss();
+        });
     }
 
     private void onError(Exception e) {
@@ -90,9 +104,7 @@ public class ImageUploadingDialog extends Dialog {
         dismiss();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
+    public String getDownloadUrl(){
+        return downloadUrl;
     }
 }

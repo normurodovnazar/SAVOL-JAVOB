@@ -1,6 +1,7 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -29,6 +30,19 @@ import static com.normurodov_nazar.savol_javob.R.string;
 
 public class Hey {
 
+    public static String getOtherUIdFromChatId(String chatId){
+        return chatId.replaceAll(My.uId,"");
+    }
+
+    public static String getChatIdFromUIds(String a,String b){
+        int A = Integer.parseInt(a),B = Integer.parseInt(b);
+        if(A>B) return A +String.valueOf(B); else return String.valueOf(B)+A;
+    }
+
+    public static void showToast(Context context,String message){
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
+
     public static void print(String tag,String message){
         Log.e(tag,message);
     }
@@ -53,8 +67,8 @@ public class Hey {
         return dialog;
     }
 
-    public static ImageUploadingDialog uploadImageForProfile(Context context,String filePath,String uId){
-        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uId,false);
+    public static ImageUploadingDialog uploadImageForProfile(Context context,String filePath,String uploadAs){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,false);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();

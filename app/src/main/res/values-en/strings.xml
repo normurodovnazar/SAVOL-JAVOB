@@ -13,7 +13,7 @@
     <string name="error_number">You have entered invalid number</string>
     <string name="error_unknown">Unknown error.Error message:</string>
     <string name="error_code">You have entered error code</string>
-    <string name="error_insert_number">Insert your number with \"+\" sign</string>
+    <string name="error_insert_number">Insert your number with \"+\" sign and country code</string>
     <string name="write_code">Write code first</string>
     <string name="timeout">Sms code waiting timeout,try again</string>
     <string name="wait">Wait ...</string>
@@ -33,4 +33,7 @@
     <string name="you_need_upload_image">You need upload your image</string>
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
+    <string name="personal">Personal</string>
+    <string name="pu_blic">Public</string>
+    <string name="my_questions">My questions</string>
 </resources>

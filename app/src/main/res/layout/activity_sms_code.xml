@@ -24,7 +24,7 @@
         android:id="@+id/smsCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/phone_bg"
+        android:background="@drawable/text_field_bg"
         android:drawableStart="@drawable/phone_icon"
         android:drawableLeft="@drawable/phone_icon"
         android:drawablePadding="5dp"

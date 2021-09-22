@@ -15,14 +15,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Loading">
-        <activity android:name=".Activities.SearchUsers" />
-        <activity android:name=".Activities.NewUser" />
-        <activity android:name=".ForTest" >
+        <activity android:name=".Activities.SingleChat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".Activities.SearchUsers" />
+        <activity android:name=".Activities.NewUser" />
+        <activity android:name=".ForTest">
+
         </activity>
         <activity android:name=".Activities.SmsCode" />
 
@@ -35,12 +38,9 @@
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity android:name=".Activities.Home">
-
-        </activity>
-        <activity android:name=".Activities.AuthUser"/>
-        <activity android:name=".Activities.MainActivity">
-        </activity>
+        <activity android:name=".Activities.Home"></activity>
+        <activity android:name=".Activities.AuthUser" />
+        <activity android:name=".Activities.MainActivity"></activity>
     </application>
 
 </manifest>
