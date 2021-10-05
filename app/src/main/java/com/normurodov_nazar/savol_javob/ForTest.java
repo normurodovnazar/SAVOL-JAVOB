@@ -1,36 +1,34 @@
 package com.normurodov_nazar.savol_javob;
 
+import android.os.Build;
 import android.os.Bundle;
-import android.widget.Button;
+import android.view.KeyEvent;
+import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.normurodov_nazar.savol_javob.MFunctions.Hey;
-import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
-import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
-
-import java.io.File;
-
 public class ForTest extends AppCompatActivity{
-    Button b;
-
+    int a = 0;
+    ProgressBar bar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_for_test);
-        b = findViewById(R.id.aaaa);
+        bar = findViewById(R.id.ppp);
     }
-
     @Override
-    protected void onStart() {
-        super.onStart();
-        b.setOnClickListener(v -> {
-            File originalFile = new File(getExternalFilesDir("images").toString()+File.separatorChar+"Me.png");
-            ImageUploadingDialog dialog = Hey.uploadImageToChat(this,originalFile.getPath(),"Nazar.png");
-            dialog.setOnDismissListener(d -> {
-                String url = dialog.getDownloadUrl();
-                if(url != null) Hey.print("aa",url); else Hey.print("aaa","Url is null");
-            });
-        });
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode==KeyEvent.KEYCODE_VOLUME_UP){
+            if(a<100) a+=10; else a=0;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    bar.setProgress(a,true);
+                }else bar.setProgress(a);
+            return true;
+        }else if(keyCode==KeyEvent.KEYCODE_VOLUME_DOWN){
+
+            return true;
+        }else if(keyCode==KeyEvent.KEYCODE_BACK) {
+            return true;
+        } return super.onKeyDown(keyCode, event);
     }
 }

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -82,8 +83,11 @@ public class ImageUploadingDialog extends Dialog {
     private void finished() {
         Hey.print("a","finished");
         storage.getDownloadUrl().addOnCompleteListener(task -> {
-            if(task.isSuccessful()) if(task.getResult()!=null)
-                downloadUrl = task.getResult().toString(); else unknownE(); else unknownE();
+            if(task.isSuccessful()) if(task.getResult()!=null) {
+                downloadUrl = task.getResult().toString();
+                dismiss();
+                Toast.makeText(context, context.getString(R.string.uploaded), Toast.LENGTH_SHORT).show();
+            } else unknownE(); else unknownE();
             });
     }
 

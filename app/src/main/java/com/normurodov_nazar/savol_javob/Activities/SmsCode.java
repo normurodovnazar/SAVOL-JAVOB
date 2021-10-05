@@ -15,7 +15,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -29,6 +28,8 @@ public class SmsCode extends AppCompatActivity {
     String number,id;
     FirebaseAuth auth;
     CountDownTimer timer,time;
+    boolean loading = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,8 +77,7 @@ public class SmsCode extends AppCompatActivity {
         super.onStart();
         b.setOnClickListener(v -> {
             if(!e.getText().toString().equals("")){
-                Hey.setButtonAsLoading(this,b);
-                if(!My.loading) check();
+                if(!loading) check();
             }else Toast.makeText(this, getString(R.string.write_code), Toast.LENGTH_SHORT).show();
         });
     }
@@ -87,6 +87,7 @@ public class SmsCode extends AppCompatActivity {
     }
 
     private void check() {
+        Hey.setButtonAsLoading(this,b,loading);
         PhoneAuthCredential authCredential = PhoneAuthProvider.getCredential(id,e.getText().toString().trim());
         auth.signInWithCredential(authCredential).addOnCompleteListener(this,
                 task -> {
@@ -94,7 +95,6 @@ public class SmsCode extends AppCompatActivity {
                         if(task.getResult()!=null){
                             FirebaseUser user = task.getResult().getUser();
                             if(user!=null){
-                                My.setFirebaseUser(user);
                                 setResult(1,new Intent().putExtra("a",true));
                                 finish();
                             }else showUnknownErrorAndExit();
@@ -124,7 +124,7 @@ public class SmsCode extends AppCompatActivity {
                                 break;
                         } else showUnknownErrorAndExit();
                     }
-                    Hey.setButtonAsDefault(this,b,getString(R.string.check));
+                    Hey.setButtonAsDefault(this,b,getString(R.string.check),loading);
                 }
         );
     }

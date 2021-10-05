@@ -16,13 +16,13 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
+import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.MyD.UserListAdapter;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class SearchUsers extends AppCompatActivity {
     ImageView back,search;
@@ -47,20 +47,24 @@ public class SearchUsers extends AppCompatActivity {
                         ArrayList<User> users = new ArrayList<>();
                         List<DocumentSnapshot> list = value.getDocuments();
                         for(DocumentSnapshot ds : list){
-                            if((Objects.requireNonNull(ds.get(Keys.name)).toString()+ Objects.requireNonNull(ds.get(Keys.surname)).toString()).contains(text)){
-                                users.add(new User(
-                                        ds.get(Keys.name).toString(),
-                                        ds.get(Keys.surname).toString(),
-                                        ds.get(Keys.imageUrl).toString(),
-                                        ds.get(Keys.seen).toString(),
-                                        ds.get(Keys.number).toString(),
-                                        ds.get(Keys.uId).toString(),
-                                        ds.get(Keys.numberOfMyPublishedQuestions).toString(),
-                                        ds.get(Keys.numberOfMyAnswers).toString(),
-                                        ds.get(Keys.numberOfCorrectAnswers).toString(),
-                                        ds.get(Keys.numberOfIncorrectAnswers).toString()
-                                        )
-                                );
+                            Object name = ds.get(Keys.name),surname = ds.get(Keys.surname);long id = Long.parseLong(ds.getId());
+                            if(name != null && surname != null){
+                                boolean b = (name.toString() + surname.toString()).toLowerCase().contains(text.toLowerCase().replaceAll(" ","")) || (surname.toString()+ name.toString()).toLowerCase().contains(text.toLowerCase().replaceAll(" ",""));
+                                if(b && text.length()>=5 && id != My.id){
+                                    users.add(new User(
+                                            ds.get(Keys.name),
+                                            ds.get(Keys.surname),
+                                            ds.get(Keys.imageUrl),
+                                            ds.get(Keys.seen),
+                                            ds.get(Keys.number),
+                                            ds.get(Keys.id),
+                                            ds.get(Keys.numberOfMyPublishedQuestions),
+                                            ds.get(Keys.numberOfMyAnswers),
+                                            ds.get(Keys.numberOfCorrectAnswers),
+                                            ds.get(Keys.numberOfIncorrectAnswers),
+                                            ds.get(Keys.chats),
+                                            ds.get(Keys.myQuestionOpportunity)));
+                                }
                             }
                         }
                         if(users.isEmpty()) noResultsFound(); else {
@@ -74,7 +78,7 @@ public class SearchUsers extends AppCompatActivity {
     }
 
     private void setAdapterToRecyclerView(ArrayList<User> users) {
-        UserListAdapter adapter = new UserListAdapter(users,this);
+        UserListAdapter adapter = new UserListAdapter(this,users,true);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }

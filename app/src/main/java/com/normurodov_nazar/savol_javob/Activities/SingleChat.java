@@ -1,22 +1,32 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -28,7 +38,10 @@ import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.MessageAdapterInSingleChat;
+import com.normurodov_nazar.savol_javob.MyD.MyDialog;
+import com.normurodov_nazar.savol_javob.MyD.RecyclerViewItemClickListener;
 import com.normurodov_nazar.savol_javob.MyD.TextMessage;
+import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
@@ -40,64 +53,81 @@ import java.util.Objects;
 public class SingleChat extends AppCompatActivity {
 
     RecyclerView recyclerView;
-    TextView name;
+    TextView name,seen,centerText;
     EditText editText;
-    ImageButton send, sendImage, profileImage, menu;
+    ImageView send, sendImage, profileImage, menu;
     String chatId;
     CollectionReference chats;
     ProgressBar progressBar, barForImageDownload;
     List<Map<String, Object>> messages = new ArrayList<>();
+    User friend;
+    boolean loading = false;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_single_chat);
-        initTempVars();
         initVars();
-        loadProfileImage();
-        loadMessages();
+        loadChatData();
     }
 
-    private void loadProfileImage() {
-        FirebaseFirestore.getInstance().collection(Keys.users).document(Hey.getOtherUIdFromChatId(chatId)).addSnapshotListener((value, error) -> {
-            if (error != null) {
-                if (value != null) {
-                    String imageUrl = Objects.requireNonNull(value.get(Keys.imageUrl)).toString();
-                    setImage(imageUrl);
-                }
-            }
+    private void loadChatData() {
+        Intent i = getIntent();
+        chatId = i.getStringExtra(Keys.chatId);
+        if(chatId!=null) {
+            chats = FirebaseFirestore.getInstance().collection(chatId);
+            loadMessages();
+            FirebaseFirestore.getInstance().collection(Keys.chats).document(chatId).addSnapshotListener((value, error) -> {
+                if(value!=null){
+                    loadFriendsData(FirebaseFirestore.getInstance().collection(Keys.users).document(Hey.getFriendsIdFromChatId(chatId)));
+                }else showError();
+            });
+        } else {showError().setOnDismissListener(d->finish());}
+    }
+
+    private void loadFriendsData(DocumentReference reference) {
+        reference.addSnapshotListener((d, error) -> {
+            if(d!=null){
+                friend = new User(d.get(Keys.name),d.get(Keys.surname),d.get(Keys.imageUrl),d.get(Keys.seen),d.get(Keys.number),d.get(Keys.id),
+                        d.get(Keys.numberOfMyPublishedQuestions),d.get(Keys.numberOfMyAnswers),d.get(Keys.numberOfCorrectAnswers),
+                        d.get(Keys.numberOfIncorrectAnswers),d.get(Keys.chats),d.get(Keys.myQuestionOpportunity));
+                setAllFriendsData();
+            }else if (error != null) Hey.showAlertDialog(getApplicationContext(),getString(R.string.error)+":"+ error.getLocalizedMessage());else showError();
+
         });
     }
 
-    private void setImage(String imageUrl) {
-        File file = new File(getExternalFilesDir("images").toString() + File.separatorChar + imageUrl);
-        if (!file.exists()) {
-            FirebaseStorage.getInstance().getReference().child(Keys.users).child(imageUrl).getFile(file)
-                    .addOnFailureListener(e -> Hey.showAlertDialog(this, getString(R.string.error_unknown) + e.getMessage()))
-                    .addOnProgressListener(snapshot -> barForImageDownload.setProgress((int) (snapshot.getBytesTransferred() / snapshot.getTotalByteCount())))
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) setImage(imageUrl);
+    private void setAllFriendsData() {
+        name.setText(friend.fullName);
+        seen.setText(Hey.getSeenTime(this,friend.getSeen()));
+        setImage();
+    }
+
+    private void setImage() {
+        File f = new File(getExternalFilesDir("images").toString()+File.separatorChar+friend.getId()+friend.getImageUrl().substring(friend.getImageUrl().length()-5));
+        if(f.exists()){
+            Hey.print("a","exists");
+            profileImage.setImageURI(Uri.parse(f.getPath()));
+            barForImageDownload.setVisibility(View.INVISIBLE);
+            profileImage.setVisibility(View.VISIBLE);
+        }else {
+            FirebaseStorage.getInstance().getReference().child(Keys.users).child(String.valueOf(friend.getId())).getFile(f)
+                    .addOnFailureListener(e -> Hey.showAlertDialog(getApplicationContext(),getString(R.string.error_download_file)+":"+e.getLocalizedMessage()))
+                    .addOnSuccessListener(taskSnapshot -> {
+                        setImage();
+                        Hey.print("a","completed");
+                    })
+                    .addOnProgressListener(snapshot -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            barForImageDownload.setProgress(Hey.getPercentage(snapshot),true);
+                        }else barForImageDownload.setProgress(Hey.getPercentage(snapshot));
                     });
-        } else {
-            setReadyImage(file);
         }
-    }
-
-    void setReadyImage(File file) {
-        barForImageDownload.setVisibility(View.INVISIBLE);
-        profileImage.setVisibility(View.VISIBLE);
-        profileImage.setImageURI(Uri.parse(file.getPath()));
-    }
-
-    private void initTempVars() {
-        chatId = "aaaa";
-        My.uId = "AA";
     }
 
     private void loadMessages() {
         chats.addSnapshotListener((value, error) -> {
-            if (error == null) {
                 if (value != null) {
                     List<DocumentSnapshot> docs = value.getDocuments();
                     for (DocumentSnapshot d : docs) {
@@ -106,23 +136,42 @@ public class SingleChat extends AppCompatActivity {
                     if (messages.size() != 0) {
                         List<TextMessage> t = new ArrayList<>();
                         for (Map<String, Object> m : messages) {
-                            t.add(new TextMessage(Objects.requireNonNull(m.get(Keys.message)).toString(), Objects.requireNonNull(m.get(Keys.time)).toString(), m.get(Keys.sender).toString()));
+                            t.add(new TextMessage(Objects.requireNonNull(m.get(Keys.message)).toString(), Long.parseLong(m.get(Keys.time).toString()), Long.parseLong(m.get(Keys.sender).toString())));
                         }
-                        MessageAdapterInSingleChat adapter = new MessageAdapterInSingleChat(t, this);
+                        MessageAdapterInSingleChat adapter = new MessageAdapterInSingleChat(t, this, (message, itemView) -> {
+                            PopupMenu menu = new PopupMenu(getApplicationContext(),itemView);
+                            menu.inflate(R.menu.message_popup);
+                            menu.setOnMenuItemClickListener(item ->{
+                                switch (item.getItemId()){
+                                    case R.id.deleteMessage:
+                                        Toast.makeText(this, "delete", Toast.LENGTH_SHORT).show();
+                                        break;
+                                    case R.id.editMessage:
+                                        Toast.makeText(this, "edit", Toast.LENGTH_SHORT).show();
+                                        break;
+                                    case R.id.copyMessage:
+                                        Toast.makeText(this, "copy", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                                return true;
+                            });
+                            menu.show();
+                        });
                         recyclerView.setAdapter(adapter);
-                    }
-                } else Hey.showAlertDialog(this, getString(R.string.error_unknown));
-                ;
-            } else {
-                Hey.showAlertDialog(this, getString(R.string.error) + ":" + error.getMessage());
-            }
+                        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                        changeAsNotLoading();
+                    } else showNoMessages();
+                } else {
+                    if (error != null) Hey.showAlertDialog(this, getString(R.string.error) + ":" + error.getMessage());showError();
+                }
         });
     }
 
     private void initVars() {
+        centerText = findViewById(R.id.center_text);
         recyclerView = findViewById(R.id.chatsInSingleChat);
-        //String ch = getIntent().getStringExtra(Keys.chatId);if(ch!=null) chatId = ch; else Hey.showUnknownError(this).setOnDismissListener(d -> finish());
-        send = findViewById(R.id.send);
+        send = findViewById(R.id.send);send.setOnClickListener(x->sendTextMessage());
+        seen = findViewById(R.id.seenSingleChat);
         sendImage = findViewById(R.id.sendImage);
         profileImage = findViewById(R.id.profileImageInSingleChat);
         menu = findViewById(R.id.menuInSingleChat);
@@ -130,40 +179,36 @@ public class SingleChat extends AppCompatActivity {
         editText = findViewById(R.id.editTextInSingleChat);
         progressBar = findViewById(R.id.progressBarInSingleChat);
         barForImageDownload = findViewById(R.id.barForImageDownload);
-        send.setOnClickListener(v -> onClickSentMessage());
-        chats = FirebaseFirestore.getInstance().collection(chatId);
+
     }
 
-    private void onClickSentMessage() {
-        if (notLoading()) {
+    private void sendTextMessage() {
+        Hey.setIconButtonAsLoading(this,send,loading);
+        if(chats!=null && !editText.getText().toString().replaceAll(" ","").isEmpty()){
             String m = editText.getText().toString();
-            if (!m.isEmpty()) {
-                chats.add((new TextMessage(m, "time", My.uId)).toMap()).
-                        addOnFailureListener(e -> Hey.showToast(SingleChat.this, getString(R.string.error) + ":" + e.getMessage()))
-                        .addOnCompleteListener(task -> {
-                            Hey.print("a", "AAA");
-                        });
-
-            }
+            TextMessage text = new TextMessage(m, Timestamp.now().toDate().getTime(),My.id);
+            chats.add(text.toMap()).addOnFailureListener(e -> Hey.showAlertDialog(getApplicationContext(),getString(R.string.error_sending_message)+e.getLocalizedMessage())).addOnSuccessListener(reference -> {
+                Hey.setIconButtonAsDefault(getApplicationContext(),send,loading);
+                Hey.print("a","sent");
+            });
         }
     }
 
-    private boolean notLoading() {
-        return My.loading;
+    private void showNoMessages() {
+        recyclerView.setVisibility(View.INVISIBLE);
+        progressBar.setVisibility(View.INVISIBLE);
+        centerText.setVisibility(View.VISIBLE);
     }
 
     void changeAsNotLoading() {
         progressBar.setVisibility(View.INVISIBLE);
         recyclerView.setVisibility(View.VISIBLE);
+        centerText.setVisibility(View.INVISIBLE);
     }
 
-    private ArrayList<TextMessage> getMessages() {
-        ArrayList<TextMessage> list = new ArrayList<>();
-        TextMessage t1 = new TextMessage("Hello how are you?Hello how are you?Hello how are you?Hello how are you?Hello how are you?Hello how are you?", "19:15,25-may,2020-yil", My.uId), t2 = new TextMessage("Im fine thank you.And you?", "19:16,25-may,2020-yil", My.uId + "a");
-        for (int i = 1; i <= 30; i++) {
-            if (i % 2 == 0) list.add(t1);
-            else list.add(t2);
-        }
-        return list;
+
+
+    private MyDialog showError(){
+        return Hey.showAlertDialog(this,getString(R.string.error_unknown));
     }
 }

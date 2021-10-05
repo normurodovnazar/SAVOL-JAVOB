@@ -24,6 +24,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <com.google.android.material.card.MaterialCardView
+                android:layout_marginHorizontal="10dp"
                 android:id="@+id/card"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
@@ -49,12 +50,13 @@
 
 
         <EditText
+            android:textCursorDrawable="@drawable/black_cursor_drawable"
             android:id="@+id/name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="32dp"
             android:layout_marginVertical="5dp"
-            android:background="@drawable/text_field_bg"
+            android:background="@drawable/text_fields_in_big_screens"
             android:drawableStart="@drawable/keyboard"
             android:drawableLeft="@drawable/keyboard"
             android:drawablePadding="10dp"
@@ -63,12 +65,13 @@
             android:padding="20dp" />
 
         <EditText
+            android:textCursorDrawable="@drawable/black_cursor_drawable"
             android:id="@+id/surname"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="32dp"
             android:layout_marginVertical="5dp"
-            android:background="@drawable/text_field_bg"
+            android:background="@drawable/text_fields_in_big_screens"
             android:drawableStart="@drawable/keyboard"
             android:drawableLeft="@drawable/keyboard"
             android:drawablePadding="10dp"

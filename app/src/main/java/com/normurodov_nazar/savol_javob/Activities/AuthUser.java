@@ -1,15 +1,10 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,7 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,6 +23,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -37,7 +33,6 @@ import com.normurodov_nazar.savol_javob.R;
 import java.util.concurrent.TimeUnit;
 
 import static com.normurodov_nazar.savol_javob.MFunctions.Keys.p;
-import static com.normurodov_nazar.savol_javob.MFunctions.Keys.verificationId;
 
 public class AuthUser extends AppCompatActivity implements View.OnClickListener {
 
@@ -48,6 +43,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     EditText phone;
     Button button;
     SharedPreferences preferences;
+    boolean loading = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,8 +58,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
         phone = findViewById(R.id.phone);
         button = findViewById(R.id.button);
 
-        manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        requestMyPermission();
         Hey.animateFadeOut(text,300);
         Hey.animateHorizontally(phone,400,500);
         Hey.animateVertically(button,350,800);
@@ -84,33 +78,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
         );
     }
 
-    @SuppressLint("HardwareIds")
-    private void requestMyPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                String[] a;
-                a = new String[]{Manifest.permission.READ_SMS,Manifest.permission.READ_PHONE_STATE};
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                   a = new String[]{Manifest.permission.READ_SMS,Manifest.permission.READ_PHONE_NUMBERS,Manifest.permission.READ_PHONE_STATE};
-                }
-                requestPermissions(a,1);
-                n = manager.getLine1Number();
-                if(n==null || n.equals("")) {
-                    phone.setText(preferences.getString(p, "+"));
-                } else {
-                    phone.setText(n);
-                }
-            }
-        }else{
-            n = manager.getLine1Number();
-            if(n==null || n.equals("")) {
-                phone.setText(preferences.getString(p, "+"));
-            } else {
-                phone.setText(n);
-            }
-        }
-    }
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -127,7 +94,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
                         if(task.getResult()!=null){
                             FirebaseUser user = task.getResult().getUser();
                             if(user!=null){
-                                My.setFirebaseUser(user);
                                 doUser();
                             }else Hey.showUnknownError(AuthUser.this);
                         }else{
@@ -177,30 +143,42 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     private void doUser() {
         Hey.amIOnline().addOnCompleteListener(task -> {
-            try{
-                if(task.getResult()==null || !task.isSuccessful()) throw new NullPointerException();
-                if(!task.getResult().getMetadata().isFromCache()){
-                    Hey.newUserOrNot(My.uId).addOnCompleteListener(task1 -> {
-                        if(!task1.isSuccessful() || task1.getResult()==null) throw new NullPointerException();
-                        boolean bo = task1.getResult().exists();
+            DocumentSnapshot doc = task.getResult();
+                if(doc!=null) if(!doc.getMetadata().isFromCache()){
+                    FirebaseFirestore.getInstance().collection(Keys.users).whereEqualTo(Keys.number,My.number).addSnapshotListener((value, error) -> {
+                        if(value !=null){
                             Intent i;
-                            if(!bo){
-                                i = new Intent(AuthUser.this, NewUser.class);
+                            if(value.size()==0){
+                                generateUniqueId();
+                                return;
                             }else {
+                                DocumentSnapshot doc1 = value.getDocuments().get(0);
+                                My.setDataFromDoc(doc1);
+                                Hey.print("Exists","a:"+doc1.toString());
                                 i = new Intent(AuthUser.this, Home.class);
                             }
                             startActivity(i);
                             finish();
-                    }).addOnFailureListener(this::onFailure);
+                        }else Hey.showAlertDialog(AuthUser.this,getString(R.string.error_unknown)+":"+ (error != null ? error.getMessage() : "null"));
+                    });
                 }else {
                     setButtonAsDefault();
                     Hey.showAlertDialog(this,getString(R.string.error_connection));
                 }
-            }catch (NullPointerException e){
-                Hey.showUnknownError(this);
-                setButtonAsDefault();
-            }
         }).addOnFailureListener(this::onFailure);
+    }
+
+    void generateUniqueId(){
+        int id = Hey.generateID();
+        FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)).addSnapshotListener((value, error) -> {
+            if(value!=null){
+                if(value.exists()) generateUniqueId(); else {
+                    Hey.print("New user","a:"+id);
+                    My.id = id;
+                    startActivity(new Intent(AuthUser.this, NewUser.class));
+                }
+            }else Hey.showAlertDialog(AuthUser.this,getString(R.string.error_unknown)+":"+ (error != null ? error.getMessage() : "null"));
+        });
     }
 
     private void onFailure(Exception e){
@@ -215,7 +193,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
                 Hey.showAlertDialog(this,getString(R.string.error_connection));
                 break;
             case Keys.errorNumberInvalid:
-                Hey.showAlertDialog(this,getString(R.string.error_number)).setOnDismissListener(dialog -> requestMyPermission());
+                Hey.showAlertDialog(this,getString(R.string.error_number));
                 break;
             default:
                 Hey.showAlertDialog(this,getString(R.string.error_unknown)+m);
@@ -233,7 +211,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     @Override
     public void onClick(View view) {
-       if(!My.loading) onButtonClicked();
+       if(!loading) onButtonClicked();
     }
 
     private void onButtonClicked() {
@@ -251,27 +229,16 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
             PhoneAuthProvider.verifyPhoneNumber(options);
         }else {
             Toast.makeText(this, getString(R.string.error_insert_number), Toast.LENGTH_SHORT).show();
-            requestMyPermission();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode==1){
-           if(grantResults[0] != PackageManager.PERMISSION_GRANTED)
-               requestMyPermission();
-           else Toast.makeText(this, getString(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
         }
     }
 
     private void setButtonAsDefault(){
         phone.setEnabled(true);
-        Hey.setButtonAsDefault(this,button,getString(R.string.verify));
+        Hey.setButtonAsDefault(this,button,getString(R.string.verify),loading);
     }
 
     private void setButtonAsLoading(){
         phone.setEnabled(false);
-        Hey.setButtonAsLoading(this,button);
+        Hey.setButtonAsLoading(this,button,loading);
     }
 }

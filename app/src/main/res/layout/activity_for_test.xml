@@ -6,14 +6,11 @@
     android:layout_height="match_parent"
     tools:context=".ForTest">
 
-    <Button
-        android:layout_height="wrap_content"
+    <ProgressBar
         android:layout_width="match_parent"
-        android:text="AAAAA"
-        android:id="@+id/aaaa"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="match_parent"
+        android:max="100"
+        android:progress="50"
+        style="@android:style/Widget.ProgressBar.Horizontal"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -15,19 +15,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Loading">
-        <activity android:name=".Activities.SingleChat">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".Activities.SearchUsers" />
+        <activity android:name=".Activities.ForTest2" />
+        <activity
+            android:name=".Activities.SingleChat"
+            android:windowSoftInputMode="adjustResize"/>
+        <activity
+            android:name=".Activities.SearchUsers"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".Activities.NewUser" />
         <activity android:name=".ForTest">
 
         </activity>
-        <activity android:name=".Activities.SmsCode" />
+        <activity
+            android:name=".Activities.SmsCode"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
 
         <service
             android:name=".Works"
@@ -38,9 +39,19 @@
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity android:name=".Activities.Home"></activity>
-        <activity android:name=".Activities.AuthUser" />
-        <activity android:name=".Activities.MainActivity"></activity>
+        <activity
+            android:name=".Activities.Home"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity
+            android:name=".Activities.AuthUser"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
+        <activity android:name=".Activities.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

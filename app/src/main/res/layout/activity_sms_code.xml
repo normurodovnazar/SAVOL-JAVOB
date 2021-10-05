@@ -21,10 +21,11 @@
         android:gravity="center_horizontal" />
 
     <EditText
+        android:textCursorDrawable="@drawable/black_cursor_drawable"
         android:id="@+id/smsCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/text_field_bg"
+        android:background="@drawable/text_fields_in_big_screens"
         android:drawableStart="@drawable/phone_icon"
         android:drawableLeft="@drawable/phone_icon"
         android:drawablePadding="5dp"

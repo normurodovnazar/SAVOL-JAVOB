@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/deleteMessage"
+        android:icon="@drawable/delete_ic"
+        android:title="@string/delete"/>
+    <item
+        android:id="@+id/editMessage"
+        android:icon="@drawable/edit_ic"
+        android:title="@string/change"/>
+    <item
+        android:id="@+id/copyMessage"
+        android:title="@string/copy"
+        android:icon="@drawable/copy_ic"/>
+</menu>

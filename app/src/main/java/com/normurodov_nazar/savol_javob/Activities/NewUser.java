@@ -1,7 +1,6 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -20,17 +19,20 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 public class NewUser extends AppCompatActivity implements View.OnClickListener {
     ImageView i;
@@ -39,6 +41,8 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     String mName="",mSurname="",mImage = "",mFilePath = "";
     ActivityResultLauncher<Intent> imagePickLauncher;
     File originalFile;
+    boolean loading = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,7 +124,8 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                     Log.e("onActivityResult", "Result is not null:"+res.getPath());
                     i.setImageURI(res);
                     mFilePath = res.getPath();
-
+                    ImageUploadingDialog d = Hey.uploadImageForProfile(this,mFilePath, String.valueOf(My.id));
+                    d.setOnDismissListener(x-> mImage = d.getDownloadUrl());
                 } else {
                     Log.e("onActivityResult", "Result is null");
                     Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
@@ -141,13 +146,11 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     @SuppressLint("NonConstantResourceId")
     @Override
     public void onClick(View v) {
-        if(!My.loading)
+        if(!loading)
             switch (v.getId()){
             case R.id.next:
                 mName = name.getText().toString();
                 mSurname = surname.getText().toString();
-                Toast.makeText(this, mName+" "+mSurname+" "+mImage, Toast.LENGTH_SHORT).show();
-
                 if(mName.equals("") || mSurname.equals("") || mImage.equals(""))
                     Toast.makeText(this, getText(R.string.name_surname_url_required), Toast.LENGTH_SHORT).show(); else {
                         changeNextButtonAsLoading();
@@ -166,30 +169,11 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void nextPressed() {
-        try {
             Hey.amIOnline().addOnCompleteListener(task -> {
-                if(!task.isSuccessful() || task.getResult() == null) throw new NullPointerException();
-                if(!task.getResult().getMetadata().isFromCache()){
-                    Map<String,Object> data = new HashMap<>();
-                    data.put(Keys.name,mName);
-                    data.put(Keys.surname,mSurname);
-                    data.put(Keys.imageUrl,mImage);
-                    data.put(Keys.myQuestionOpportunity,3);
-                    data.put(Keys.numberOfMyAnswers,0);
-                    data.put(Keys.numberOfMyPublishedQuestions,0);
-                    String[] chats = {};
-                    data.put(Keys.myChats,chats);
-                    data.put(Keys.numberOfCorrectAnswers,0);data.put(Keys.numberOfIncorrectAnswers,0);
-                    FirebaseFirestore.getInstance().collection(Keys.users).document(My.uId).set(data).addOnCompleteListener(task1 -> {
-                        Intent intent = new Intent(NewUser.this,Home.class);
-                        if(task1.isSuccessful()){
-                            startActivity(intent);
-                            finish();
-                        }else {
-                            Hey.showUnknownError(NewUser.this);
-                            changeNextButtonAsDefault();
-                        }
-                    });
+                DocumentSnapshot doc = task.getResult();
+                if(doc!=null)
+                    if(!doc.getMetadata().isFromCache()){
+                        createUserById();
                 }else {
                     Hey.showAlertDialog(NewUser.this,getString(R.string.error_connection));
                     changeNextButtonAsDefault();
@@ -199,10 +183,21 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                 changeNextButtonAsDefault();
                 Hey.showAlertDialog(this,getString(R.string.error_unknown)+e.getMessage());
             });
-        }catch (NullPointerException e){
-            Hey.showUnknownError(this);
-            changeNextButtonAsDefault();
-        }
+    }
+
+    private void createUserById() {
+        User me = new User(mName,mSurname,mImage,Timestamp.now().toDate().getTime(),My.number,My.id,0,0,0,0,new ArrayList<>(), 0);
+        FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).set(me.toMap()).addOnCompleteListener(task1 -> {
+            Intent intent = new Intent(NewUser.this,Home.class);
+            if(task1.isSuccessful()){
+                My.setDataFromUser(me);
+                startActivity(intent);
+                finish();
+            }else {
+                Hey.showUnknownError(NewUser.this);
+                changeNextButtonAsDefault();
+            }
+        });
     }
 
     private void doWorksWithFile() {
@@ -236,15 +231,15 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void changeImageButtonAsDefault(){
-        Hey.setButtonAsDefault(this,imageB,getString(R.string.choose_image));
+        Hey.setButtonAsDefault(this,imageB,getString(R.string.choose_image),loading);
     }
     private void changeImageButtonAsLoading(){
-        Hey.setButtonAsLoading(this,imageB);
+        Hey.setButtonAsLoading(this,imageB,loading);
     }
     private void changeNextButtonAsDefault(){
-        Hey.setButtonAsDefault(this,next,getString(R.string.verify));
+        Hey.setButtonAsDefault(this,next,getString(R.string.verify),loading);
     }
     private void changeNextButtonAsLoading(){
-        Hey.setButtonAsLoading(this,next);
+        Hey.setButtonAsLoading(this,next,loading);
     }
 }
