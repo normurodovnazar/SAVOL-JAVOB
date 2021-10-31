@@ -3,32 +3,40 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="2dp"
-    android:layout_marginEnd="30dp"
+    android:layout_gravity="start"
+    android:layout_marginEnd="10dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_marginRight="30dp">
+    android:layout_marginRight="10dp">
 
-    <TextView
-        android:id="@+id/messageFromOtherInSingleChat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <LinearLayout
+        android:id="@+id/h"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="@drawable/message_by_other"
-        android:text="AAAA"
-        android:gravity="start"
-        android:ellipsize="start"
-        android:padding="7dp"
-        android:textSize="20sp"
-        android:layout_marginBottom="3dp"
-        android:layout_marginStart="10dp"
-        android:textColor="@color/black"
-        android:layout_marginLeft="10dp" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/messageFromOtherInSingleChat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/message_by_other"
+            android:gravity="start"
+            android:ellipsize="start"
+            android:padding="7dp"
+            android:textSize="20sp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginStart="10dp"
+            android:textColor="@color/black"
+            android:layout_marginLeft="10dp" />
+    </LinearLayout>
+
+
     <TextView
         android:id="@+id/timeMessageFromOtherInSingleChat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@id/messageFromOtherInSingleChat"
-        app:layout_constraintTop_toBottomOf="@id/messageFromOtherInSingleChat"
+        app:layout_constraintStart_toStartOf="@id/h"
+        app:layout_constraintTop_toBottomOf="@id/h"
         android:text="19-aprel,2021-yil"
         android:textSize="11sp"
         android:layout_marginStart="1dp"

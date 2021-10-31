@@ -35,27 +35,9 @@
                     android:layout_marginVertical="5dp"
                     android:id="@+id/home_search_icon"
                     android:background="@drawable/icon_button_bg"
-                    android:src="@drawable/search_glass"
+                    android:src="@drawable/ic_add"
                     android:layout_marginRight="10dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/textFieldHome"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:textCursorDrawable="@drawable/white_cursor_drawable"
-                android:hint="@string/search_users"
-                android:textColorHint="@color/other"
-                android:textColor="@color/white"
-                android:layout_marginHorizontal="10dp"
-                android:background="@drawable/text_field_bg"
-                android:paddingVertical="5dp"
-                android:paddingHorizontal="10dp"
-                app:layout_constraintBottom_toBottomOf="@id/home_search_icon"
-                app:layout_constraintStart_toEndOf="@id/menuDrawer"
-                app:layout_constraintEnd_toStartOf="@id/home_search_icon"
-                app:layout_constraintTop_toTopOf="@id/home_search_icon"/>
             <TextView
                 android:visibility="visible"
                 android:id="@+id/nameHome"
@@ -128,7 +110,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:visibility="visible"
+        android:visibility="invisible"
         android:id="@+id/drawer"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -196,6 +178,8 @@
                     android:max="100"
                     style="@android:style/Widget.ProgressBar.Horizontal"
                     android:id="@+id/progressHome"
+                    android:progressTint="@color/black"
+                    android:progressBackgroundTint="@color/white"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"/>
             </androidx.constraintlayout.widget.ConstraintLayout>

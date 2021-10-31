@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +26,8 @@ import java.io.File;
 public class ImageUploadingDialog extends Dialog {
     private final String filePath;
     private final Context context;
+    private final SuccessListener successListener;
+    ProgressBar bar;
     TextView progress,percent;
     ImageView imageView;
     Button b;
@@ -32,11 +35,12 @@ public class ImageUploadingDialog extends Dialog {
     private final StorageReference storage;
     String downloadUrl;
 
-    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean forProfile) {
+    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean forProfile,SuccessListener successListener) {
         super(context);
         this.context = context;
         this.filePath = filePath;
         storage = FirebaseStorage.getInstance().getReference().child(forProfile ? Keys.chats : Keys.users).child(uploadAs);
+        this.successListener = successListener;
     }
 
     @Override
@@ -46,6 +50,7 @@ public class ImageUploadingDialog extends Dialog {
         uploadTask = storage.putFile(Uri.fromFile(new File(filePath)));
         progress = findViewById(R.id.progress);
         percent = findViewById(R.id.foiz);
+        bar = findViewById(R.id.progressImageUpload);
         imageView = findViewById(R.id.imageView);imageView.setImageURI(Uri.fromFile(new File(filePath)));
         b = findViewById(R.id.b);b.setOnClickListener(v -> {
             uploadTask.cancel();
@@ -61,6 +66,8 @@ public class ImageUploadingDialog extends Dialog {
         })
         .addOnProgressListener(snapshot -> {
             Hey.print("progress changed",getPercentage(snapshot));
+            int i = (int) (snapshot.getBytesTransferred()*100/snapshot.getTotalByteCount());
+            bar.setProgress(100-i);
             progress.setText(getProgress(snapshot));percent.setText(getPercentage(snapshot));
         });
     }
@@ -76,7 +83,8 @@ public class ImageUploadingDialog extends Dialog {
     }
 
     private String getPercentage(UploadTask.TaskSnapshot snapshot){
-        float f = (float) snapshot.getBytesTransferred()/snapshot.getTotalByteCount()*100;f = (int)(f*100)/100f;
+        float f = (float) snapshot.getBytesTransferred()/snapshot.getTotalByteCount()*100;
+        f = (int)(f*100)/100f;
         return f +" %";
     }
 
@@ -85,6 +93,7 @@ public class ImageUploadingDialog extends Dialog {
         storage.getDownloadUrl().addOnCompleteListener(task -> {
             if(task.isSuccessful()) if(task.getResult()!=null) {
                 downloadUrl = task.getResult().toString();
+                successListener.onSuccess(null);
                 dismiss();
                 Toast.makeText(context, context.getString(R.string.uploaded), Toast.LENGTH_SHORT).show();
             } else unknownE(); else unknownE();

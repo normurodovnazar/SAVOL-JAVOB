@@ -1,10 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@drawable/dialog_bg"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="20dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:gravity="end"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="5dp"
+        android:layout_marginVertical="10dp">
+        <TextView
+            android:layout_marginStart="30dp"
+            android:id="@+id/messageFromMeSelector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+
+            android:gravity="end"
+            android:textSize="20sp"
+            android:padding="7dp"
+            android:layout_marginEnd="10dp"
+            android:textColor="@color/white"
+            android:background="@drawable/message_by_me_bg"
+            android:ellipsize="start"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="30dp" />
+        <TextView
+            android:id="@+id/timeMessageFromMeSelector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="@id/messageFromMeSelector"
+            app:layout_constraintTop_toBottomOf="@id/messageFromMeSelector"
+            android:layout_marginEnd="1dp"
+            android:layout_marginRight="1dp" />
+    </LinearLayout>
 
     <TextView
         android:layout_marginHorizontal="10dp"
@@ -12,43 +48,39 @@
         android:id="@+id/textErrorDialog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text=""
         android:textStyle="bold"
         android:textSize="20sp"
         android:textColor="@color/black"
-        android:layout_marginTop="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.1"
         android:gravity="center_horizontal"
         android:paddingVertical="20dp"/>
 
-    <Button
-        android:textColor="@color/black"
-        android:id="@+id/yes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/textErrorDialog"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/no"
-        android:background="@drawable/sss"
-        android:layout_marginVertical="20dp"
-        android:layout_marginHorizontal="15dp"/>
+    <LinearLayout
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginVertical="10dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:textColor="@color/black"
+            android:id="@+id/yes"
+            android:text="@string/yes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/sss"
+            android:layout_marginHorizontal="15dp"/>
 
-    <Button
-        android:textColor="@color/black"
-        android:id="@+id/no"
-        android:layout_marginHorizontal="15dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/textErrorDialog"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/yes"
-        android:background="@drawable/sss"/>
+        <Button
+            android:text="@string/no"
+            android:textColor="@color/black"
+            android:id="@+id/no"
+            android:layout_marginHorizontal="15dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/sss"/>
+    </LinearLayout>
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</LinearLayout>

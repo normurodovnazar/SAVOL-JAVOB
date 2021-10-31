@@ -12,6 +12,8 @@ import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.R;
 import com.normurodov_nazar.savol_javob.Works;
 
+import java.io.File;
+
 public class MainActivity extends AppCompatActivity {
 
 
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences p = Hey.getPreferences(this);
         long id = Hey.getId(p);
         boolean b = Hey.isLoggedIn(p);
+        My.folder = getExternalFilesDir("images").toString()+ File.separatorChar;
         Hey.print("Main","logged:"+b);
         Intent i = new Intent(this, b ? Home.class : AuthUser.class),s = new Intent(this, Works.class);
         if(b && id==-1) Hey.showAlertDialog(this,getString(R.string.error_unknown)+getString(R.string.reinstall_app)).setOnDismissListener(d->finish()); else {

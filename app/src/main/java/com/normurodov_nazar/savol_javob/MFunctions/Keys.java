@@ -30,5 +30,9 @@ public class Keys {
     public static final String type = "Type";
     public static final String textMessage = "TextMessage";
     public static final String imageMessage = "ImageMessage";
-    public static final String chatId = "ChatId";
+    public static final String chatId = "ChatId",searchHistory = "SearchHistory";
+    public static String subject = "Subject";
+    public static String theme = "Theme";
+    public static String hidden = "Hidden";
+    public static String publicQuestions = "PublicQuestions";
 }

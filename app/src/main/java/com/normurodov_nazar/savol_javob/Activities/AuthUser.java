@@ -28,6 +28,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.MyD.Exists;
+import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.util.concurrent.TimeUnit;
@@ -142,48 +144,50 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     }
 
     private void doUser() {
-        Hey.amIOnline().addOnCompleteListener(task -> {
-            DocumentSnapshot doc = task.getResult();
-                if(doc!=null) if(!doc.getMetadata().isFromCache()){
-                    FirebaseFirestore.getInstance().collection(Keys.users).whereEqualTo(Keys.number,My.number).addSnapshotListener((value, error) -> {
-                        if(value !=null){
-                            Intent i;
-                            if(value.size()==0){
-                                generateUniqueId();
-                                return;
-                            }else {
-                                DocumentSnapshot doc1 = value.getDocuments().get(0);
-                                My.setDataFromDoc(doc1);
-                                Hey.print("Exists","a:"+doc1.toString());
-                                i = new Intent(AuthUser.this, Home.class);
-                            }
-                            startActivity(i);
-                            finish();
-                        }else Hey.showAlertDialog(AuthUser.this,getString(R.string.error_unknown)+":"+ (error != null ? error.getMessage() : "null"));
-                    });
-                }else {
-                    setButtonAsDefault();
-                    Hey.showAlertDialog(this,getString(R.string.error_connection));
-                }
-        }).addOnFailureListener(this::onFailure);
+        Hey.amIOnline(new StatusListener() {
+            @Override
+            public void online() {
+                Hey.myNumberExists(new Exists() {
+                    @Override
+                    public void exists(DocumentSnapshot doc) {
+                        My.setDataFromDoc(doc);
+                        Hey.print("Exists","a:"+doc.toString());
+                        startActivity(new Intent(AuthUser.this, Home.class));
+                        finish();
+                    }
+                    @Override
+                    public void notExists() {
+                        generateUniqueId();
+                    }
+                });
+            }
+
+            @Override
+            public void offline() {
+                Hey.showAlertDialog(AuthUser.this,getString(R.string.error_connection));
+            }
+        }, errorMessage -> {
+        }, this);
     }
 
     void generateUniqueId(){
+        Hey.print("A","not exists creating new user");
         int id = Hey.generateID();
-        FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)).addSnapshotListener((value, error) -> {
-            if(value!=null){
-                if(value.exists()) generateUniqueId(); else {
-                    Hey.print("New user","a:"+id);
-                    My.id = id;
-                    startActivity(new Intent(AuthUser.this, NewUser.class));
-                }
-            }else Hey.showAlertDialog(AuthUser.this,getString(R.string.error_unknown)+":"+ (error != null ? error.getMessage() : "null"));
-        });
-    }
+        Hey.isDocumentExists(this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)),
+                new Exists() {
+                    @Override
+                    public void exists(DocumentSnapshot doc) {
+                        generateUniqueId();
+                    }
 
-    private void onFailure(Exception e){
-        Hey.showAlertDialog(this,getString(R.string.error_unknown)+e.getMessage());
-        setButtonAsDefault();
+                    @Override
+                    public void notExists() {
+                        Hey.print("New user","a:"+id);
+                        My.id = id;
+                        startActivity(new Intent(AuthUser.this, NewUser.class));
+                        finish();
+                    }
+                }, errorMessage -> finish());
     }
 
     private void failed(@Nullable String m) {

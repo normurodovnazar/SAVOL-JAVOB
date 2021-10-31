@@ -1,7 +1,6 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,44 +12,29 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.HomeFragmentStateAdapter;
-import com.normurodov_nazar.savol_javob.MyD.MyDialog;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
 
 public class Home extends AppCompatActivity {
     TextView name,nameDrawer,numberDrawer;
-    ImageView searchIcon,backDrawer,menuDrawer,profileImage;
-    TextInputEditText editText;
+    ImageView addIcon,backDrawer,menuDrawer,profileImage;
     TabLayout tabLayout;
     ProgressBar progressBar;
     ViewPager2 viewPager2;
     ConstraintLayout constraintLayout, drawer;
-    boolean drawerIsOpened = false, searchBarOpened = false;
+    boolean drawerIsOpened = false;
     int width;
     LinearLayout logout;
 
@@ -64,40 +48,29 @@ public class Home extends AppCompatActivity {
     }
 
     private void downloadMyData() {
-        FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).addSnapshotListener((value, error) -> {
-            if(value!=null){
-                if(value.exists()) {
-                    My.setDataFromDoc(value);
-                    setMyData();
-                } else {
-                    showError().setOnDismissListener(d->finish());
-                }
-            }else {
-                if (error != null) Hey.showAlertDialog(Home.this,getString(R.string.error_unknown)+":"+ error.getMessage()).setOnDismissListener(d->finish()); else showError().setOnDismissListener(d->finish());
-            }
-        });
+        Hey.addDocumentListener(this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), doc -> {
+            My.setDataFromDoc(doc);
+            setMyData();
+        }, errorMessage -> finish());
     }
 
     private void setMyData() {
         nameDrawer.setText(My.fullName);name.setText(My.fullName);
         numberDrawer.setText(My.number);
-        File f = new File(getExternalFilesDir("images").toString()+File.separatorChar+My.id);
+        File f = new File(getExternalFilesDir("images").toString()+File.separatorChar+My.id+".png");
         if(f.exists()){
             showProfileImage();
             profileImage.setImageURI(Uri.parse(f.getPath()));
         }else {
-          //TODO download image
-            FirebaseStorage.getInstance().getReference().child(Keys.users).child(String.valueOf(My.id)).getFile(f).addOnFailureListener(e -> {
-                Hey.showAlertDialog(getApplicationContext(),getString(R.string.error_download_file)+":"+e.getLocalizedMessage());
-            })
-            .addOnSuccessListener(taskSnapshot -> {
+            Hey.downloadFile(this,Keys.users, String.valueOf(My.id), f, (progress, total) -> {
+                Hey.print("down","value:"+Hey.getPercentage(progress, total));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) progressBar.setProgress(Hey.getPercentage(progress, total),true);
+                else progressBar.setProgress(Hey.getPercentage(progress, total));
+            }, doc -> {
                 setMyData();
                 Hey.print("success","Downloaded");
-            })
-            .addOnProgressListener(snapshot -> {
-                Hey.print("down","value:"+Hey.getPercentage(snapshot));
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) progressBar.setProgress(Hey.getPercentage(snapshot),true);
-                else progressBar.setProgress(Hey.getPercentage(snapshot));
+            }, errorMessage -> {
+
             });
         }
     }
@@ -116,10 +89,9 @@ public class Home extends AppCompatActivity {
             startActivity(new Intent(this,AuthUser.class));
             finish();
         });
-        editText = findViewById(R.id.textFieldHome);
         name = findViewById(R.id.nameHome);
-        searchIcon = findViewById(R.id.home_search_icon);
-        searchIcon.setOnClickListener(v -> doWithSearchIcon());
+        addIcon = findViewById(R.id.home_search_icon);
+        addIcon.setOnClickListener(v -> doWithAddIcon());
         menuDrawer = findViewById(R.id.menuDrawer);
         menuDrawer.setOnClickListener(v -> doWithDrawer());
         backDrawer = findViewById(R.id.backDrawer);
@@ -138,17 +110,26 @@ public class Home extends AppCompatActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         width = metrics.widthPixels;
+        My.width = width;
         drawer.setTranslationX(width);
-        editText.setTranslationX(width);
         profileImage = findViewById(R.id.profileImageHome);
         hideProfileImage();
+    }
+
+    private void doWithAddIcon() {
+        Intent i;
+        if (viewPager2.getCurrentItem() == 0) {
+            i = new Intent(this, SearchUsers.class);
+        } else {
+            i = new Intent(this, NewQuestionActivity.class);
+        }
+        startActivity(i);
     }
 
     private void hideProfileImage() {
         profileImage.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.VISIBLE);
     }
-
 
     private void setTabs(){
         HomeFragmentStateAdapter adapter = new HomeFragmentStateAdapter(this);
@@ -165,21 +146,6 @@ public class Home extends AppCompatActivity {
                     tab.setText(getString(R.string.personal));
             }
         }).attach();
-    }
-
-    private void doWithSearchIcon() {
-        if (searchBarOpened) {
-            searchIcon.setImageResource(R.drawable.search_glass);
-            Hey.animateHorizontal(name, 0, 100);
-            Hey.animateHorizontal(editText, width, 100);
-            editText.clearFocus();
-        } else {
-            searchIcon.setImageResource(R.drawable.redo_ic);
-            Hey.animateHorizontal(name, -width, 100);
-            Hey.animateHorizontal(editText, 0, 100);
-            editText.requestFocus();
-        }
-        searchBarOpened = !searchBarOpened;
     }
 
     private void doWithDrawer() {
@@ -204,13 +170,10 @@ public class Home extends AppCompatActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode==KeyEvent.KEYCODE_VOLUME_UP){
-            Hey.print("a","a"+My.id);
+
             return true;
         }else
         return super.onKeyDown(keyCode, event);
     }
 
-    MyDialog showError(){
-        return Hey.showUnknownError(this);
-    }
 }

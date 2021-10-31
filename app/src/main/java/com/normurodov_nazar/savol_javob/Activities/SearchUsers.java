@@ -22,7 +22,6 @@ import com.normurodov_nazar.savol_javob.MyD.UserListAdapter;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class SearchUsers extends AppCompatActivity {
     ImageView back,search;
@@ -42,36 +41,35 @@ public class SearchUsers extends AppCompatActivity {
             String text = searchField.getText().toString();
             if(!text.isEmpty()){
                 viewLoading();
-                collection.addSnapshotListener((value, error) -> {
-                    if (value != null) {
-                        ArrayList<User> users = new ArrayList<>();
-                        List<DocumentSnapshot> list = value.getDocuments();
-                        for(DocumentSnapshot ds : list){
-                            Object name = ds.get(Keys.name),surname = ds.get(Keys.surname);long id = Long.parseLong(ds.getId());
-                            if(name != null && surname != null){
-                                boolean b = (name.toString() + surname.toString()).toLowerCase().contains(text.toLowerCase().replaceAll(" ","")) || (surname.toString()+ name.toString()).toLowerCase().contains(text.toLowerCase().replaceAll(" ",""));
-                                if(b && text.length()>=5 && id != My.id){
-                                    users.add(new User(
-                                            ds.get(Keys.name),
-                                            ds.get(Keys.surname),
-                                            ds.get(Keys.imageUrl),
-                                            ds.get(Keys.seen),
-                                            ds.get(Keys.number),
-                                            ds.get(Keys.id),
-                                            ds.get(Keys.numberOfMyPublishedQuestions),
-                                            ds.get(Keys.numberOfMyAnswers),
-                                            ds.get(Keys.numberOfCorrectAnswers),
-                                            ds.get(Keys.numberOfIncorrectAnswers),
-                                            ds.get(Keys.chats),
-                                            ds.get(Keys.myQuestionOpportunity)));
-                                }
+                Hey.collectionListener(this, collection, docs -> {
+                    ArrayList<User> users = new ArrayList<>();
+                    for(DocumentSnapshot ds : docs){
+                        Hey.print("a",docs.toString());
+                        Object name = ds.get(Keys.name),surname = ds.get(Keys.surname);long id = Long.parseLong(ds.getId());
+                        if(name != null && surname != null){
+                            boolean b = (name.toString() + surname.toString()).toLowerCase().contains(text.toLowerCase().replaceAll(" ","")) || (surname.toString()+ name.toString()).toLowerCase().contains(text.toLowerCase().replaceAll(" ",""));
+                            if(b && text.length()>=5 && id != My.id){
+                                users.add(new User(
+                                        ds.get(Keys.name),
+                                        ds.get(Keys.surname),
+                                        ds.get(Keys.imageUrl),
+                                        ds.get(Keys.seen),
+                                        ds.get(Keys.number),
+                                        ds.get(Keys.id),
+                                        ds.get(Keys.numberOfMyPublishedQuestions),
+                                        ds.get(Keys.numberOfMyAnswers),
+                                        ds.get(Keys.numberOfCorrectAnswers),
+                                        ds.get(Keys.numberOfIncorrectAnswers),
+                                        ds.get(Keys.myQuestionOpportunity)));
                             }
                         }
-                        if(users.isEmpty()) noResultsFound(); else {
-                            setAdapterToRecyclerView(users);
-                            viewResults();
-                        }
-                    }else Hey.showUnknownError(this);
+                    }
+                    if(users.isEmpty()) noResultsFound(); else {
+                        setAdapterToRecyclerView(users);
+                        viewResults();
+                    }
+                }, errorMessage -> {
+
                 });
             }
         });

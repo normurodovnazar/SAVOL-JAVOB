@@ -25,14 +25,16 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
 import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.StatusListener;
+import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class NewUser extends AppCompatActivity implements View.OnClickListener {
     ImageView i;
@@ -48,7 +50,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_user);
         initVars();
-        originalFile = new File(getExternalFilesDir("images").toString()+File.separatorChar+"Me.png");
+        originalFile = new File(getExternalFilesDir("images").toString()+File.separatorChar);
     }
 
     private void initVars() {
@@ -87,28 +89,10 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void cropImage(Uri uri){
-        UCrop.Options options = new UCrop.Options();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            int blackColor = getColor(R.color.black);
-            int whiteColor = getColor(R.color.white);
-            options.setRootViewBackgroundColor(blackColor);
-            options.setStatusBarColor(blackColor);
-            options.setLogoColor(blackColor);
-            options.setActiveControlsWidgetColor(whiteColor);
-            options.setToolbarWidgetColor(blackColor);
-            options.setCropFrameColor(blackColor);
-            options.setCropGridColor(blackColor);
-        }
-        options.setCompressionFormat(Bitmap.CompressFormat.PNG);
-        if(originalFile.exists()){
-            Uri target = Uri.fromFile(originalFile);
-            UCrop.of(uri,target).withAspectRatio(1,1)
-                    .withOptions(options)
-                    .start(this);
-        }else{
-            Toast.makeText(this, getString(R.string.file_not_exists), Toast.LENGTH_SHORT).show();
+        Hey.cropImage(this, this, uri, originalFile, true, errorMessage -> {
+            Toast.makeText(getApplicationContext(), getString(R.string.file_not_exists), Toast.LENGTH_SHORT).show();
             changeImageButtonAsDefault();
-        }
+        });
     }
 
     @Override
@@ -124,7 +108,9 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                     Log.e("onActivityResult", "Result is not null:"+res.getPath());
                     i.setImageURI(res);
                     mFilePath = res.getPath();
-                    ImageUploadingDialog d = Hey.uploadImageForProfile(this,mFilePath, String.valueOf(My.id));
+                    ImageUploadingDialog d = Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
+
+                    });
                     d.setOnDismissListener(x-> mImage = d.getDownloadUrl());
                 } else {
                     Log.e("onActivityResult", "Result is null");
@@ -169,24 +155,22 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void nextPressed() {
-            Hey.amIOnline().addOnCompleteListener(task -> {
-                DocumentSnapshot doc = task.getResult();
-                if(doc!=null)
-                    if(!doc.getMetadata().isFromCache()){
-                        createUserById();
-                }else {
+            Hey.amIOnline(new StatusListener() {
+                @Override
+                public void online() {
+                    createUserById();
+                }
+
+                @Override
+                public void offline() {
                     Hey.showAlertDialog(NewUser.this,getString(R.string.error_connection));
                     changeNextButtonAsDefault();
                 }
-            })
-            .addOnFailureListener(e -> {
-                changeNextButtonAsDefault();
-                Hey.showAlertDialog(this,getString(R.string.error_unknown)+e.getMessage());
-            });
+            }, errorMessage -> changeNextButtonAsDefault(),this);
     }
 
     private void createUserById() {
-        User me = new User(mName,mSurname,mImage,Timestamp.now().toDate().getTime(),My.number,My.id,0,0,0,0,new ArrayList<>(), 0);
+        User me = new User(mName,mSurname,mImage,Timestamp.now().toDate().getTime(),My.number,My.id,0,0,0,0, 0);
         FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).set(me.toMap()).addOnCompleteListener(task1 -> {
             Intent intent = new Intent(NewUser.this,Home.class);
             if(task1.isSuccessful()){

@@ -15,17 +15,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Loading">
+        <activity android:name=".Activities.AnswerToQuestion"></activity>
+        <activity android:name=".Activities.QuestionChat" />
+        <activity android:name=".Activities.SelectItem" />
+        <activity android:name=".Activities.ShowAd" />
+        <activity android:name=".Activities.NewQuestionActivity" />
         <activity android:name=".Activities.ForTest2" />
         <activity
             android:name=".Activities.SingleChat"
-            android:windowSoftInputMode="adjustResize"/>
+            android:windowSoftInputMode="adjustResize|stateHidden" />
         <activity
             android:name=".Activities.SearchUsers"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".Activities.NewUser" />
-        <activity android:name=".ForTest">
-
-        </activity>
+        <activity android:name=".ForTest" />
         <activity
             android:name=".Activities.SmsCode"
             android:windowSoftInputMode="adjustResize|stateHidden" />

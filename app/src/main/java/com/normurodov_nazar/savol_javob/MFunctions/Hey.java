@@ -1,9 +1,13 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.view.View;
@@ -12,27 +16,141 @@ import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.UploadTask;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.storage.FirebaseStorage;
+import com.normurodov_nazar.savol_javob.MyD.AddItemDialog;
+import com.normurodov_nazar.savol_javob.MyD.CollectionListener;
+import com.normurodov_nazar.savol_javob.MyD.DocumentSnapshotListener;
+import com.normurodov_nazar.savol_javob.MyD.DocumentsListener;
+import com.normurodov_nazar.savol_javob.MyD.EditMessageDialog;
+import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
+import com.normurodov_nazar.savol_javob.MyD.Exists;
 import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.Message;
 import com.normurodov_nazar.savol_javob.MyD.MyDialog;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
+import com.normurodov_nazar.savol_javob.MyD.ProgressListener;
+import com.normurodov_nazar.savol_javob.MyD.StatusListener;
+import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.R;
+import com.yalantis.ucrop.UCrop;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static com.normurodov_nazar.savol_javob.R.color;
 import static com.normurodov_nazar.savol_javob.R.string;
 
 public class Hey {
+
+    public static void addItem(Context context,CollectionReference reference,String user){
+        AddItemDialog dialog = new AddItemDialog(context, reference, user);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+    }
+
+    public static void downloadFile(Context context,String folder, String fileName, File destinationFile, ProgressListener progressListener, SuccessListener successListener, ErrorListener errorListener){
+        FirebaseStorage.getInstance().getReference().child(folder).child(fileName).getFile(destinationFile).addOnFailureListener(e -> {
+            Hey.showAlertDialog(context,context.getString(R.string.error_download_file)+":"+e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(e.getLocalizedMessage()));
+        }).addOnProgressListener(snapshot -> progressListener.onProgressChanged(snapshot.getBytesTransferred(),snapshot.getTotalByteCount())).addOnSuccessListener(taskSnapshot -> successListener.onSuccess(null));
+    }
+
+    public static void addDocumentListener(Context context, DocumentReference doc, DocumentSnapshotListener listener, ErrorListener errorListener){
+        doc.addSnapshotListener((value, error) -> {
+            if(value!=null){
+                listener.documentSnapshot(value);
+            }else if(error!=null) Hey.showAlertDialog(context,context.getString(string.error)+":"+ error.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(error.getLocalizedMessage()));
+            else showUnknownError(context).setOnDismissListener(dialog -> {
+                    assert false;
+                    errorListener.onError(error.getLocalizedMessage());
+                });
+        });
+    }
+
+    public static void addToChats(Context context,long id,long otherId){
+        CollectionReference collection = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)).collection(Keys.chats);
+        collectionListener(context, collection, docs -> {
+            boolean contains = false;
+            for (DocumentSnapshot doc : docs) {
+                if(Long.parseLong(doc.getId())==otherId) contains=true;
+            }
+            if(!contains) addDocumentToCollection(context, collection, String.valueOf(otherId), new HashMap<>(), doc -> {
+                print("A",otherId+" added to "+id);
+            }, errorMessage -> {
+
+            });
+        }, errorMessage -> {
+
+        });
+    }
+
+    public static void addDocumentToCollection(Context context,CollectionReference collectionReference, String documentId, Map<String,Object> data,SuccessListener successListener,ErrorListener errorListener){
+        collectionReference.document(documentId).set(data).addOnSuccessListener(unused -> {
+            successListener.onSuccess(null);
+        }).addOnFailureListener(e -> showAlertDialog(context,context.getString(string.error)+":"+e.getLocalizedMessage()).setOnDismissListener(dialog -> {errorListener.onError(e.getLocalizedMessage());}));
+    }
+
+    public static EditMessageDialog editMessage(Context context,Message message,CollectionReference chats){
+        EditMessageDialog dialog = new EditMessageDialog(context,message,chats);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
+    }
+
+    public static void getDocument(Context context, DocumentReference doc, SuccessListener documentListener, ErrorListener errorListener){
+        doc.addSnapshotListener((value, error) -> {
+            if(value!=null){
+                documentListener.onSuccess(value);
+            }else {
+                if (error != null) Hey.showAlertDialog(context,context.getString(string.error)+":"+error.getLocalizedMessage()); else showUnknownError(context);
+                errorListener.onError(error != null ? error.getLocalizedMessage() : context.getString(string.unknown));
+            }
+        });
+    }
+
+    public static ListenerRegistration addMessagesListener(Context context, CollectionReference collectionReference, CollectionListener collectionListener, ErrorListener errorListener){
+        return collectionReference.addSnapshotListener((value, error) -> {
+            if(value!=null){
+                List<DocumentSnapshot> list = value.getDocuments();
+                ArrayList<Message> messages = new ArrayList<>();
+                for(DocumentSnapshot d : list){
+                    messages.add(Message.fromDoc(d));
+                }
+                collectionListener.result(messages);
+            }else if(error!=null) Hey.showAlertDialog(context,context.getString(string.error)+":"+ error.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(error.getLocalizedMessage()));
+            else showUnknownError(context).setOnDismissListener(dialog -> {
+                    assert false;
+                    errorListener.onError(error.getLocalizedMessage());
+                });
+        });
+    }
+
+    public static void collectionListener(Context context, CollectionReference collectionReference, DocumentsListener documentsListener, ErrorListener errorListener){
+        collectionReference.addSnapshotListener((value, error) -> {
+            if(value!=null){
+                documentsListener.onDocuments(value.getDocuments());
+            }else if(error!=null) Hey.showAlertDialog(context,context.getString(string.error)+":"+ error.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(error.getLocalizedMessage()));
+            else showUnknownError(context).setOnDismissListener(dialog -> {
+                    assert false;
+                    errorListener.onError(error.getLocalizedMessage());
+                });
+        });
+    }
 
     public static String getSeenTime(Context context,long time){
         Date date = new Date(time);
@@ -63,7 +181,7 @@ public class Hey {
 
     static String getMonth(Context context,Calendar calendar){
         int i = calendar.get(Calendar.MONTH);
-        String m="";
+        String m;
         switch (i){
             case Calendar.JANUARY:m = context.getString(string.january);break;
             case Calendar.FEBRUARY:m = context.getString(string.february);break;
@@ -83,7 +201,7 @@ public class Hey {
 
     static String getClock(Calendar calendar){
         int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY),minute = calendar.get(Calendar.MINUTE);
-        return hourOfDay+":"+minute;
+        return (String.valueOf(hourOfDay).length()==1 ? "0"+hourOfDay : hourOfDay) +":"+(String.valueOf(minute).length()==1 ? "0"+minute : minute);
     }
 
     public static String getFriendsIdFromChatId(String chatId){
@@ -114,33 +232,33 @@ public class Hey {
         return showAlertDialog(context, context.getString(string.error_unknown) + context.getString(string.unknown));
     }
 
-    public static MyDialogWithTwoButtons showSelectorDialog(Context context,String yes,String no,String info){
-        MyDialogWithTwoButtons dialog = new MyDialogWithTwoButtons(context,yes,no,info);
+    public static MyDialogWithTwoButtons showDeleteDialog(Context context, String info, Message message){
+        MyDialogWithTwoButtons dialog = new MyDialogWithTwoButtons(context,info,message);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();
         return dialog;
     }
 
-    public static ImageUploadingDialog uploadImageForProfile(Context context,String filePath,String uploadAs){
-        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,false);
+    public static ImageUploadingDialog uploadImageForProfile(Context context,String filePath,String uploadAs,SuccessListener listener){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,false,listener);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();
         return dialog;
     }
 
-    public static ImageUploadingDialog uploadImageToChat(Context context,String filePath,String uploadAs){
-        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,true);
+    public static ImageUploadingDialog uploadImageToChat(Context context,String filePath,String uploadAs,SuccessListener listener){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,true,listener);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();
         return dialog;
     }
 
-    public static int getPercentage(FileDownloadTask.TaskSnapshot snapshot){
-        long l = 100*snapshot.getBytesTransferred()/snapshot.getTotalByteCount();
-        Hey.print("a",snapshot.getBytesTransferred()+"/"+snapshot.getTotalByteCount());
+    public static int getPercentage(long progress,long total){
+        long l = 100*progress/total;
+        Hey.print("a",progress+"/"+total);
         return (int) l;
     }
 
@@ -164,16 +282,18 @@ public class Hey {
         button.startAnimation(animation);
     }
 
-    public static void setIconButtonAsLoading(@NonNull Context context, @NonNull View button,boolean loading){
-        loading = true;
-        Animation animation = new AlphaAnimation(0,1);
-        animation.setDuration(600);
-        animation.setRepeatCount(Animation.INFINITE);
-        animation.setRepeatMode(Animation.REVERSE);
-        button.startAnimation(animation);
+    public static void setIconButtonAsLoading(@NonNull View button, boolean loading){
+        if (!loading){
+            loading = true;
+            Animation animation = new AlphaAnimation(0, 1);
+            animation.setDuration(600);
+            animation.setRepeatCount(Animation.INFINITE);
+            animation.setRepeatMode(Animation.REVERSE);
+            button.startAnimation(animation);
+        }
     }
 
-    public static void setIconButtonAsDefault(Context context, @NonNull View button,boolean loading){
+    public static void setIconButtonAsDefault(@NonNull View button, boolean loading){
         button.clearAnimation();
         loading = false;
     }
@@ -204,10 +324,28 @@ public class Hey {
         view.setAlpha(0f);
         view.animate().alpha(1f).setDuration(1500).setStartDelay(startAfter).start();
     }
+    public static void myNumberExists(Exists exists){
+        FirebaseFirestore.getInstance().collection(Keys.users).whereEqualTo(Keys.number,My.number).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            if (queryDocumentSnapshots.size()==0){
+                exists.notExists();
+            }else exists.exists(queryDocumentSnapshots.getDocuments().get(0));
+        });
+    }
+    public static void amIOnline(StatusListener statusListener,ErrorListener errorListener, Context context){
+        FirebaseFirestore.getInstance().collection(Keys.appNumber).document(Keys.appNumber).get().addOnSuccessListener(documentSnapshot -> {
+            if(documentSnapshot.getMetadata().isFromCache()) statusListener.offline(); else statusListener.online();
+        }).addOnFailureListener(e -> {
+            if(e.getLocalizedMessage()!=null){
+                if(!e.getLocalizedMessage().equals("Failed to get document because the client is offline.")) showAlertDialog(context,context.getString(string.error)+":"+e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(e.getLocalizedMessage()));
+                else statusListener.offline();
+            }
+        });
+    }
 
-    @NonNull
-    public static Task<DocumentSnapshot> amIOnline(){
-        return FirebaseFirestore.getInstance().collection(Keys.appNumber).document(Keys.appNumber).get();
+    public static void isDocumentExists(Context context,DocumentReference doc,Exists exists,ErrorListener errorListener){
+        doc.get().addOnSuccessListener(documentSnapshot -> {
+            if(documentSnapshot.exists()) exists.exists(documentSnapshot); else exists.notExists();
+        }).addOnFailureListener(e -> showAlertDialog(context,context.getString(string.error)+":"+e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(e.getLocalizedMessage())));
     }
 
     public static long getId(SharedPreferences preferences){
@@ -229,5 +367,67 @@ public class Hey {
     public static int generateID(){
         Random r = new Random();
         return Math.abs(r.nextInt());
+    }
+
+    public static void deleteDocument(Context context,DocumentReference doc) {
+        print("a","delete started");
+        doc.delete().addOnFailureListener(e -> showAlertDialog(context,context.getString(string.error_deleting)+e.getLocalizedMessage()))
+        .addOnSuccessListener(unused -> print("a","Document deleted"));
+    }
+
+    public static void sendMessage(Context context, CollectionReference chats,Message message,SuccessListener successListener,ErrorListener errorListener) {
+        print("a","send message");
+        amIOnline(new StatusListener() {
+            @Override
+            public void online() {
+                print("a","i online");
+                chats.document(message.getId()).set(message.toMap()).addOnSuccessListener(unused -> {
+                    successListener.onSuccess(null);
+                }).addOnFailureListener(e -> {
+                            showToast(context,context.getString(string.error)+":"+e.getLocalizedMessage());
+                            errorListener.onError(e.getLocalizedMessage());
+                        });
+            }
+
+            @Override
+            public void offline() {
+                Toast.makeText(context, context.getString(string.error_connection), Toast.LENGTH_SHORT).show();
+                errorListener.onError("");
+            }
+        }, errorListener,context);
+
+
+    }
+
+    public static void pickImage(ActivityResultLauncher<Intent> p) {
+        Intent i = new Intent();
+        i.setType("image/*");
+        i.setAction(Intent.ACTION_GET_CONTENT);
+        p.launch(i);
+    }
+
+    public static void cropImage(Context context, Activity activity, Uri uri,File targetFile,boolean forProfile,ErrorListener errorListener) {
+        UCrop.Options options = new UCrop.Options();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int blackColor = context.getColor(R.color.black);
+            int whiteColor = context.getColor(R.color.white);
+            options.setRootViewBackgroundColor(blackColor);
+            options.setStatusBarColor(blackColor);
+            options.setLogoColor(blackColor);
+            options.setActiveControlsWidgetColor(whiteColor);
+            options.setToolbarWidgetColor(blackColor);
+            options.setCropFrameColor(blackColor);
+            options.setCropGridColor(blackColor);
+        }
+        options.setCompressionFormat(Bitmap.CompressFormat.PNG);
+
+        if(!targetFile.exists()){
+            Uri target = Uri.fromFile(targetFile);
+            if(forProfile) UCrop.of(uri,target).withAspectRatio(1,1)
+                    .withOptions(options)
+                    .start(activity); else UCrop.of(uri,target).withOptions(options).start(activity);
+        }else{
+            if(targetFile.delete()) cropImage(context,activity,uri,targetFile,forProfile,errorListener); else errorListener.onError("");
+        }
     }
 }

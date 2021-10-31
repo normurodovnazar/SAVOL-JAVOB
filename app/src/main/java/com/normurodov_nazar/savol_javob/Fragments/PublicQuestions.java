@@ -3,64 +3,78 @@ package com.normurodov_nazar.savol_javob.Fragments;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.normurodov_nazar.savol_javob.MFunctions.Hey;
+import com.normurodov_nazar.savol_javob.MFunctions.Keys;
+import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
+import com.normurodov_nazar.savol_javob.MyD.Question;
+import com.normurodov_nazar.savol_javob.MyD.QuestionAdapter;
 import com.normurodov_nazar.savol_javob.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link PublicQuestions#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+
 public class PublicQuestions extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    RecyclerView recyclerView;
+    TextView text;
+    ArrayList<Question> questions = new ArrayList<>();
 
     public PublicQuestions() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment PublicQuestions.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static PublicQuestions newInstance(String param1, String param2) {
-        PublicQuestions fragment = new PublicQuestions();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_public_questions, container, false);
+        View v = inflater.inflate(R.layout.fragment_public_questions, container, false);
+        init(v);
+        Hey.collectionListener(getContext(), FirebaseFirestore.getInstance().collection(Keys.publicQuestions), docs -> {
+            questions.clear();
+            for (DocumentSnapshot doc : docs) {
+                questions.add(Question.fromDoc(doc));
+            }
+            if(questions.size()==0) showNoQuestions(); else showQuestions();
+        }, errorMessage -> {
+
+        });
+        return v;
     }
+
+    private void showQuestions() {
+        recyclerView.setVisibility(View.VISIBLE);
+        text.setVisibility(View.INVISIBLE);
+        QuestionAdapter adapter = new QuestionAdapter(getContext(), questions, (position, name) -> {
+
+        });
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+    }
+
+    private void showNoQuestions() {
+        recyclerView.setVisibility(View.INVISIBLE);
+        text.setVisibility(View.VISIBLE);
+    }
+
+
+    private void init(View v) {
+        text = v.findViewById(R.id.noQuestions);
+        recyclerView = v.findViewById(R.id.questions);
+    }
+
+
 }
