@@ -13,16 +13,16 @@
         android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@id/cardImageUploading"
+        app:layout_constraintBottom_toTopOf="@id/cardImageDownloading"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_height="wrap_content"
-        android:text="@string/image_is_uploading"
+        android:text="@string/image_downloading"
         android:textColor="@color/black"/>
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardImageUploading"
+        android:id="@+id/cardImageDownloading"
         app:cardCornerRadius="10dp"
         app:strokeColor="@color/black"
         app:strokeWidth="2dp"
@@ -32,20 +32,12 @@
         android:layout_marginVertical="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/progress">
+        app:layout_constraintBottom_toTopOf="@id/progress_download">
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <ImageView
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:id="@+id/imageView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
             <ProgressBar
-                android:id="@+id/progressImageUpload"
+                android:id="@+id/progressImageDownload"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -53,7 +45,7 @@
                 android:indeterminate="false"
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:max="100"
-                android:progress="0"
+                android:progress="100"
                 android:progressTint="@color/black"
                 android:progressBackgroundTint="@color/transparent"
                 android:layout_width="match_parent"
@@ -65,35 +57,35 @@
     <TextView
         android:layout_marginHorizontal="15dp"
         android:layout_marginVertical="10dp"
-        android:id="@+id/progress"
+        android:id="@+id/progress_download"
         android:text="0 Mb/ ~ Mb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
         android:textSize="30sp"
         android:textStyle="italic"
-        app:layout_constraintBottom_toTopOf="@+id/foiz"
+        app:layout_constraintBottom_toTopOf="@+id/percentage_download"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:layout_marginHorizontal="15dp"
         android:layout_marginVertical="10dp"
-        android:id="@+id/foiz"
+        android:id="@+id/percentage_download"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
         android:textSize="25sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/b"/>
+        app:layout_constraintBottom_toTopOf="@id/cancel_download"/>
 
     <Button
         android:text="@string/cancel"
         android:padding="5dp"
         android:layout_marginHorizontal="10dp"
         android:layout_marginVertical="5dp"
-        android:id="@+id/b"
+        android:id="@+id/cancel_download"
         android:background="@drawable/sss"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -26,12 +26,15 @@ public class EditMessageDialog extends Dialog {
     EditText text;
     Button ok,cancel;
     final Message message;
+    final SuccessListener successListener;
     CollectionReference chats;
 
-    public EditMessageDialog(@NonNull Context context, Message message, CollectionReference chats) {
+
+    public EditMessageDialog(@NonNull Context context, Message message, CollectionReference chats,SuccessListener successListener) {
         super(context);
         this.message = message;
         this.chats = chats;
+        this.successListener = successListener;
     }
 
     @Override
@@ -45,7 +48,11 @@ public class EditMessageDialog extends Dialog {
             if(!m.isEmpty() && !m.replaceAll(" ","").isEmpty()){
                 Map<String,Object> data = new HashMap<>();
                 data.put(Keys.message,m);
-                chats.document(message.getId()).update(data).addOnSuccessListener(unused -> Hey.print("a","succes")).addOnFailureListener(e -> Hey.print("a",e.getLocalizedMessage()));
+                Message newMessage = message;
+                newMessage.setMessage(m);
+                chats.document(message.getId()).update(data)
+                        .addOnSuccessListener(unused -> successListener.onSuccess(newMessage))
+                        .addOnFailureListener(e -> Hey.print("a",e.getLocalizedMessage()));
                 dismiss();
             } else Toast.makeText(getContext(), getContext().getString(R.string.emty), Toast.LENGTH_SHORT).show();
         });

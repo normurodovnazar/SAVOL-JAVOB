@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
@@ -69,7 +70,7 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.QViewH
 
         private void setName(String docId) {
             Hey.getDocument(itemView.getContext(), FirebaseFirestore.getInstance().collection(Keys.users).document(docId), doc -> {
-                sender.setText(sender.getText().toString()+User.fromDoc(doc).getFullName());
+                sender.setText(sender.getText().toString()+User.fromDoc((DocumentSnapshot) doc).getFullName());
             }, errorMessage -> {
 
             });

@@ -3,6 +3,7 @@ package com.normurodov_nazar.savol_javob.MyD;
 import android.app.Dialog;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -27,6 +28,7 @@ public class ImageUploadingDialog extends Dialog {
     private final String filePath;
     private final Context context;
     private final SuccessListener successListener;
+    private final ItemClickListener clickListener;
     ProgressBar bar;
     TextView progress,percent;
     ImageView imageView;
@@ -35,12 +37,13 @@ public class ImageUploadingDialog extends Dialog {
     private final StorageReference storage;
     String downloadUrl;
 
-    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean forProfile,SuccessListener successListener) {
+    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean forProfile,SuccessListener successListener,ItemClickListener clickListener) {
         super(context);
         this.context = context;
         this.filePath = filePath;
         storage = FirebaseStorage.getInstance().getReference().child(forProfile ? Keys.chats : Keys.users).child(uploadAs);
         this.successListener = successListener;
+        this.clickListener = clickListener;
     }
 
     @Override
@@ -54,38 +57,23 @@ public class ImageUploadingDialog extends Dialog {
         imageView = findViewById(R.id.imageView);imageView.setImageURI(Uri.fromFile(new File(filePath)));
         b = findViewById(R.id.b);b.setOnClickListener(v -> {
             uploadTask.cancel();
+            clickListener.onItemClick(0,null);
             dismiss();
         });
         percent.setText("0 %");
         uploadTask.addOnFailureListener(this::onError)
                 .addOnCompleteListener(task -> {
-                    Hey.print("complete", String.valueOf(task.isSuccessful()));
                     if(task.isSuccessful()){
                         finished();
                     }else Hey.showUnknownError(context);
         })
         .addOnProgressListener(snapshot -> {
-            Hey.print("progress changed",getPercentage(snapshot));
+            Hey.print("progress changed",Hey.getPercentage(snapshot));
             int i = (int) (snapshot.getBytesTransferred()*100/snapshot.getTotalByteCount());
-            bar.setProgress(100-i);
-            progress.setText(getProgress(snapshot));percent.setText(getPercentage(snapshot));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) bar.setProgress(100-i,true);
+            else bar.setProgress(100-i);
+            progress.setText(Hey.getProgress(snapshot));percent.setText(Hey.getPercentage(snapshot));
         });
-    }
-
-    private String getProgress(UploadTask.TaskSnapshot snapshot){
-        return getMb(snapshot.getBytesTransferred())+" Mb/"+getMb(snapshot.getTotalByteCount())+" Mb";
-    }
-
-    private String getMb(long bytes){
-        float f = bytes/1024f/1024f;
-        f = (int)(f*100f)/100f;
-        return Float.toString(f);
-    }
-
-    private String getPercentage(UploadTask.TaskSnapshot snapshot){
-        float f = (float) snapshot.getBytesTransferred()/snapshot.getTotalByteCount()*100;
-        f = (int)(f*100)/100f;
-        return f +" %";
     }
 
     private void finished() {
@@ -95,7 +83,6 @@ public class ImageUploadingDialog extends Dialog {
                 downloadUrl = task.getResult().toString();
                 successListener.onSuccess(null);
                 dismiss();
-                Toast.makeText(context, context.getString(R.string.uploaded), Toast.LENGTH_SHORT).show();
             } else unknownE(); else unknownE();
             });
     }

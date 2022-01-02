@@ -1,7 +1,10 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -51,7 +54,37 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth_user);
+        launcher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    Intent res = result.getData();
+                    if(res != null){
+                        if(res.getBooleanExtra("a",false)) doUser(); else Hey.showUnknownError(this);
+                    }else {
+                        Hey.showUnknownError(this);
+                        setButtonAsDefault();
+                    }
+                }
+        );
+        checkHasPermission();
         initVars();
+    }
+
+    private void checkHasPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},100);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode==100){
+            if (grantResults[0]==PackageManager.PERMISSION_GRANTED) initVars(); else {
+                Toast.makeText(getApplicationContext(), getString(R.string.permission_error), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
     }
 
     private void initVars() {
@@ -65,19 +98,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
         Hey.animateVertically(button,350,800);
 
         button.setOnClickListener(this);
-
-        launcher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    Intent res = result.getData();
-                    if(res != null){
-                        if(res.getBooleanExtra("a",false)) doUser(); else Hey.showUnknownError(this);
-                    }else {
-                        Hey.showUnknownError(this);
-                        setButtonAsDefault();
-                    }
-                }
-        );
     }
 
     @Override

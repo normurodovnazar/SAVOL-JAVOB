@@ -11,7 +11,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -21,14 +20,33 @@ import java.io.File;
 import java.util.List;
 
 public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
-    final List<Message> messages;
+    List<Message> messages;
     final Context context;
     final RecyclerViewItemClickListener listener;
+    final RecyclerViewItemLongClickListener longClickListener;
 
-    public MessageAdapterInSingleChat(List<Message> messages, Context context, RecyclerViewItemClickListener listener) {
+    public MessageAdapterInSingleChat(List<Message> messages, Context context, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener) {
         this.messages = messages;
         this.context = context;
         this.listener = listener;
+        this.longClickListener=longClickListener;
+    }
+
+    public void removeItem(Message message){
+        int index= messages.indexOf(message);
+        messages.remove(message);
+        notifyItemRemoved(index);
+    }
+
+    public void addItem(Message message){
+        messages.add(message);
+        notifyItemInserted(messages.size()-1);
+    }
+
+    public void changeItem(Message message){
+        int index = messages.indexOf(message);
+        messages.set(index, message);
+        notifyItemChanged(index);
     }
 
     @NonNull
@@ -37,16 +55,16 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
         switch (viewType){
             case 1:
                 View meT = LayoutInflater.from(context).inflate(R.layout.message_from_me,parent,false);
-                return new MessageFormMeHolder(meT,true);
-            case 2:
-                View otherT = LayoutInflater.from(context).inflate(R.layout.message_from_other,parent,false);
-                return new MessageFormOtherHolder(otherT);
+                return new MessageFromMeHolder(meT,true);
             case 3:
                 View meI = LayoutInflater.from(context).inflate(R.layout.image_message_from_me,parent,false);
-                return new MessageFormMeHolder(meI,false);
+                return new MessageFromMeHolder(meI,false);
+            case 2:
+                View otherT = LayoutInflater.from(context).inflate(R.layout.message_from_other,parent,false);
+                return new MessageFromOtherHolder(otherT,true);
             default:
-                View otherI = LayoutInflater.from(context).inflate(R.layout.image_message_from_me,parent,false);
-                return new MessageFormOtherHolder(otherI);
+                View otherI = LayoutInflater.from(context).inflate(R.layout.image_message_from_other,parent,false);
+                return new MessageFromOtherHolder(otherI,false);
         }
     }
 
@@ -54,16 +72,15 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message messageSingleChat = messages.get(position);
         if(messageSingleChat.sender==My.id){
-            ((MessageFormMeHolder) holder).setChatItem(messageSingleChat,listener);
+            ((MessageFromMeHolder) holder).setChatItem(messageSingleChat,listener,longClickListener,position);
         }else {
-            ((MessageFormOtherHolder) holder).setChatItem(messageSingleChat);
+            ((MessageFromOtherHolder) holder).setChatItem(messageSingleChat,listener);
         }
     }
 
     @Override
     public int getItemViewType(int position) {
         Message message = messages.get(position);
-        Hey.print("a",message.toMap().toString());
         if(message.sender==My.id) {
             if(message.getType().equals(Keys.textMessage)) return 1; else return 3;
         } else {
@@ -76,12 +93,12 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
         return messages.size();
     }
 
-    static class MessageFormMeHolder extends RecyclerView.ViewHolder{
+    static class MessageFromMeHolder extends RecyclerView.ViewHolder{
         TextView message,time;
         ImageView imageView;
         final boolean isTextMessage;
 
-        public MessageFormMeHolder(View itemView,boolean isTextMessage) {
+        public MessageFromMeHolder(View itemView, boolean isTextMessage) {
             super(itemView);
             this.isTextMessage = isTextMessage;
             if(isTextMessage){
@@ -92,11 +109,18 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
             time = itemView.findViewById(R.id.timeMessageFromMeInSingleChat);
         }
 
-        void setChatItem(Message data, RecyclerViewItemClickListener listener){
-            itemView.setOnClickListener(v -> listener.onItemClick(data,itemView));
+        void setChatItem(Message data, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener,int position){
+
             time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
-            if(isTextMessage) message.setText(data.message); else {
-                File f = new File(My.folder+data.getId()+".png");
+            itemView.setOnClickListener(v -> listener.onItemClick(data,itemView));
+            if(isTextMessage) {
+                message.setText(data.message);
+            } else {
+                itemView.setOnLongClickListener(v -> {
+                    longClickListener.onItemLongClick(data,itemView,position);
+                    return true;
+                });
+                File f = new File(Hey.getLocalFile(data));
                 Hey.print("a",f.getPath());
                 if (f.exists()){
                     imageView.setImageURI(Uri.fromFile(f));
@@ -114,16 +138,35 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
         }
     }
 
-    static class MessageFormOtherHolder extends RecyclerView.ViewHolder{
+    static class MessageFromOtherHolder extends RecyclerView.ViewHolder{
         TextView message,time;
+        ImageView imageView;
+        boolean isTextMessage;
 
-        public MessageFormOtherHolder(@NonNull View itemView) {
+        public MessageFromOtherHolder(@NonNull View itemView,boolean isTextMessage) {
             super(itemView);
-            message = itemView.findViewById(R.id.messageFromOtherInSingleChat);
-            time = itemView.findViewById(R.id.timeMessageFromOtherInSingleChat);
+            this.isTextMessage = isTextMessage;
+            if (isTextMessage) {
+                time = itemView.findViewById(R.id.timeMessageFromOtherInSingleChat);
+                message = itemView.findViewById(R.id.messageFromOtherInSingleChat);
+            } else {
+                time = itemView.findViewById(R.id.timeImageMessageFromOtherInSingleChat);
+                imageView = itemView.findViewById(R.id.imageMessageByOther);
+            }
         }
-        void setChatItem(Message data){
-            message.setText(data.message);time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
+
+        void setChatItem(Message data,RecyclerViewItemClickListener itemClickListener){
+            time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
+            if (isTextMessage){
+                message.setText(data.message);
+            }else {
+                itemView.setOnClickListener(v -> itemClickListener.onItemClick(data,itemView));
+                File f = new File(Hey.getLocalFile(data));
+                Hey.print("a",f.getPath());
+                if (f.exists()){
+                    imageView.setImageURI(Uri.fromFile(f));
+                }else imageView.setImageResource(R.drawable.download_ic);
+            }
         }
     }
 }

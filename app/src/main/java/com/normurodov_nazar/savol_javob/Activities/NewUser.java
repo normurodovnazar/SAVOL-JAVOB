@@ -27,6 +27,7 @@ import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
 import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
@@ -50,7 +51,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_user);
         initVars();
-        originalFile = new File(getExternalFilesDir("images").toString()+File.separatorChar);
+        originalFile = new File(My.folder+"me");
     }
 
     private void initVars() {
@@ -109,6 +110,8 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                     i.setImageURI(res);
                     mFilePath = res.getPath();
                     ImageUploadingDialog d = Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
+
+                    }, (position, name) -> {
 
                     });
                     d.setOnDismissListener(x-> mImage = d.getDownloadUrl());

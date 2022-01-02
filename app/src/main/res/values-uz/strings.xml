@@ -90,4 +90,8 @@
     <string name="explainAnswer">Javobingizni izohlang</string>
     <string name="publishAnswer">Javobni joylash</string>
     <string name="enter_question_number">Savol raqamini kiriting</string>
+    <string name="permission_error">Ilovaga ruxsat bermasdan turib undan foydalana olmaysiz</string>
+    <string name="confirmdeleteImagem">Siz bu rasmni o\'chirib tashlamoqchimisiz?</string>
+    <string name="youAreOffline">Siz rasmli xabarlarni offlayn holda o\'chira olmaysiz</string>
+    <string name="image_downloading">Rasm yuklab olinmoqda,kuting</string>
 </resources>

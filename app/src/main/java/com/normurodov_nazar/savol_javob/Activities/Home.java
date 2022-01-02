@@ -57,7 +57,7 @@ public class Home extends AppCompatActivity {
     private void setMyData() {
         nameDrawer.setText(My.fullName);name.setText(My.fullName);
         numberDrawer.setText(My.number);
-        File f = new File(getExternalFilesDir("images").toString()+File.separatorChar+My.id+".png");
+        File f = new File(My.folder+My.id+".png");
         if(f.exists()){
             showProfileImage();
             profileImage.setImageURI(Uri.parse(f.getPath()));

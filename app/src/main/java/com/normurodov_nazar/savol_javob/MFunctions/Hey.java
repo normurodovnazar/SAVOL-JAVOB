@@ -1,5 +1,8 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
+import static com.normurodov_nazar.savol_javob.R.color;
+import static com.normurodov_nazar.savol_javob.R.string;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -24,7 +27,10 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.UploadTask;
 import com.normurodov_nazar.savol_javob.MyD.AddItemDialog;
 import com.normurodov_nazar.savol_javob.MyD.CollectionListener;
 import com.normurodov_nazar.savol_javob.MyD.DocumentSnapshotListener;
@@ -32,7 +38,10 @@ import com.normurodov_nazar.savol_javob.MyD.DocumentsListener;
 import com.normurodov_nazar.savol_javob.MyD.EditMessageDialog;
 import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
 import com.normurodov_nazar.savol_javob.MyD.Exists;
+import com.normurodov_nazar.savol_javob.MyD.ImageDownloadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
+import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.Message;
 import com.normurodov_nazar.savol_javob.MyD.MyDialog;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
@@ -51,10 +60,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static com.normurodov_nazar.savol_javob.R.color;
-import static com.normurodov_nazar.savol_javob.R.string;
-
 public class Hey {
+
+    public static Message biggerListsLastElement(ArrayList<Message> m1,ArrayList<Message> m2){
+        ArrayList<Message> bigger = m1.size()>m2.size() ? m1 : m2;
+        return bigger.get(bigger.size()-1);
+    }
+
+    public static boolean isSimilar(ArrayList<Message> m1,ArrayList<Message> m2){
+        boolean matches = true;
+        int limit;
+        if (m1.size()==0 || m2.size()==0) return false; else {
+            limit = Math.min(m1.size(), m2.size());
+            Hey.print("limit", String.valueOf(limit));
+            for (int i=0;i<limit;i++){
+                Hey.print("messages", String.valueOf(m1.get(i).getId()));
+                Hey.print("oldMessages", String.valueOf(m2.get(i).getId()));
+                if (!m1.get(i).getId().equals(m2.get(i).getId())) {
+                    Hey.print("xxxxxxxxxxx", m1.get(i).getId() +" xxx "+ m1.get(i).getId());
+                    matches = false;
+                    break;
+                }
+            }
+            Hey.print("matches", String.valueOf(matches));
+            return matches;
+        }
+    }
 
     public static void addItem(Context context,CollectionReference reference,String user){
         AddItemDialog dialog = new AddItemDialog(context, reference, user);
@@ -64,6 +95,7 @@ public class Hey {
     }
 
     public static void downloadFile(Context context,String folder, String fileName, File destinationFile, ProgressListener progressListener, SuccessListener successListener, ErrorListener errorListener){
+        Hey.print("downloadingFileTo",destinationFile.getPath());
         FirebaseStorage.getInstance().getReference().child(folder).child(fileName).getFile(destinationFile).addOnFailureListener(e -> {
             Hey.showAlertDialog(context,context.getString(R.string.error_download_file)+":"+e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(e.getLocalizedMessage()));
         }).addOnProgressListener(snapshot -> progressListener.onProgressChanged(snapshot.getBytesTransferred(),snapshot.getTotalByteCount())).addOnSuccessListener(taskSnapshot -> successListener.onSuccess(null));
@@ -104,8 +136,8 @@ public class Hey {
         }).addOnFailureListener(e -> showAlertDialog(context,context.getString(string.error)+":"+e.getLocalizedMessage()).setOnDismissListener(dialog -> {errorListener.onError(e.getLocalizedMessage());}));
     }
 
-    public static EditMessageDialog editMessage(Context context,Message message,CollectionReference chats){
-        EditMessageDialog dialog = new EditMessageDialog(context,message,chats);
+    public static EditMessageDialog editMessage(Context context,Message message,CollectionReference chats,SuccessListener successListener){
+        EditMessageDialog dialog = new EditMessageDialog(context,message,chats,successListener);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();
@@ -123,8 +155,11 @@ public class Hey {
         });
     }
 
+    /**
+     * called listener every updates in this chat
+     */
     public static ListenerRegistration addMessagesListener(Context context, CollectionReference collectionReference, CollectionListener collectionListener, ErrorListener errorListener){
-        return collectionReference.addSnapshotListener((value, error) -> {
+        return collectionReference.orderBy(Keys.time, Query.Direction.ASCENDING).addSnapshotListener((value, error) -> {
             if(value!=null){
                 List<DocumentSnapshot> list = value.getDocuments();
                 ArrayList<Message> messages = new ArrayList<>();
@@ -240,16 +275,44 @@ public class Hey {
         return dialog;
     }
 
-    public static ImageUploadingDialog uploadImageForProfile(Context context,String filePath,String uploadAs,SuccessListener listener){
-        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,false,listener);
+    public static LoadingDialog showLoadingDialog(Context context){
+        LoadingDialog loadingDialog = new LoadingDialog(context);
+        loadingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        return  loadingDialog;
+    }
+
+    public static void showDeleteImageDialog(Context context,Message message,ErrorListener errorListener,SuccessListener successListener) {
+        LoadingDialog dialog = showLoadingDialog(context);
+        FirebaseStorage.getInstance().getReference().child(Keys.chats).child(message.getId()).delete().addOnFailureListener(e -> {
+            Hey.showAlertDialog(context,context.getString(string.error)+":"+e.getLocalizedMessage());
+            errorListener.onError(e.getLocalizedMessage());
+            dialog.dismiss();
+        }).addOnCompleteListener(task -> {
+            successListener.onSuccess(null);
+            dialog.dismiss();
+        });
+    }
+
+    public static ImageDownloadingDialog showDownloadDialog(Context context,Message message,SuccessListener successListener,ErrorListener errorListener) {
+        ImageDownloadingDialog dialog = new ImageDownloadingDialog(context,message,errorListener,successListener);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();
         return dialog;
     }
 
-    public static ImageUploadingDialog uploadImageToChat(Context context,String filePath,String uploadAs,SuccessListener listener){
-        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,true,listener);
+    public static ImageUploadingDialog uploadImageForProfile(Context context, String filePath, String uploadAs, SuccessListener listener, ItemClickListener cancelListener){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,false,listener,cancelListener);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
+    }
+
+    public static ImageUploadingDialog uploadImageToChat(Context context,String filePath,String uploadAs,SuccessListener listener, ItemClickListener cancelListener){
+        ImageUploadingDialog dialog = new ImageUploadingDialog(context,filePath,uploadAs,true,listener,cancelListener);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setCancelable(false);
         dialog.show();
@@ -282,20 +345,16 @@ public class Hey {
         button.startAnimation(animation);
     }
 
-    public static void setIconButtonAsLoading(@NonNull View button, boolean loading){
-        if (!loading){
-            loading = true;
+    public static void setIconButtonAsLoading(@NonNull View button){
             Animation animation = new AlphaAnimation(0, 1);
             animation.setDuration(600);
             animation.setRepeatCount(Animation.INFINITE);
             animation.setRepeatMode(Animation.REVERSE);
             button.startAnimation(animation);
-        }
     }
 
-    public static void setIconButtonAsDefault(@NonNull View button, boolean loading){
+    public static void setIconButtonAsDefault(@NonNull View button){
         button.clearAnimation();
-        loading = false;
     }
 
     public static void setButtonAsDefault(Context context, @NonNull Button button, @NonNull String title,boolean loading) {
@@ -369,21 +428,30 @@ public class Hey {
         return Math.abs(r.nextInt());
     }
 
-    public static void deleteDocument(Context context,DocumentReference doc) {
+    public static void deleteDocument(Context context, DocumentReference doc, SuccessListener successListener) {
         print("a","delete started");
         doc.delete().addOnFailureListener(e -> showAlertDialog(context,context.getString(string.error_deleting)+e.getLocalizedMessage()))
-        .addOnSuccessListener(unused -> print("a","Document deleted"));
+        .addOnSuccessListener(unused -> {
+            print("a","Document deleted");
+            successListener.onSuccess(null);
+        });
     }
 
+    /**
+     *
+     * @param context
+     * @param chats collection to add message
+     * @param message message to send
+     * @param successListener called when message sent
+     * @param errorListener called when error occurs
+     */
     public static void sendMessage(Context context, CollectionReference chats,Message message,SuccessListener successListener,ErrorListener errorListener) {
         print("a","send message");
         amIOnline(new StatusListener() {
             @Override
             public void online() {
                 print("a","i online");
-                chats.document(message.getId()).set(message.toMap()).addOnSuccessListener(unused -> {
-                    successListener.onSuccess(null);
-                }).addOnFailureListener(e -> {
+                chats.document(message.getId()).set(message.toMap()).addOnSuccessListener(unused -> successListener.onSuccess(null)).addOnFailureListener(e -> {
                             showToast(context,context.getString(string.error)+":"+e.getLocalizedMessage());
                             errorListener.onError(e.getLocalizedMessage());
                         });
@@ -429,5 +497,35 @@ public class Hey {
         }else{
             if(targetFile.delete()) cropImage(context,activity,uri,targetFile,forProfile,errorListener); else errorListener.onError("");
         }
+    }
+
+    public static String getLocalFile(Message message) {
+        return My.folder+message.getId()+".png";
+    }
+
+    public static String getProgress(UploadTask.TaskSnapshot snapshot){
+        return getMb(snapshot.getBytesTransferred())+" Mb/"+getMb(snapshot.getTotalByteCount())+" Mb";
+    }
+
+    public static String getProgress(FileDownloadTask.TaskSnapshot snapshot){
+        return getMb(snapshot.getBytesTransferred())+" Mb/"+getMb(snapshot.getTotalByteCount())+" Mb";
+    }
+
+    public static String getMb(long bytes){
+        float f = bytes/1024f/1024f;
+        f = (int)(f*100f)/100f;
+        return Float.toString(f);
+    }
+
+    public static String getPercentage(UploadTask.TaskSnapshot snapshot){
+        float f = (float) snapshot.getBytesTransferred()/snapshot.getTotalByteCount()*100;
+        f = (int)(f*100)/100f;
+        return f +" %";
+    }
+
+    public static String getPercentage(FileDownloadTask.TaskSnapshot snapshot){
+        float f = (float) snapshot.getBytesTransferred()/snapshot.getTotalByteCount()*100;
+        f = (int)(f*100)/100f;
+        return f +" %";
     }
 }

@@ -102,4 +102,8 @@
     <string name="explainAnswer">Explain your answer</string>
     <string name="publishAnswer">Publish answer</string>
     <string name="enter_question_number">Enter question number</string>
+    <string name="permission_error">You cannot use this app if you are not grant this permission</string>
+    <string name="confirmdeleteImagem">Dou you want to delete this image?</string>
+    <string name="youAreOffline">You cannot delete image message if you are offline</string>
+    <string name="image_downloading">Image is downloading,please wait</string>
 </resources>

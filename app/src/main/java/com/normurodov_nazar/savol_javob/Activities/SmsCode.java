@@ -56,7 +56,6 @@ public class SmsCode extends AppCompatActivity {
             }
         };
         timer = new CountDownTimer(4*30*1000L,1000L) {
-
             @Override
             public void onTick(long millisUntilFinished) {
                 if(My.timedOut){

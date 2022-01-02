@@ -19,6 +19,10 @@ public class Message {
         id = sender+""+time;
     }
 
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public Map<String,Object> toMap(){
         return data;
     }

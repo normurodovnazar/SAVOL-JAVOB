@@ -3,13 +3,14 @@ package com.normurodov_nazar.savol_javob.Activities;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -23,35 +24,45 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.davemorrissey.labs.subscaleview.ImageSource;
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.storage.FirebaseStorage;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.EditMessageDialog;
 import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
+import com.normurodov_nazar.savol_javob.MyD.ImageDownloadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
 import com.normurodov_nazar.savol_javob.MyD.Message;
 import com.normurodov_nazar.savol_javob.MyD.MessageAdapterInSingleChat;
 import com.normurodov_nazar.savol_javob.MyD.MyDialog;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
+import com.normurodov_nazar.savol_javob.MyD.RecyclerViewItemLongClickListener;
+import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SingleChat extends AppCompatActivity {
 
+    ConstraintLayout main,image;
     RecyclerView recyclerView;
     TextView name, seen, centerText;
     EditText editText;
@@ -60,11 +71,13 @@ public class SingleChat extends AppCompatActivity {
     CollectionReference chats;
     ProgressBar progressBar, barForImageDownload;
     User friend;
-    boolean loading = false;
+    boolean loading = false,imageIsViewing = false;
     ListenerRegistration registration;
     MessageAdapterInSingleChat adapter = null;
     ActivityResultLauncher<Intent> imagePickLauncher;
+    SubsamplingScaleImageView imageItem;
     long i;Message message;
+    ArrayList<Message> oldMessages = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +95,8 @@ public class SingleChat extends AppCompatActivity {
         if (result.getData()!=null){
             Uri uri = result.getData().getData();
             cropImage(uri);
-        }
+        }else stopLoading(sendImage);
+
     }
 
     private void cropImage(Uri uri){
@@ -102,44 +116,42 @@ public class SingleChat extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == UCrop.REQUEST_CROP) if (data != null && resultCode == RESULT_OK){
                 Uri res = UCrop.getOutput(data);
-                if(res!=null) Hey.uploadImageToChat(this, res.getPath(), res.getPath(), doc -> Hey.addDocumentToCollection(getApplicationContext(), chats, message.getId(), message.toMap(), doc1 -> Hey.setIconButtonAsDefault(sendImage,loading), errorMessage -> Hey.setIconButtonAsDefault(sendImage,loading))); else Hey.setIconButtonAsDefault(sendImage,loading);
-        }else Hey.setIconButtonAsDefault(sendImage,loading);
+                if(res!=null)
+                    Hey.uploadImageToChat(this, res.getPath(), message.getId(), doc -> Hey.addDocumentToCollection(getApplicationContext(), chats, message.getId(), message.toMap(), doc1 -> stopLoading(sendImage), errorMessage -> stopLoading(sendImage)),
+                            (position, name) -> stopLoading(sendImage));
+                else stopLoading(sendImage);
+        }else stopLoading(sendImage);
+    }
+
+    private void stopLoading(ImageView icon) {
+        loading=false;
+        Hey.setIconButtonAsDefault(icon);
+    }
+    private void startLoading(ImageView icon) {
+        loading=true;
+        Hey.setIconButtonAsLoading(icon);
     }
 
     private void loadMessages() {
         registration = Hey.addMessagesListener(this, chats, messages -> {
             if(messages.size()==0) showNoMessages(); else{
-                adapter = new MessageAdapterInSingleChat(messages, this, (message, itemView) -> {
-                    PopupMenu menu = new PopupMenu(getApplicationContext(), itemView);
-                    menu.inflate(R.menu.message_popup);
-                    menu.setOnMenuItemClickListener(item -> {
-                        switch (item.getItemId()) {
-                            case R.id.deleteMessage:
-                                MyDialogWithTwoButtons d = Hey.showDeleteDialog(this, getString(R.string.confirm_delete_message), message);
-                                d.setOnDismissListener(a -> {
-                                    if (d.getResult()) Hey.deleteDocument(this, chats.document(message.getId()));
-                                });
-                                break;
-                            case R.id.editMessage:
-                                EditMessageDialog dialog = Hey.editMessage(this,message,chats);
-                                break;
-                            case R.id.copyMessage:
-                                ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                                ClipData clipData = new ClipData(new ClipDescription("a", new String[0]), new ClipData.Item(message.getMessage()));
-                                clipboardManager.setPrimaryClip(clipData);
-                                Toast.makeText(this, getText(R.string.copied), Toast.LENGTH_SHORT).show();
-                                break;
+                if (adapter==null){
+                    showMessages(messages);
+                }else {
+                    if (Hey.isSimilar(messages,oldMessages)){
+                        Hey.print("oldMessages=", String.valueOf(oldMessages.size()));
+                        Hey.print("messages=", String.valueOf(messages.size()));
+                        if (oldMessages.size()<messages.size()){
+                            Hey.print("a","item inserted");
+                            if (oldMessages.size()+1==messages.size()) adapter.addItem(Hey.biggerListsLastElement(oldMessages,messages));
+                            else showMessages(messages);
+                            recyclerView.smoothScrollToPosition(messages.size()-1);
+                            oldMessages=messages;
+                        }else if (oldMessages.size()>messages.size()){
+                            Hey.print("a","item removed");
                         }
-                        return true;
-                    });
-                    menu.setOnDismissListener(menu1 -> itemView.setBackgroundColor(Color.TRANSPARENT));
-                    itemView.setBackgroundColor(Color.BLACK);
-                    menu.show();
-                });
-                recyclerView.setAdapter(adapter);
-                recyclerView.setLayoutManager(new LinearLayoutManager(SingleChat.this));
-                recyclerView.smoothScrollToPosition(messages.size() - 1);
-                Hey.setIconButtonAsDefault(send, loading);
+                    }
+                }
                 editText.setText("");
                 changeAsNotLoading();
             }
@@ -148,9 +160,127 @@ public class SingleChat extends AppCompatActivity {
         });
     }
 
+
+
+    private void showMessages(ArrayList<Message> messages) {
+        Hey.print("A","showMessages");
+        oldMessages=messages;
+        adapter = new MessageAdapterInSingleChat(messages, this, (message, itemView) -> {
+            PopupMenu menu = new PopupMenu(getApplicationContext(), itemView);
+            if (message.getSender()==My.id) if (message.getType().equals(Keys.textMessage)){
+                menu.inflate(R.menu.message_popup);
+                menu.setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case R.id.deleteMessage:
+                            MyDialogWithTwoButtons d = Hey.showDeleteDialog(this, getString(R.string.confirm_delete_message), message);
+                            d.setOnDismissListener(a -> {
+                                if (d.getResult())
+                                    Hey.deleteDocument(this, chats.document(message.getId()), doc -> {
+                                        oldMessages = messages;
+                                        adapter.removeItem(message);
+                                        Hey.print("a", "remove called");
+                                    });
+                            });
+                            break;
+                        case R.id.editMessage:
+                            Hey.editMessage(this, message, chats, newMessage -> adapter.changeItem((Message) newMessage));
+                            break;
+                        case R.id.copyMessage:
+                            ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                            ClipData clipData = new ClipData(new ClipDescription("a", new String[0]), new ClipData.Item(message.getMessage()));
+                            clipboardManager.setPrimaryClip(clipData);
+                            Toast.makeText(this, getText(R.string.copied), Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                    return true;
+                });
+                menu.setOnDismissListener(menu1 -> itemView.setBackgroundColor(Color.TRANSPARENT));
+                itemView.setBackgroundColor(Color.BLACK);
+                menu.show();
+            }
+            if (message.getType().equals(Keys.imageMessage)){
+                File f = new File(Hey.getLocalFile(message));
+                if (f.exists()){
+                    imageItem.setImage(ImageSource.uri(Uri.fromFile(f)));
+                    imageItem.setBackgroundColor(Color.BLACK);
+                    imageItem.setMaxScale(15);
+                    imageItem.setMinScale(0.1f);
+                    main.setVisibility(View.GONE);
+                    image.setVisibility(View.VISIBLE);
+                    imageIsViewing=true;
+                }else {
+                    Hey.amIOnline(new StatusListener() {
+                        @Override
+                        public void online() {
+                            Hey.showDownloadDialog(SingleChat.this, message, doc -> {
+                                adapter.changeItem(message);
+                            }, errorMessage -> {
+
+                            });
+                        }
+
+                        @Override
+                        public void offline() {
+                            Hey.showToast(SingleChat.this,getString(R.string.error_connection));
+                        }
+                    }, errorMessage -> {
+
+                    },this);
+                }
+            }
+        }, (message,itemView, position) -> {
+            PopupMenu menu = new PopupMenu(getApplicationContext(), itemView);
+            menu.inflate(R.menu.delete_item);
+            menu.setOnMenuItemClickListener(item -> {
+                MyDialogWithTwoButtons dialog = Hey.showDeleteDialog(this,getString(R.string.confirmdeleteImagem),message);
+                dialog.setOnDismissListener(dialog1 -> {
+                    if (dialog.getResult()){
+                        Hey.amIOnline(new StatusListener() {
+                            @Override
+                            public void online() {
+                                Hey.showDeleteImageDialog(SingleChat.this, message, errorMessage -> {
+                                        },
+                                        doc -> Hey.deleteDocument(SingleChat.this, chats.document(message.getId()), doc1 -> {
+                                            oldMessages = messages;
+                                            adapter.removeItem(message);
+                                            Hey.print("a", "remove called");
+                                        }));
+                            }
+
+                            @Override
+                            public void offline() {
+                                Hey.showAlertDialog(SingleChat.this,getString(R.string.youAreOffline));
+                            }
+                        }, errorMessage -> {
+
+                        },this);
+                    }
+                });
+                dialog.show();
+                return true;
+            });
+            menu.setOnDismissListener(menu12 -> itemView.setBackgroundColor(Color.TRANSPARENT));
+            menu.show();
+            itemView.setBackgroundColor(Color.BLACK);
+        });
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(SingleChat.this));
+        recyclerView.smoothScrollToPosition(messages.size() - 1);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (imageIsViewing) {
+            image.setVisibility(View.GONE);
+            main.setVisibility(View.VISIBLE);
+            imageIsViewing = false;
+        }else super.onBackPressed();
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode==KeyEvent.KEYCODE_VOLUME_UP) {
+            Hey.showLoadingDialog(this);
             return true;
         }else
         return super.onKeyDown(keyCode, event);
@@ -158,7 +288,7 @@ public class SingleChat extends AppCompatActivity {
 
     private void sendTextMessage() {
         if (!loading && chats != null && !editText.getText().toString().replaceAll(" ", "").isEmpty()) {
-            Hey.setIconButtonAsLoading(send, loading);
+            startLoading(send);
             String m = editText.getText().toString();
             long l = Timestamp.now().toDate().getTime();
             Map<String, Object> data = new HashMap<>();
@@ -167,8 +297,7 @@ public class SingleChat extends AppCompatActivity {
             data.put(Keys.sender, My.id);
             data.put(Keys.type,Keys.textMessage);
             Message text = new Message(data);
-            Hey.sendMessage(this, chats, text, doc -> {
-            }, errorMessage -> Hey.setIconButtonAsDefault(send, loading));
+            Hey.sendMessage(this, chats, text, doc -> stopLoading(send), errorMessage -> stopLoading(send));
         }
     }
 
@@ -200,6 +329,7 @@ public class SingleChat extends AppCompatActivity {
             barForImageDownload.setVisibility(View.INVISIBLE);
             profileImage.setVisibility(View.VISIBLE);
         } else {
+            barForImageDownload.setVisibility(View.VISIBLE);
             Hey.downloadFile(this, Keys.users, String.valueOf(friend.getId()), f, (progress, total) -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     barForImageDownload.setProgress(Hey.getPercentage(progress, total), true);
@@ -226,12 +356,19 @@ public class SingleChat extends AppCompatActivity {
     }
 
     private void initVars() {
+        main = findViewById(R.id.main);
+        image = findViewById(R.id.imageSide);
+        imageItem = findViewById(R.id.imageItem);
         centerText = findViewById(R.id.center_text);
         recyclerView = findViewById(R.id.chatsInSingleChat);
         send = findViewById(R.id.send);
-        send.setOnClickListener(x -> sendTextMessage());
+        send.setOnClickListener(x -> {
+            if (!loading) sendTextMessage(); else Toast.makeText(this, getString(R.string.wait), Toast.LENGTH_SHORT).show();
+        });
         seen = findViewById(R.id.seenSingleChat);
-        sendImage = findViewById(R.id.sendImageQuestion);sendImage.setOnClickListener(v -> sendImage());
+        sendImage = findViewById(R.id.sendImageQuestion);sendImage.setOnClickListener(v -> {
+            if (!loading) sendImage(); else Toast.makeText(this, getString(R.string.wait), Toast.LENGTH_SHORT).show();
+        });
         profileImage = findViewById(R.id.profileImageInSingleChat);
         PopupMenu p = new PopupMenu(this, menu = findViewById(R.id.menuInSingleChat));
         menu.setOnClickListener(view -> p.show());
@@ -256,7 +393,7 @@ public class SingleChat extends AppCompatActivity {
     }
 
     private void sendImage() {
-        Hey.setIconButtonAsLoading(sendImage,loading);
+        startLoading(sendImage);
         pickImage();
     }
 

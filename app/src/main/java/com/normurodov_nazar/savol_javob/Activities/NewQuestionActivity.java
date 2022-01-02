@@ -26,6 +26,7 @@ import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
 import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
 import com.normurodov_nazar.savol_javob.MyD.Question;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
@@ -71,7 +72,7 @@ public class NewQuestionActivity extends AppCompatActivity {
             Hey.amIOnline(new StatusListener() {
                 @Override
                 public void online() {
-                    Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.publicQuestions), question.getQuestionId(), question.toMap(), doc -> {
+                    Hey.addDocumentToCollection(getApplicationContext(), FirebaseFirestore.getInstance().collection(Keys.publicQuestions), question.getQuestionId(), question.toMap(), doc -> {
                         Hey.showToast(getApplicationContext(),"ADDED");
                     }, errorMessage -> {
                         Hey.showToast(getApplicationContext(),"ERROR");
@@ -141,6 +142,8 @@ public class NewQuestionActivity extends AppCompatActivity {
                 filePath = res.getPath();
                 ImageUploadingDialog d = Hey.uploadImageForProfile(this, filePath, String.valueOf(My.id), doc -> {
                     questionImage.setImageURI(res);
+                }, (position, name) -> {
+
                 });
             } else {
                 Log.e("onActivityResult", "Result is null");
