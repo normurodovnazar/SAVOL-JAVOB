@@ -3,6 +3,6 @@
     <stroke
         android:color="@color/black"
         android:width="1dp"/>
-    <corners android:radius="@dimen/browser_actions_context_menu_max_width"/>
+    <corners android:radius="20dp"/>
 
 </shape>

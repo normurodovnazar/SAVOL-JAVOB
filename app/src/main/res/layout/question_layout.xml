@@ -17,63 +17,107 @@
         app:cardCornerRadius="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <LinearLayout
-            android:layout_marginVertical="5dp"
-            android:layout_marginHorizontal="20sp"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:visibility="invisible"
+            android:id="@+id/formQ"
             android:layout_width="match_parent"
-            android:orientation="vertical"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:id="@+id/linerL"
+                android:layout_marginVertical="5dp"
+                android:layout_marginHorizontal="20sp"
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:id="@+id/sender"
+                    android:gravity="start"
+                    android:ellipsize="middle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sender"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/theme"
+                    android:gravity="start"
+                    android:ellipsize="middle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/theme"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/time"
+                    android:gravity="start"
+                    android:ellipsize="middle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/time"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/visibleTime"
+                    android:gravity="start"
+                    android:ellipsize="middle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/visibleTime"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/whoNeed"
+                android:text="who need again"
+                android:gravity="center"
+                android:textSize="20sp"
+                android:textColor="@color/black"
+                android:textStyle="italic"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/linerL"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <Button
+                android:visibility="gone"
+                android:id="@+id/iNeed"
+                android:text="@string/need"
+                android:padding="10dp"
+                app:layout_constraintTop_toBottomOf="@id/linerL"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_margin="5dp"
+                android:background="@drawable/sss"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:visibility="invisible"
+            android:id="@+id/linearQ"
+            android:layout_width="match_parent"
             android:layout_height="match_parent">
             <TextView
-                android:id="@+id/sender"
-                android:gravity="start"
-                android:ellipsize="middle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/sender"
+                android:text="@string/questionDeleted"
+                android:gravity="center"
                 android:textColor="@color/black"
                 android:textSize="20sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:id="@+id/time"
-                android:gravity="start"
-                android:ellipsize="middle"
+                android:textStyle="bold"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/time"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:id="@+id/subject"
-                android:gravity="start"
-                android:ellipsize="middle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/Subject"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:id="@+id/theme"
-                android:gravity="start"
-                android:ellipsize="middle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/theme"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:id="@+id/number"
-                android:gravity="start"
-                android:ellipsize="middle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/number"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:layout_height="match_parent"/>
         </LinearLayout>
+
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

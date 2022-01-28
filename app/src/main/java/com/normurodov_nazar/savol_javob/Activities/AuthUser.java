@@ -1,12 +1,13 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.p;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -37,13 +38,9 @@ import com.normurodov_nazar.savol_javob.R;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.normurodov_nazar.savol_javob.MFunctions.Keys.p;
-
 public class AuthUser extends AppCompatActivity implements View.OnClickListener {
 
     ActivityResultLauncher<Intent> launcher;
-    String n;
-    TelephonyManager manager;
     TextView text;
     EditText phone;
     Button button;
@@ -258,11 +255,13 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     private void setButtonAsDefault(){
         phone.setEnabled(true);
-        Hey.setButtonAsDefault(this,button,getString(R.string.verify),loading);
+        Hey.setButtonAsDefault(this,button,getString(R.string.verify));
+        loading = false;
     }
 
     private void setButtonAsLoading(){
         phone.setEnabled(false);
-        Hey.setButtonAsLoading(this,button,loading);
+        Hey.setButtonAsLoading(this,button);
+        loading = true;
     }
 }

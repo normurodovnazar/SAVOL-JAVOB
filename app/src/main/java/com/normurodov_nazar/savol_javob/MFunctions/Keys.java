@@ -1,20 +1,22 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
 public class Keys {
+
+    public static final String token = "Token";
     public static final String sharedPreferences = "com.normurodov_nazar.savol_javob.preferences";
     public static final String p = "phone";
     public static final String logged = "logged";
     public static final String seen = "Seen";
     public static final String number = "Number";
     public static final String users = "Users";
-    public static final String appNumber = "AppNumber";
+    public static final String appNumbers = "AppNumbers";
     public static final String name = "Name";
     public static final String surname = "Surname";
-    public static final String imageUrl = "ImageUrl";
+    public static final String imageSize = "ImageSize";
     public static final String id = "User Id";
     public static final String chats = "Chats";
     public static final String verificationId = "verificationId";
-    public static final String myQuestionOpportunity = "QuestionOpportunity";
+    public static final String units = "QuestionOpportunity";
     public static final String numberOfMyPublishedQuestions = "numberOfMyPublishedQuestions";
     public static final String numberOfMyAnswers = "numberOfMyAnswers";
     public static final String numberOfCorrectAnswers = "numberOfCorrectAnswers";
@@ -30,9 +32,23 @@ public class Keys {
     public static final String type = "Type";
     public static final String textMessage = "TextMessage";
     public static final String imageMessage = "ImageMessage";
-    public static final String chatId = "ChatId",searchHistory = "SearchHistory";
-    public static String subject = "Subject";
-    public static String theme = "Theme";
-    public static String hidden = "Hidden";
-    public static String publicQuestions = "PublicQuestions";
+    public static final String chatId = "ChatId";
+    public static final String publicQuestions = "PublicQuestions";
+    public static final String read = "Read";
+    public static final String fromChat = "From chat";
+    public static final String newMessagesTo = "UnreadMessagesBy:";
+    public static final String theme = "Theme";
+    public static final String allQuestions = "AllQuestions";
+    public static final String question = "Question";
+    public static final String answer = "Answer";
+    public static String correct = "Correct";
+    public static String incorrect = "Incorrect";
+    public static String savedQuestions = "SavedQuestions";
+    public static String questionLimit = "QuestionLimit";
+    public static String unitsForPerDay = "UnitsForPerDay";
+    public static String visibleTime = "PublicUntil";
+    public static String needQuestions = "NeedQuestions";
+    public static String order = "Order";
+    public static String divider = "Divider";
+    public static String status = "Status";
 }

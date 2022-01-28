@@ -14,10 +14,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:strokeColor="@color/black"
-        app:strokeWidth="2dp"
-        android:layout_marginLeft="10dp">
+        app:strokeWidth="2dp">
         <ImageView
-            android:src="@drawable/download_ic"
+            android:src="@drawable/download_black_ic"
             android:id="@+id/imageMessageByOther"
             android:scaleType="fitXY"
             app:layout_constraintTop_toTopOf="parent"
@@ -34,6 +33,5 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="@id/cardMessageFromMe"
         app:layout_constraintTop_toBottomOf="@id/cardMessageFromMe"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp" />
+        android:layout_marginStart="8dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

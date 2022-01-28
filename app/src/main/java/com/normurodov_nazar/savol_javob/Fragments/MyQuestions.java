@@ -1,66 +1,94 @@
 package com.normurodov_nazar.savol_javob.Fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.normurodov_nazar.savol_javob.Activities.QuestionChat;
+import com.normurodov_nazar.savol_javob.MFunctions.Hey;
+import com.normurodov_nazar.savol_javob.MFunctions.Keys;
+import com.normurodov_nazar.savol_javob.MFunctions.My;
+import com.normurodov_nazar.savol_javob.MyD.Question;
+import com.normurodov_nazar.savol_javob.MyD.QuestionAdapter;
 import com.normurodov_nazar.savol_javob.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link MyQuestions#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+
 public class MyQuestions extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    RecyclerView recyclerView;
+    TextView text;
+    ProgressBar progressBar;
+    ArrayList<Question> questions = new ArrayList<>();
+    ListenerRegistration registration;
 
     public MyQuestions() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MyQuestions.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MyQuestions newInstance(String param1, String param2) {
-        MyQuestions fragment = new MyQuestions();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_my_questions, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_my_questions, container, false);
+        initVars(v);
+        registration = Hey.setCollectionListener(getContext(), FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.allQuestions), docs -> {
+            questions.clear();
+            for (DocumentSnapshot doc : docs) {
+                questions.add(Question.fromDoc(doc));
+            }
+            Hey.print("questions",questions.toString());
+            if(questions.size()==0) showNoQuestions(); else showQuestions();
+        }, errorMessage -> {
+
+        });
+        return v;
+    }
+
+    private void showQuestions() {
+        progressBar.setVisibility(View.GONE);
+        recyclerView.setVisibility(View.VISIBLE);
+        text.setVisibility(View.INVISIBLE);
+        QuestionAdapter adapter = new QuestionAdapter(getContext(), questions, (position, name) -> {
+            Intent i = new Intent(getContext(), QuestionChat.class);
+            i.putExtra(Keys.id,questions.get(position).getQuestionId());
+            i.putExtra(Keys.theme,questions.get(position).getTheme());
+            startActivity(i);
+        });
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+    }
+
+    private void showNoQuestions() {
+        progressBar.setVisibility(View.GONE);
+        recyclerView.setVisibility(View.INVISIBLE);
+        text.setVisibility(View.VISIBLE);
+    }
+
+    private void initVars(View v) {
+        recyclerView = v.findViewById(R.id.questionsMy);
+        text = v.findViewById(R.id.noQuestionsMy);
+        progressBar = v.findViewById(R.id.progressBarMy);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        registration.remove();
     }
 }

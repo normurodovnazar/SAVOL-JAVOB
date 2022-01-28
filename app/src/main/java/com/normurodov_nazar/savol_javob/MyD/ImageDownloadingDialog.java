@@ -51,23 +51,23 @@ public class ImageDownloadingDialog extends Dialog {
                         downloadTask.cancel();
                         this.dismiss();
                     });
-        })
-                .addOnSuccessListener(taskSnapshot -> {
-                    successListener.onSuccess(null);
-                    dismiss();
-                })
-                .addOnProgressListener(taskSnapshot -> {
+        }).addOnSuccessListener(taskSnapshot -> {
+            successListener.onSuccess(null);
+            dismiss();
+        }).addOnProgressListener(taskSnapshot -> {
             int i = (int) (taskSnapshot.getBytesTransferred() * 100 / taskSnapshot.getTotalByteCount());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) progress.setProgress(100 - i,true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                progress.setProgress(100 - i, true);
             else progress.setProgress(100 - i);
-            Hey.print("progress",Hey.getProgress(taskSnapshot));
+            Hey.print("progress", Hey.getProgress(taskSnapshot));
             progressDownload.setText(Hey.getProgress(taskSnapshot));
             percentage.setText(Hey.getPercentage(taskSnapshot));
         });
     }
 
     private void initVars() {
-        cancel = findViewById(R.id.cancel_download);cancel.setOnClickListener(v -> {
+        cancel = findViewById(R.id.cancel_download);
+        cancel.setOnClickListener(v -> {
             downloadTask.cancel();
             dismiss();
         });

@@ -16,6 +16,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:visibility="invisible"
         android:id="@+id/noQuestions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,5 +28,15 @@
         android:textColor="@color/black"
         android:textStyle="bold"
         android:textSize="20sp"/>
+
+    <ProgressBar
+        android:id="@+id/progressBarP"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:indeterminateTint="@color/black"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

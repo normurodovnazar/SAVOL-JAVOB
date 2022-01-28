@@ -2,11 +2,10 @@ package com.normurodov_nazar.savol_javob.Activities;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,16 +19,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
-import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
-import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
-import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
@@ -39,9 +35,10 @@ import java.io.IOException;
 
 public class NewUser extends AppCompatActivity implements View.OnClickListener {
     ImageView i;
-    EditText name,surname;
-    Button next,imageB;
-    String mName="",mSurname="",mImage = "",mFilePath = "";
+    EditText name, surname;
+    Button next, imageB;
+    String mName = "", mSurname = "", mFilePath = "", mToken = "";
+    long imageSize = 0;
     ActivityResultLauncher<Intent> imagePickLauncher;
     File originalFile;
     boolean loading = false;
@@ -51,7 +48,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_user);
         initVars();
-        originalFile = new File(My.folder+"me");
+        originalFile = new File(My.folder + "me");
     }
 
     private void initVars() {
@@ -63,13 +60,13 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         next.setOnClickListener(this);
         imageB.setOnClickListener(this);
 
-        Hey.animateVertically(findViewById(R.id.card),400,300);
-        Hey.animateVertically(i,400,600);
-        Hey.animateHorizontally(imageB,400,900);
-        Hey.animateVertically(name,400,1200);
-        Hey.animateVertically(surname,400,1500);
+        Hey.animateVertically(findViewById(R.id.card), 400, 300);
+        Hey.animateVertically(i, 400, 600);
+        Hey.animateHorizontally(imageB, 400, 900);
+        Hey.animateVertically(name, 400, 1200);
+        Hey.animateVertically(surname, 400, 1500);
 
-        Hey.animateFadeOut(next,1800);
+        Hey.animateFadeOut(next, 1800);
         imagePickLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onPickImageResult
@@ -80,16 +77,16 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         if (result.getData() != null) {
             Uri uri = result.getData().getData();
             cropImage(uri);
-        }else orElse();
+        } else orElse();
     }
 
-    void orElse(){
+    void orElse() {
         changeImageButtonAsDefault();
-        mImage="";
         i.setImageResource(R.drawable.tab1_icon);
+        imageSize=0;
     }
 
-    private void cropImage(Uri uri){
+    private void cropImage(Uri uri) {
         Hey.cropImage(this, this, uri, originalFile, true, errorMessage -> {
             Toast.makeText(getApplicationContext(), getString(R.string.file_not_exists), Toast.LENGTH_SHORT).show();
             changeImageButtonAsDefault();
@@ -99,22 +96,25 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == UCrop.REQUEST_CROP){
+        if (requestCode == UCrop.REQUEST_CROP) {
             if (data != null && resultCode == RESULT_OK) {
                 Log.e("onActivityResult", "Result came");
                 changeImageButtonAsDefault();
                 Uri res = UCrop.getOutput(data);
                 if (res != null) {
                     i.setImageResource(R.drawable.tab1_icon);
-                    Log.e("onActivityResult", "Result is not null:"+res.getPath());
+                    Log.e("onActivityResult", "Result is not null:" + res.getPath());
                     i.setImageURI(res);
                     mFilePath = res.getPath();
-                    ImageUploadingDialog d = Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
-
+                    Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
+                        imageSize = new File(mFilePath).length();
+                        Hey.print("imageSize", String.valueOf(imageSize));
+                        Hey.print("mFilePath", String.valueOf(mFilePath));
                     }, (position, name) -> {
 
+                    }, errorMessage -> {
+
                     });
-                    d.setOnDismissListener(x-> mImage = d.getDownloadUrl());
                 } else {
                     Log.e("onActivityResult", "Result is null");
                     Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
@@ -132,55 +132,73 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode==KeyEvent.KEYCODE_VOLUME_UP){
+            Hey.print("aaa", String.valueOf(imageSize));
+            return true;
+        }else return super.onKeyDown(keyCode, event);
+    }
+
     @SuppressLint("NonConstantResourceId")
     @Override
     public void onClick(View v) {
-        if(!loading)
-            switch (v.getId()){
-            case R.id.next:
-                mName = name.getText().toString();
-                mSurname = surname.getText().toString();
-                if(mName.equals("") || mSurname.equals("") || mImage.equals(""))
-                    Toast.makeText(this, getText(R.string.name_surname_url_required), Toast.LENGTH_SHORT).show(); else {
+        if (!loading)
+            switch (v.getId()) {
+                case R.id.next:
+                    mName = name.getText().toString();
+                    mSurname = surname.getText().toString();
+                    if (mName.equals("") || mSurname.equals("") || imageSize==0)
+                        Toast.makeText(this, getText(R.string.name_surname_url_required), Toast.LENGTH_SHORT).show();
+                    else if (Hey.withUpper(mName) && Hey.withUpper(mSurname)){
                         changeNextButtonAsLoading();
                         nextPressed();
-                }
-                break;
-            case R.id.addImage:
+                    }else Hey.showToast(this,getString(R.string.mustBeUpper));
+                    break;
+                case R.id.addImage:
                     changeImageButtonAsLoading();
                     doWorksWithFile();
                     Intent i = new Intent();
                     i.setType("image/*");
                     i.setAction(Intent.ACTION_GET_CONTENT);
                     imagePickLauncher.launch(Intent.createChooser(i, getString(R.string.choose_image)));
-                break;
-        }
+                    break;
+            }
     }
 
     private void nextPressed() {
-            Hey.amIOnline(new StatusListener() {
-                @Override
-                public void online() {
-                    createUserById();
-                }
+        Hey.amIOnline(new StatusListener() {
+            @Override
+            public void online() {
+                mToken = Hey.getPreferences(NewUser.this).getString(Keys.token, "n");
+                if (mToken.equals("n")) {
+                    FirebaseMessaging.getInstance().getToken().addOnFailureListener(e -> {
+                        Hey.showAlertDialog(NewUser.this, getString(R.string.error) + ":" + e.getLocalizedMessage());
+                        changeNextButtonAsDefault();
+                    }).addOnSuccessListener(s -> {
+                        mToken = s;
+                        createUserById();
+                    });
+                } else createUserById();
+            }
 
-                @Override
-                public void offline() {
-                    Hey.showAlertDialog(NewUser.this,getString(R.string.error_connection));
-                    changeNextButtonAsDefault();
-                }
-            }, errorMessage -> changeNextButtonAsDefault(),this);
+            @Override
+            public void offline() {
+                Hey.showAlertDialog(NewUser.this, getString(R.string.error_connection));
+                changeNextButtonAsDefault();
+            }
+        }, errorMessage -> changeNextButtonAsDefault(), this);
     }
 
     private void createUserById() {
-        User me = new User(mName,mSurname,mImage,Timestamp.now().toDate().getTime(),My.number,My.id,0,0,0,0, 0);
+        User me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 0L, mToken);
         FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).set(me.toMap()).addOnCompleteListener(task1 -> {
-            Intent intent = new Intent(NewUser.this,Home.class);
-            if(task1.isSuccessful()){
+            Intent intent = new Intent(NewUser.this, Home.class);
+            if (task1.isSuccessful()) {
                 My.setDataFromUser(me);
                 startActivity(intent);
                 finish();
-            }else {
+            } else {
                 Hey.showUnknownError(NewUser.this);
                 changeNextButtonAsDefault();
             }
@@ -188,11 +206,11 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void doWorksWithFile() {
-        if(originalFile.exists()){
-            Log.e("doWorksWithFile","File is exists.Now we will delete and create new one after delete");
+        if (originalFile.exists()) {
+            Log.e("doWorksWithFile", "File is exists.Now we will delete and create new one after delete");
             deleteAndThenCreateOriginalFile();
-        }else {
-            Log.e("doWorksWithFile","File is not exists.We will just create a new file");
+        } else {
+            Log.e("doWorksWithFile", "File is not exists.We will just create a new file");
             createOriginalFile();
         }
     }
@@ -201,7 +219,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         boolean deleted = originalFile.delete();
         if (deleted) {
             createOriginalFile();
-        }else {
+        } else {
             Toast.makeText(this, getString(R.string.cannot_delete_existing_file), Toast.LENGTH_SHORT).show();
         }
     }
@@ -209,7 +227,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     private void createOriginalFile() {
         try {
             boolean created = originalFile.createNewFile();
-            if(!created){
+            if (!created) {
                 Toast.makeText(this, getString(R.string.error_on_creating_image_file), Toast.LENGTH_SHORT).show();
             }
         } catch (IOException e) {
@@ -217,16 +235,21 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
-    private void changeImageButtonAsDefault(){
-        Hey.setButtonAsDefault(this,imageB,getString(R.string.choose_image),loading);
+    private void changeImageButtonAsDefault() {
+        Hey.setButtonAsDefault(this, imageB, getString(R.string.choose_image));loading = false;
     }
-    private void changeImageButtonAsLoading(){
-        Hey.setButtonAsLoading(this,imageB,loading);
+
+    private void changeImageButtonAsLoading() {
+        Hey.setButtonAsLoading(this, imageB);
+        loading = true;
     }
-    private void changeNextButtonAsDefault(){
-        Hey.setButtonAsDefault(this,next,getString(R.string.verify),loading);
+
+    private void changeNextButtonAsDefault() {
+        Hey.setButtonAsDefault(this, next, getString(R.string.verify));loading = false;
     }
-    private void changeNextButtonAsLoading(){
-        Hey.setButtonAsLoading(this,next,loading);
+
+    private void changeNextButtonAsLoading() {
+        Hey.setButtonAsLoading(this, next);
+        loading = true;
     }
 }

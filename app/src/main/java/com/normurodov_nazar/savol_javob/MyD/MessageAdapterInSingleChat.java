@@ -17,15 +17,15 @@ import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
-import java.util.List;
+import java.util.ArrayList;
 
 public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
-    List<Message> messages;
+    ArrayList<Message> messages;
     final Context context;
     final RecyclerViewItemClickListener listener;
     final RecyclerViewItemLongClickListener longClickListener;
 
-    public MessageAdapterInSingleChat(List<Message> messages, Context context, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener) {
+    public MessageAdapterInSingleChat(ArrayList<Message> messages, Context context, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener) {
         this.messages = messages;
         this.context = context;
         this.listener = listener;
@@ -33,20 +33,22 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
     }
 
     public void removeItem(Message message){
-        int index= messages.indexOf(message);
-        messages.remove(message);
-        notifyItemRemoved(index);
+        int index= Hey.getIndexInArray(message,messages);
+        if (index!=-1){
+            messages.remove(message);
+            notifyItemRemoved(index);
+        }
     }
 
-    public void addItem(Message message){
-        messages.add(message);
-        notifyItemInserted(messages.size()-1);
+    public void addItems(ArrayList<Message> messages,int itemCount){
+        int startPosition = this.messages.size();
+        this.messages.addAll(messages);
+        notifyItemRangeInserted(startPosition,itemCount);
     }
 
-    public void changeItem(Message message){
-        int index = messages.indexOf(message);
-        messages.set(index, message);
-        notifyItemChanged(index);
+    public void changeItem(int position,Message message){
+        messages.set(position, message);
+        notifyItemChanged(position);
     }
 
     @NonNull
@@ -74,7 +76,7 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
         if(messageSingleChat.sender==My.id){
             ((MessageFromMeHolder) holder).setChatItem(messageSingleChat,listener,longClickListener,position);
         }else {
-            ((MessageFromOtherHolder) holder).setChatItem(messageSingleChat,listener);
+            ((MessageFromOtherHolder) holder).setChatItem(messageSingleChat,listener,position);
         }
     }
 
@@ -95,24 +97,26 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
 
     static class MessageFromMeHolder extends RecyclerView.ViewHolder{
         TextView message,time;
-        ImageView imageView;
+        ImageView imageView,read;
         final boolean isTextMessage;
 
         public MessageFromMeHolder(View itemView, boolean isTextMessage) {
             super(itemView);
             this.isTextMessage = isTextMessage;
             if(isTextMessage){
+                read = itemView.findViewById(R.id.statusOfMessage);
                 message = itemView.findViewById(R.id.messageFromMe);
+                time = itemView.findViewById(R.id.timeMessageFromMeInSingleChat);
             }else {
+                read = itemView.findViewById(R.id.statusOfImageMessage);
                 imageView = itemView.findViewById(R.id.imageMessageByMe);
+                time = itemView.findViewById(R.id.timeImageFromMeFromMe);
             }
-            time = itemView.findViewById(R.id.timeMessageFromMeInSingleChat);
         }
 
         void setChatItem(Message data, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener,int position){
-
             time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
-            itemView.setOnClickListener(v -> listener.onItemClick(data,itemView));
+            itemView.setOnClickListener(v -> listener.onItemClick(data,itemView,position));
             if(isTextMessage) {
                 message.setText(data.message);
             } else {
@@ -120,21 +124,9 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
                     longClickListener.onItemLongClick(data,itemView,position);
                     return true;
                 });
-                File f = new File(Hey.getLocalFile(data));
-                Hey.print("a",f.getPath());
-                if (f.exists()){
-                    imageView.setImageURI(Uri.fromFile(f));
-                }else imageView.setImageResource(R.drawable.download_ic);
-//                    Hey.downloadFile(imageView.getContext(), Keys.chats, data.getSender() + "" + data.getTime(), f, (progress, total) -> {
-//
-//                    }, doc -> {
-//
-//                    }, errorMessage -> {
-//
-//                    });
-//                time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
+                Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
             }
-
+            if (data.getRead()) read.setImageResource(R.drawable.ic_read);
         }
     }
 
@@ -155,17 +147,13 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
             }
         }
 
-        void setChatItem(Message data,RecyclerViewItemClickListener itemClickListener){
+        void setChatItem(Message data,RecyclerViewItemClickListener itemClickListener,int position){
             time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
             if (isTextMessage){
                 message.setText(data.message);
             }else {
-                itemView.setOnClickListener(v -> itemClickListener.onItemClick(data,itemView));
-                File f = new File(Hey.getLocalFile(data));
-                Hey.print("a",f.getPath());
-                if (f.exists()){
-                    imageView.setImageURI(Uri.fromFile(f));
-                }else imageView.setImageResource(R.drawable.download_ic);
+                itemView.setOnClickListener(v -> itemClickListener.onItemClick(data,itemView,position));
+                Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> imageView.setImageResource(R.drawable.download_black_ic));
             }
         }
     }

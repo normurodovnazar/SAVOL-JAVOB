@@ -18,18 +18,21 @@ public class MyDialogWithTwoButtons extends Dialog {
     TextView info, m, t;
     Message message;
     String i;
-    boolean result = false;
+    boolean result = false,forDelete;
 
-    public MyDialogWithTwoButtons(@NonNull Context context, String i, Message message) {
+    public MyDialogWithTwoButtons(@NonNull Context context, String i, Message message,boolean forDelete) {
         super(context);
         this.i = i;
         this.message = message;
+        this.forDelete = forDelete;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_mydialogwithtwobuttons);
+        m = findViewById(R.id.messageFromMeSelector);
+        t = findViewById(R.id.timeMessageFromMeSelector);
         yes = findViewById(R.id.yes);
         yes.setOnClickListener(v -> {
             result = true;
@@ -42,14 +45,18 @@ public class MyDialogWithTwoButtons extends Dialog {
         });
         info = findViewById(R.id.textErrorDialog);
         info.setText(i);
-        m = findViewById(R.id.messageFromMeSelector);
-        t = findViewById(R.id.timeMessageFromMeSelector);
-        if (message.getType().equals(Keys.textMessage)) {
-            m.setText(message.getMessage());
-            t.setText(Hey.getSeenTime(getContext(), message.getTime()));
-        } else {
-            m.setVisibility(View.INVISIBLE);
-            t.setVisibility(View.INVISIBLE);
+
+        if (forDelete)
+            if (message.getType().equals(Keys.textMessage)) {
+                m.setText(message.getMessage());
+                t.setText(Hey.getSeenTime(getContext(), message.getTime()));
+            } else {
+                m.setVisibility(View.GONE);
+                t.setVisibility(View.GONE);
+            }
+        else {
+            m.setVisibility(View.GONE);
+            t.setVisibility(View.GONE);
         }
     }
 

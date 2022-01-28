@@ -28,9 +28,7 @@
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginLeft="10dp" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:maxLines="1"
-            android:lines="1"
+        <EditText
             android:id="@+id/search_users_field"
             android:textCursorDrawable="@drawable/white_cursor_drawable"
             android:textColor="@color/white"
@@ -43,9 +41,9 @@
             app:layout_constraintBottom_toBottomOf="@id/back"
             android:background="@drawable/text_field_bg"
             android:hint="@string/search_users"
+            android:inputType="text"
             android:textColorHint="@color/other"
-            android:paddingStart="10dp"
-            android:paddingLeft="10dp" />
+            android:paddingStart="10dp" />
 
         <ImageView
             android:id="@+id/search"
@@ -67,7 +65,7 @@
         android:gravity="center"
         android:text="@string/no_results_found"
         android:textColor="@color/black"
-        android:textSize="15sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -83,6 +81,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appBar"
+        android:indeterminateTint="@color/black"
         android:visibility="invisible"/>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -90,10 +89,22 @@
         android:id="@+id/search_results"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/searchFilter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBar"
         android:visibility="visible"/>
+
+    <Button
+        android:id="@+id/searchFilter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@drawable/sss"
+        android:text="@string/byName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="10dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

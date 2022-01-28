@@ -21,9 +21,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
-
-
-
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/profileImageCard"
                 android:layout_width="40dp"
@@ -119,7 +116,7 @@
                 android:textColor="@color/white"
                 android:lineSpacingExtra="1dp"
                 android:textCursorDrawable="@drawable/white_cursor_drawable"
-                android:id="@+id/editTextInSingleChat"
+                android:id="@+id/textInSingle"
                 android:paddingVertical="2dp"
                 android:paddingHorizontal="5dp"
                 android:layout_width="0dp"

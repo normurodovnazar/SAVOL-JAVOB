@@ -86,7 +86,7 @@ public class SmsCode extends AppCompatActivity {
     }
 
     private void check() {
-        Hey.setButtonAsLoading(this,b,loading);
+        Hey.setButtonAsLoading(this,b);loading = true;
         PhoneAuthCredential authCredential = PhoneAuthProvider.getCredential(id,e.getText().toString().trim());
         auth.signInWithCredential(authCredential).addOnCompleteListener(this,
                 task -> {
@@ -123,7 +123,7 @@ public class SmsCode extends AppCompatActivity {
                                 break;
                         } else showUnknownErrorAndExit();
                     }
-                    Hey.setButtonAsDefault(this,b,getString(R.string.check),loading);
+                    Hey.setButtonAsDefault(this,b,getString(R.string.check));loading = false;
                 }
         );
     }

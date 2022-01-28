@@ -12,11 +12,9 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentReference;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
-import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.util.HashMap;
@@ -25,16 +23,18 @@ import java.util.Map;
 public class EditMessageDialog extends Dialog {
     EditText text;
     Button ok,cancel;
-    final Message message;
+    final Map<String,Object> data;
     final SuccessListener successListener;
-    CollectionReference chats;
+    final EditMode editMode;
+    final DocumentReference document;
 
 
-    public EditMessageDialog(@NonNull Context context, Message message, CollectionReference chats,SuccessListener successListener) {
+    public EditMessageDialog(@NonNull Context context, Map<String,Object> data, DocumentReference chat, EditMode editMode,SuccessListener successListener) {
         super(context);
-        this.message = message;
-        this.chats = chats;
+        this.data = data;
+        this.document = chat;
         this.successListener = successListener;
+        this.editMode = editMode;
     }
 
     @Override
@@ -43,20 +43,37 @@ public class EditMessageDialog extends Dialog {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.layout_edit_message_dialog);
         text = findViewById(R.id.editingField);
-        ok = findViewById(R.id.ok_button);ok.setOnClickListener(v -> {
+        ok = findViewById(R.id.ok_button);
+        ok.setOnClickListener(v -> {
             String m = text.getText().toString();
             if(!m.isEmpty() && !m.replaceAll(" ","").isEmpty()){
-                Map<String,Object> data = new HashMap<>();
-                data.put(Keys.message,m);
-                Message newMessage = message;
-                newMessage.setMessage(m);
-                chats.document(message.getId()).update(data)
-                        .addOnSuccessListener(unused -> successListener.onSuccess(newMessage))
-                        .addOnFailureListener(e -> Hey.print("a",e.getLocalizedMessage()));
+                Map<String,Object> x = new HashMap<>();
+                switch (editMode){
+                    case name:
+                        x.put(Keys.name,m);
+                        break;
+                    case surname:
+                        x.put(Keys.surname,m);
+                        break;
+                    case message:
+                        x.put(Keys.message,m);
+                        break;
+                }
+                document.update(x).addOnSuccessListener(unused -> successListener.onSuccess(x)).addOnFailureListener(e -> Hey.showAlertDialog(getContext(),e.getLocalizedMessage()));
                 dismiss();
             } else Toast.makeText(getContext(), getContext().getString(R.string.emty), Toast.LENGTH_SHORT).show();
         });
         cancel = findViewById(R.id.cancel_b);cancel.setOnClickListener(v -> dismiss());
-        text.setText(message.getMessage());
+        switch (editMode){
+            case name:
+                text.setText((String) data.get(Keys.name));
+                break;
+            case surname:
+                text.setText((String) data.get(Keys.surname));
+                break;
+            case message:
+                text.setText((String) data.get(Keys.message));
+                break;
+        }
     }
 }

@@ -2,11 +2,11 @@ package com.normurodov_nazar.savol_javob.Activities;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -17,16 +17,17 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.davemorrissey.labs.subscaleview.ImageSource;
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
-import com.normurodov_nazar.savol_javob.MyD.ImageUploadingDialog;
-import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
+import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.Question;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
@@ -34,169 +35,201 @@ import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 public class NewQuestionActivity extends AppCompatActivity {
-    Button subject,theme,image,publish;
-    EditText number;
-    ImageView subjectList,themeList,questionImage;
-    ArrayList<String> subjects = new ArrayList<>(),themes = new ArrayList<>();
-    String subjectS = "",themeS = "",filePath = "";
-    ActivityResultLauncher<Intent> subjectR,themeR,imageR;
-    Map<String,Object> data = new HashMap<>();
+    ConstraintLayout main;
+    Button image, publish, selectTheme;
+    EditText message,number;
+    ImageView questionImage;
+    SubsamplingScaleImageView scaleImageView;
+    String filePath = "", theme = "";
+    boolean imageSelected = false;
+    ActivityResultLauncher<Intent> imageR, themeR;
+    Map<String, Object> data = new HashMap<>();
     long time;
+    boolean imageShowing = false;
+    File file;
+    CollectionReference publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions),
+            allQuestions = FirebaseFirestore.getInstance().collection(Keys.allQuestions), chats = FirebaseFirestore.getInstance().collection(Keys.chats),
+    myAllQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.allQuestions);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_question);
         initVars();
-        opportunityTest();
-    }
-
-    private void opportunityTest() {
-        My.questionOpportunity=100;
-        if (My.questionOpportunity==0) Hey.showAlertDialog(this,getString(R.string.no_opportunity)).setOnDismissListener(dialog -> {
-            startActivity(new Intent(this,ShowAd.class));
-            this.finish();
-        });
-        else publishQuestion();
     }
 
     private void publishQuestion() {
-        String n = number.getText().toString();
-        if(!n.isEmpty()) Hey.showToast(this,getString(R.string.enter_question_number)); else {
-            Question question = new Question(data);
-            Hey.amIOnline(new StatusListener() {
-                @Override
-                public void online() {
-                    Hey.addDocumentToCollection(getApplicationContext(), FirebaseFirestore.getInstance().collection(Keys.publicQuestions), question.getQuestionId(), question.toMap(), doc -> {
-                        Hey.showToast(getApplicationContext(),"ADDED");
-                    }, errorMessage -> {
-                        Hey.showToast(getApplicationContext(),"ERROR");
-                    });
-                }
-
-                @Override
-                public void offline() {
-                    Hey.showToast(getApplicationContext(),"OFFLINE");
-                }
-            }, errorMessage -> {
-                Hey.showToast(getApplicationContext(),"ERROR");
-            },this);
-
+        String n = message.getText().toString(),x = number.getText().toString();
+        int i = -1;
+        try{
+            i = Integer.parseInt(x);
+        } catch (NumberFormatException e){
+            Hey.showToast(this,e.getLocalizedMessage());
         }
+        if (i!=-1) if (My.units >= i * My.unitsForPerDay){
+            if (theme.isEmpty()) Hey.showToast(this, getString(R.string.themeReq));
+            else if (n.isEmpty()) Hey.showToast(this, getString(R.string.emty));
+            else if (!imageSelected) Hey.showToast(this, getString(R.string.you_need_upload_image));
+            else {
+                data.put(Keys.sender, My.id);
+                data.put(Keys.time, time);
+                data.put(Keys.message, n);
+                data.put(Keys.theme, theme+Keys.incorrect);
+                data.put(Keys.imageSize,file.length());
+                data.put(Keys.visibleTime,time+ 24L *60*60*1000*i);
+                Question question = new Question(data);
+                int finalI = i;
+                Hey.amIOnline(new StatusListener() {
+                    @Override
+                    public void online() {
+                        LoadingDialog d = Hey.showLoadingDialog(NewQuestionActivity.this);
+                        Hey.getCollection(NewQuestionActivity.this, publicQuestions, docs -> {
+                            if (My.questionLimit > docs.size()) {
+                                Hey.uploadImageToChat(NewQuestionActivity.this, filePath, question.getQuestionId(), doc ->
+                                        Hey.addDocumentToCollection(NewQuestionActivity.this, allQuestions, question.getQuestionId(), question.toMap(), doc0 -> Hey.addDocumentToCollection(NewQuestionActivity.this, publicQuestions, question.getQuestionId(), question.toMap(), doc1 -> Hey.addDocumentToCollection(NewQuestionActivity.this, myAllQuestions, question.getQuestionId(), question.toMap(), new SuccessListener() {
+                                            @Override
+                                            public void onSuccess(Object doc) {
+                                                Map<String, Object> data = new HashMap<>();
+                                                data.put(Keys.time, question.getTime());
+                                                data.put(Keys.type, Keys.question);
+                                                data.put(Keys.sender, question.getSender());
+                                                data.put(Keys.message, question.getMessage());
+                                                data.put(Keys.read, false);
+                                                data.put(Keys.imageSize,file.length());
+                                                Map<String,Object> x = new HashMap<>();
+                                                x.put(Keys.numberOfMyPublishedQuestions,My.numberOfMyPublishedQuestions+1);
+                                                x.put(Keys.units,My.units-My.unitsForPerDay* finalI);
+                                                Hey.addDocumentToCollection(NewQuestionActivity.this, chats.document(question.getQuestionId()).collection(Keys.chats), question.getQuestionId(), data, doc2 -> Hey.updateDocument(NewQuestionActivity.this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), x, doc3 -> {
+                                                    if (d.isShowing()) d.dismiss();
+                                                    finish();
+                                                }, errorMessage -> {
+
+                                                }), errorMessage -> {
+                                                    if (d.isShowing()) d.dismiss();
+                                                });
+                                            }
+                                        }, errorMessage -> {
+
+                                        }), errorMessage -> {
+                                            if (d.isShowing()) d.dismiss();
+                                        }), errorMessage -> { if (d.isShowing()) d.dismiss(); }), (position, name) -> {
+                                }, errorMessage -> {
+                                    if (d.isShowing()) d.dismiss();
+                                });
+                            }
+                            else {
+                                if (d.isShowing()) d.dismiss();
+                                Hey.showAlertDialog(NewQuestionActivity.this, getString(R.string.questionLimitError).replace("xxx", String.valueOf(My.questionLimit)));
+                            }
+                        }, errorMessage -> {
+                            if (d.isShowing()) d.dismiss();
+                        });
+                    }
+
+                    @Override
+                    public void offline() {
+                        Hey.showToast(NewQuestionActivity.this, "OFFLINE");
+                    }
+                }, errorMessage -> {
+                }, this);
+            }
+        } else Hey.showAlertDialog(this,getString(R.string.notEnoughUnitsForDay).replaceAll("xxx", String.valueOf(i)).replaceAll("yyy", String.valueOf(My.units)).replaceAll("zzz", String.valueOf(My.unitsForPerDay)));
     }
 
     private void initVars() {
-        subjectR = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> onSubjectR(true)
-        );
-        themeR = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> onSubjectR(false)
-        );
-        imageR = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), this::onPickImageResult
-        );
-        subjectList = findViewById(R.id.listSubject);subjectList.setOnClickListener(v -> showSubjects());
-        themeList = findViewById(R.id.listTheme);themeList.setOnClickListener(v -> showThemes());
-        subject = findViewById(R.id.selectSubject);subject.setOnClickListener(view -> {
-            Intent i = new Intent(this,SelectItem.class);
-            i.putExtra("a", Keys.subject);
-            My.result = subjects;
-            subjectR.launch(i);
-        });
-        theme = findViewById(R.id.selectTheme);theme.setOnClickListener(v -> {
-            Intent i = new Intent(this,SelectItem.class);
-            i.putExtra("a", Keys.theme);
-            My.result = themes;
+        main = findViewById(R.id.mainNQ);
+        selectTheme = findViewById(R.id.selectTheme);
+        selectTheme.setOnClickListener(v -> {
+            Intent i = new Intent(this, SelectTheme.class);
             themeR.launch(i);
         });
-        image = findViewById(R.id.selectImage);image.setOnClickListener(v -> chooseImage());
-        publish = findViewById(R.id.publish);publish.setOnClickListener(v -> publishQuestion());
-        number = findViewById(R.id.itemText);
-        time = Timestamp.now().toDate().getTime();
-        filePath = My.folder+My.id+time+".png";
-        data.put(Keys.time, time);
-        data.put(Keys.sender,My.id);
+        imageR = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onPickImageResult);
+        themeR = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onThemeResult);
+        image = findViewById(R.id.selectImage);
+        image.setOnClickListener(v -> chooseImage());
+        publish = findViewById(R.id.publish);
+        publish.setOnClickListener(v -> publishQuestion());
+        message = findViewById(R.id.itemText);
         questionImage = findViewById(R.id.questionImage);
+        questionImage.setOnClickListener(v -> showImage());
+        scaleImageView = findViewById(R.id.bigImageNQ);
+        time = Calendar.getInstance().getTimeInMillis();
+        number = findViewById(R.id.numberOfDays);
+        filePath = My.folder + My.id + time + ".png";
+    }
+
+    private void showImage() {
+        if (!imageShowing && file != null) {
+            imageShowing = true;
+            main.setVisibility(View.INVISIBLE);
+            scaleImageView.setVisibility(View.VISIBLE);
+            scaleImageView.setMaxScale(15);
+            scaleImageView.setMinScale(0.1f);
+            scaleImageView.setBackgroundColor(Color.BLACK);
+            scaleImageView.setImage(ImageSource.uri(Uri.fromFile(file)));
+        }
+    }
+
+    private void onThemeResult(ActivityResult result) {
+        if (result.getResultCode() == RESULT_OK) {
+            Intent o = result.getData();
+            if (o != null) {
+                theme = o.getStringExtra(Keys.theme);
+                selectTheme.setText(getString(R.string.theme)+theme);
+            }
+        }
     }
 
     private void onPickImageResult(ActivityResult result) {
         if (result.getData() != null) {
             Uri uri = result.getData().getData();
-            Hey.cropImage(this, this, uri, new File(filePath), false, errorMessage -> {Hey.print("a","AAA"); });
+            Hey.cropImage(this, this, uri, new File(filePath), false, errorMessage -> Hey.print("a", errorMessage));
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == UCrop.REQUEST_CROP) if (data != null && resultCode == RESULT_OK) {
-            Uri res = UCrop.getOutput(data);
-            if (res != null) {
-                questionImage.setImageDrawable(new ColorDrawable(Color.WHITE));
-                Log.e("onActivityResult", "Result is not null:"+res.getPath());
-                filePath = res.getPath();
-                ImageUploadingDialog d = Hey.uploadImageForProfile(this, filePath, String.valueOf(My.id), doc -> {
-                    questionImage.setImageURI(res);
-                }, (position, name) -> {
-
-                });
-            } else {
-                Log.e("onActivityResult", "Result is null");
-                Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
+        if (requestCode == UCrop.REQUEST_CROP)
+            if (data != null && resultCode == RESULT_OK) {
+                Uri res = UCrop.getOutput(data);
+                if (res != null) {
+                    imageSelected = true;
+                    filePath = res.getPath();
+                    file = new File(filePath);
+                    questionImage.setImageURI(Uri.fromFile(file));
+                    Log.e("onActivityResult", "Result is not null:" + res.getPath());
+                } else {
+                    Log.e("onActivityResult", "Result is null");
+                    Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
+                }
             }
-        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (imageShowing) {
+            imageShowing = false;
+            scaleImageView.setVisibility(View.GONE);
+            main.setVisibility(View.VISIBLE);
+        } else super.onBackPressed();
     }
 
     private void chooseImage() {
         Hey.pickImage(imageR);
     }
 
-    private void onSubjectR(boolean isSubject) {
-        if(My.isSuccess && !My.result.isEmpty()) {
-            if(isSubject){
-                subjects = new ArrayList<>();
-                for(String s:My.result) if (!subjects.contains(s)) subjects.add(s);
-                subjectS = "";
-                for (String i:subjects) if(subjects.get(0).equals(i)) subjectS+=i; else subjectS+=","+i;
-                Hey.print("A","s:"+subjectS);
-                data.remove(Keys.subject);
-                data.put(Keys.subject,subjectS);
-            } else {
-                themes = new ArrayList<>();
-                for(String a:My.result) if(!themes.contains(a)) themes.add(a);
-                themeS = "";
-                for (String i:themes) if(themes.get(0).equals(i)) themeS+=i; else themeS+=","+i;
-                data.remove(Keys.theme);
-                data.put(Keys.theme,themeS);
-            }
-            My.result.clear();
-            My.isSuccess = false;
-        }
-    }
-
-    private void showThemes() {
-        if(themes.size()==0) Hey.showToast(this,getString(R.string.you_not_selected)); else {
-            Hey.showAlertDialog(this, themeS);
-        }
-    }
-
-    private void showSubjects() {
-        if(subjects.size()==0) Hey.showToast(this,getString(R.string.you_not_selected)); else {
-            Hey.showAlertDialog(this, subjectS);
-        }
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode==KeyEvent.KEYCODE_VOLUME_UP){
-            Hey.print("A",subjects.toString());
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+
             return true;
-        }else
-        return super.onKeyDown(keyCode, event);
+        } else
+            return super.onKeyDown(keyCode, event);
     }
 }

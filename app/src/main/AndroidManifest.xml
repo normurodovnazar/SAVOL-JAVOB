@@ -3,11 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.normurodov_nazar.savol_javob">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
 
     <application
@@ -17,7 +19,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Loading">
-        <activity android:name=".Activities.AnswerToQuestion"></activity>
+        <activity
+            android:name=".Activities.QuestionFilter"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.SearchQuestions"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.SelectTheme"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.AccountInformation"
+            android:exported="false" />
+        <activity android:name=".Activities.AnswerToQuestion" />
         <activity android:name=".Activities.QuestionChat" />
         <activity android:name=".Activities.SelectItem" />
         <activity android:name=".Activities.ShowAd" />
@@ -39,6 +53,11 @@
             android:name=".Works"
             android:enabled="true"
             android:exported="true" />
+        <service android:name=".NotificationService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"

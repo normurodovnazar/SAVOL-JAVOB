@@ -1,15 +1,15 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Question {
-    long time,sender;
-    String subject,theme,number,questionId;
-    boolean hiddenUser;
+    Long time,sender,visibleTime;
+    String message,questionId,theme;
     final Map<String,Object> data;
 
     public String getQuestionId() {
@@ -21,10 +21,9 @@ public class Question {
         this.data = data;
         time = (long) data.get(Keys.time);
         sender = (long) data.get(Keys.sender);
-        subject = (String) data.get(Keys.subject);
+        message = (String) data.get(Keys.message);
         theme = (String) data.get(Keys.theme);
-        number = (String) data.get(Keys.number);
-        hiddenUser = (boolean) data.get(Keys.hidden);
+        visibleTime = (long) data.get(Keys.visibleTime);
         questionId = sender+""+time;
     }
 
@@ -32,10 +31,9 @@ public class Question {
         Map<String,Object> data = new HashMap<>();
         data.put(Keys.time,doc.get(Keys.time));
         data.put(Keys.sender,doc.get(Keys.sender));
-        data.put(Keys.subject,doc.get(Keys.subject));
+        data.put(Keys.message,doc.get(Keys.message));
         data.put(Keys.theme,doc.get(Keys.theme));
-        data.put(Keys.number,doc.get(Keys.number));
-        data.put(Keys.hidden,doc.get(Keys.hidden));
+        data.put(Keys.visibleTime,doc.get(Keys.visibleTime));
         return new Question(data);
     }
 
@@ -47,23 +45,23 @@ public class Question {
         return sender;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getNumber() {
+        return message;
+    }
+
+    public Map<String, Object> toMap() {
+        return data;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public String getTheme() {
         return theme;
     }
 
-    public String getNumber() {
-        return number;
-    }
-
-    public boolean isHiddenUser() {
-        return hiddenUser;
-    }
-
-    public Map<String, Object> toMap() {
-        return data;
+    public long getVisibleTime() {
+        return visibleTime;
     }
 }

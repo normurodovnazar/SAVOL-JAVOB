@@ -1,109 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Activities.NewQuestionActivity">
 
-    <Button
-        android:id="@+id/selectSubject"
-        android:background="@drawable/sss"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="20sp"
-        android:text="@string/select_subj"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginVertical="10dp"/>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainNQ"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/listSubject"
-        android:clickable="true"
-        android:focusable="true"
-        android:layout_marginHorizontal="10dp"
-        android:src="@drawable/info_ic"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@id/selectSubject"
-        app:layout_constraintStart_toEndOf="@id/selectSubject"
-        app:layout_constraintBottom_toBottomOf="@id/selectSubject"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        <Button
+            android:id="@+id/selectTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/sss"
+            android:padding="15dp"
+            android:text="@string/select_theme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/selectTheme"
-        android:background="@drawable/sss"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/select_theme"
-        app:layout_constraintTop_toBottomOf="@id/selectSubject"
-        app:layout_constraintStart_toStartOf="@id/selectSubject"
-        app:layout_constraintEnd_toEndOf="@id/selectSubject"
-        android:layout_marginVertical="10dp"/>
+        <EditText
+            android:id="@+id/itemText"
+            android:layout_width="0dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/text_fields_in_big_screens"
+            android:drawableStart="@drawable/keyboard"
+            android:drawablePadding="10dp"
+            android:ems="10"
+            android:hint="@string/write_message"
+            android:inputType="text"
+            android:padding="15dp"
+            android:textCursorDrawable="@drawable/black_cursor_drawable"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectTheme" />
 
-    <ImageView
-        android:id="@+id/listTheme"
-        android:clickable="true"
-        android:focusable="true"
-        android:layout_marginHorizontal="10dp"
-        android:src="@drawable/info_ic"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@id/selectTheme"
-        app:layout_constraintStart_toEndOf="@id/selectTheme"
-        app:layout_constraintBottom_toBottomOf="@id/selectTheme"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        <EditText
+            android:maxLength="1"
+            android:id="@+id/numberOfDays"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@drawable/text_fields_in_big_screens"
+            android:hint="@string/daysAvailable"
+            android:inputType="number"
+            android:padding="15dp"
+            android:textColor="@color/black"
+            android:textCursorDrawable="@drawable/black_cursor_drawable"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/itemText" />
 
-    <EditText
-        android:textCursorDrawable="@drawable/black_cursor_drawable"
-        android:id="@+id/itemText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/text_fields_in_big_screens"
-        android:drawableStart="@drawable/keyboard"
-        android:drawablePadding="10dp"
-        android:ems="10"
-        android:hint="@string/number_question"
-        android:inputType="number"
-        android:padding="15dp"
-        android:drawableLeft="@drawable/keyboard"
-        android:layout_marginVertical="10dp"
-        app:layout_constraintTop_toBottomOf="@id/selectTheme"
-        app:layout_constraintStart_toStartOf="@id/selectTheme"
-        app:layout_constraintEnd_toEndOf="@id/selectTheme"/>
+        <Button
+            android:id="@+id/selectImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/sss"
+            android:padding="15dp"
+            android:text="@string/choose_image"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/numberOfDays" />
 
-    <Button
-        android:id="@+id/selectImage"
-        android:background="@drawable/sss"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/choose_image"
-        app:layout_constraintTop_toBottomOf="@id/itemText"
-        app:layout_constraintStart_toStartOf="@id/selectSubject"
-        app:layout_constraintEnd_toEndOf="@id/selectSubject"
-        android:layout_marginVertical="10dp"/>
+        <ImageView
+            android:id="@+id/questionImage"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/publish"
+            app:layout_constraintTop_toBottomOf="@id/selectImage" />
 
-    <ImageView
-        android:id="@+id/questionImage"
-        android:layout_marginVertical="10dp"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/selectImage"
-        app:layout_constraintBottom_toTopOf="@id/publish"/>
+        <Button
+            android:id="@+id/publish"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="30dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/sss"
+            android:padding="15dp"
+            android:text="@string/publish"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <Button
-        android:id="@+id/publish"
-        android:background="@drawable/sss"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/publish"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/selectSubject"
-        app:layout_constraintEnd_toEndOf="@id/selectSubject"
-        android:layout_marginVertical="10dp"/>
+    <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+        android:id="@+id/bigImageNQ"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

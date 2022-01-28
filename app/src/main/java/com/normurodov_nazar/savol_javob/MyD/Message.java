@@ -9,18 +9,29 @@ public class Message {
 
     final Map<String,Object> data;
     String message,id;
-    long sender,time;
+    long sender,time,incorrect,correct,imageSize;
+    boolean read;
 
     public Message(Map<String, Object> data) {
         this.data = data;
         message = (String) data.get(Keys.message);
         sender = (long) data.get(Keys.sender);
         time = (long) data.get(Keys.time);
+        read = (boolean) data.get(Keys.read);
+        Object c = data.get(Keys.correct),i = data.get(Keys.incorrect);
+        correct = c==null ? 0 : (long) c;
+        incorrect = i==null ? 0 : (long) i;
+        Long a = (Long) data.get(Keys.imageSize);
+        imageSize = a==null ? -1 : a;
         id = sender+""+time;
     }
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public long getImageSize() {
+        return imageSize;
     }
 
     public Map<String,Object> toMap(){
@@ -29,7 +40,6 @@ public class Message {
 
     public static Message fromDoc(DocumentSnapshot doc){
         Map<String,Object> data = doc.getData();
-        assert data != null;
         return new Message(data);
     }
 
@@ -41,6 +51,14 @@ public class Message {
         return id;
     }
 
+    public long getIncorrect() {
+        return incorrect;
+    }
+
+    public long getCorrect() {
+        return correct;
+    }
+
     public long getTime() {
         return time;
     }
@@ -50,4 +68,6 @@ public class Message {
     }
 
     public String getType(){return (String) data.get(Keys.type);}
+
+    public boolean getRead(){return read;}
 }

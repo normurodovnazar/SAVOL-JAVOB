@@ -2,24 +2,26 @@ package com.normurodov_nazar.savol_javob.MyD;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
+import com.normurodov_nazar.savol_javob.MFunctions.My;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 public class User implements Serializable {
-    private final Object name,surname,imageUrl,seen,number,id,numberOfMyPublishedQuestions,numberOfMyAnswers,numberOfCorrectAnswers,numberOfIncorrectAnswers;
-    private final Object questionOpportunity;
+    private final String name,surname,number,token,id;
+    private final Long units,imageSize,seen,numberOfMyPublishedQuestions,numberOfMyAnswers,numberOfCorrectAnswers,numberOfIncorrectAnswers;
     public String fullName,localFileName;
 
     public String getLocalFileName() {
         return localFileName;
     }
 
-    public User(Object name, Object surname, Object imageUrl, Object seen, Object number, Object id, Object numberOfMyPublishedQuestions, Object numberOfMyAnswers, Object numberOfCorrectAnswers, Object numberOfIncorrectAnswers, Object questionOpportunity) {
+    public User(String name, String surname,Long imageSize, Long seen, String number, String id, Long numberOfMyPublishedQuestions, Long numberOfMyAnswers, Long numberOfCorrectAnswers, Long numberOfIncorrectAnswers, Long questionOpportunity,String token) {
+        this.token = token;
+        this.imageSize = imageSize;
         this.name = name;
         this.surname = surname;
-        this.imageUrl = imageUrl;
         this.seen = seen;
         this.number = number;
         this.id = id;
@@ -27,9 +29,11 @@ public class User implements Serializable {
         this.numberOfMyAnswers = numberOfMyAnswers;
         this.numberOfCorrectAnswers = numberOfCorrectAnswers;
         this.numberOfIncorrectAnswers = numberOfIncorrectAnswers;
-        this.questionOpportunity = questionOpportunity;
+        this.units = questionOpportunity;
         fullName = surname+" "+name;
-        localFileName = id + imageUrl.toString().substring(imageUrl.toString().length() - 5)+".png";
+        localFileName = My.folder + id + imageSize +".png";
+        if (name==null || surname==null || number==null || seen==null || imageSize==null ||id==null||numberOfMyPublishedQuestions==null||numberOfMyAnswers==null|| numberOfCorrectAnswers==null||numberOfIncorrectAnswers==null||questionOpportunity==null|| token.equals("a"))
+            My.noProblem = false;
     }
 
     public String getFullName() {
@@ -37,14 +41,14 @@ public class User implements Serializable {
     }
 
     public static User fromDoc(DocumentSnapshot doc){
-        return new User(doc.get(Keys.name),doc.get(Keys.surname),doc.get(Keys.imageUrl),doc.get(Keys.seen),doc.get(Keys.number),doc.get(Keys.id),doc.get(Keys.numberOfMyPublishedQuestions),doc.get(Keys.numberOfMyAnswers),doc.get(Keys.numberOfCorrectAnswers),doc.get(Keys.numberOfIncorrectAnswers),doc.get(Keys.myQuestionOpportunity));
+        return new User(doc.getString(Keys.name),doc.getString(Keys.surname),doc.getLong(Keys.imageSize),doc.getLong(Keys.seen),doc.getString(Keys.number),doc.getId(),doc.getLong(Keys.numberOfMyPublishedQuestions),doc.getLong(Keys.numberOfMyAnswers),doc.getLong(Keys.numberOfCorrectAnswers),doc.getLong(Keys.numberOfIncorrectAnswers),doc.getLong(Keys.units),doc.getString(Keys.token));
     }
 
     public Map<String,Object> toMap(){
         Map<String,Object> map = new HashMap<>();
         map.put(Keys.name,name);
         map.put(Keys.surname,surname);
-        map.put(Keys.imageUrl,imageUrl);
+        map.put(Keys.imageSize,imageSize);
         map.put(Keys.seen,seen);
         map.put(Keys.number,number);
         map.put(Keys.id,id);
@@ -52,7 +56,8 @@ public class User implements Serializable {
         map.put(Keys.numberOfMyAnswers,numberOfMyAnswers);
         map.put(Keys.numberOfCorrectAnswers,numberOfCorrectAnswers);
         map.put(Keys.numberOfIncorrectAnswers,numberOfIncorrectAnswers);
-        map.put(Keys.myQuestionOpportunity,questionOpportunity);
+        map.put(Keys.units, units);
+        map.put(Keys.token,token);
         return map;
     }
 
@@ -60,16 +65,16 @@ public class User implements Serializable {
         return name.toString();
     }
 
+    public String getToken(){return token.toString();}
+
     public String getSurname() {
         return surname.toString();
     }
 
-    public String getImageUrl() {
-        return imageUrl.toString();
-    }
+    public long getImageSize(){return (long) imageSize;}
 
     public long getSeen() {
-        return Long.parseLong(seen.toString());
+        return seen;
     }
 
     public String getNumber() {
@@ -81,22 +86,22 @@ public class User implements Serializable {
     }
 
     public long  getNumberOfMyPublishedQuestions() {
-        return Long.parseLong(numberOfMyPublishedQuestions.toString());
+        return numberOfMyPublishedQuestions;
     }
 
     public long getNumberOfMyAnswers() {
-        return Long.parseLong(numberOfMyAnswers.toString());
+        return numberOfMyAnswers;
     }
 
     public long getNumberOfCorrectAnswers() {
-        return Long.parseLong(numberOfCorrectAnswers.toString());
+        return numberOfCorrectAnswers;
     }
 
     public long getNumberOfIncorrectAnswers() {
-        return Long.parseLong(numberOfIncorrectAnswers.toString());
+        return numberOfIncorrectAnswers;
     }
 
-    public long getQuestionOpportunity() {
-        return Long.parseLong(questionOpportunity.toString());
+    public long getUnits() {
+        return units;
     }
 }

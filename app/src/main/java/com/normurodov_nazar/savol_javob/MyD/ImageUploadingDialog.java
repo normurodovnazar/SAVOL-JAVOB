@@ -2,6 +2,7 @@ package com.normurodov_nazar.savol_javob.MyD;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,12 +10,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -29,19 +27,34 @@ public class ImageUploadingDialog extends Dialog {
     private final Context context;
     private final SuccessListener successListener;
     private final ItemClickListener clickListener;
+    private final ErrorListener errorListener;
     ProgressBar bar;
     TextView progress,percent;
     ImageView imageView;
     Button b;
     UploadTask uploadTask;
     private final StorageReference storage;
-    String downloadUrl;
 
-    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,boolean forProfile,SuccessListener successListener,ItemClickListener clickListener) {
+    public ImageUploadingDialog(@NonNull Context context,String filePath,String uploadAs,ImageMode mode,SuccessListener successListener,ItemClickListener clickListener,ErrorListener errorListener) {
         super(context);
+        this.errorListener = errorListener;
         this.context = context;
         this.filePath = filePath;
-        storage = FirebaseStorage.getInstance().getReference().child(forProfile ? Keys.chats : Keys.users).child(uploadAs);
+        String ref;
+        switch (mode){
+            case chat:
+                ref = Keys.chats;
+                break;
+            case profile:
+                ref = Keys.users;
+                break;
+            case question:
+                ref = Keys.allQuestions;
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + mode);
+        }
+        storage = FirebaseStorage.getInstance().getReference().child(ref).child(uploadAs);
         this.successListener = successListener;
         this.clickListener = clickListener;
     }
@@ -64,7 +77,8 @@ public class ImageUploadingDialog extends Dialog {
         uploadTask.addOnFailureListener(this::onError)
                 .addOnCompleteListener(task -> {
                     if(task.isSuccessful()){
-                        finished();
+                        successListener.onSuccess(null);
+                        dismiss();
                     }else Hey.showUnknownError(context);
         })
         .addOnProgressListener(snapshot -> {
@@ -76,35 +90,13 @@ public class ImageUploadingDialog extends Dialog {
         });
     }
 
-    private void finished() {
-        Hey.print("a","finished");
-        storage.getDownloadUrl().addOnCompleteListener(task -> {
-            if(task.isSuccessful()) if(task.getResult()!=null) {
-                downloadUrl = task.getResult().toString();
-                successListener.onSuccess(null);
-                dismiss();
-            } else unknownE(); else unknownE();
-            });
-    }
-
-    void unknownE(){
-        Hey.showUnknownError(context).setOnDismissListener(dialog -> {
-            dismiss();
-            ImageUploadingDialog.this.dismiss();
-        });
-    }
-
     private void onError(Exception e) {
         Hey.print("error",e.getMessage());
         if(e.getMessage() != null)
             switch (e.getMessage()){
             default:
-                Hey.showAlertDialog(context,e.getMessage());
+                Hey.showAlertDialog(context,e.getMessage()).setOnDismissListener(dialogInterface -> errorListener.onError(null));
         }
         dismiss();
-    }
-
-    public String getDownloadUrl(){
-        return downloadUrl;
     }
 }
