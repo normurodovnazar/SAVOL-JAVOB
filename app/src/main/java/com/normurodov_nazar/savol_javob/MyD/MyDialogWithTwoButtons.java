@@ -20,7 +20,7 @@ public class MyDialogWithTwoButtons extends Dialog {
     String i;
     boolean result = false,forDelete;
 
-    public MyDialogWithTwoButtons(@NonNull Context context, String i, Message message,boolean forDelete) {
+    public MyDialogWithTwoButtons(@NonNull Context context, String i, Message message, boolean forDelete) {
         super(context);
         this.i = i;
         this.message = message;

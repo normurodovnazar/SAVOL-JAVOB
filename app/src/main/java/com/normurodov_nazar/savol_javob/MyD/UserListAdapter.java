@@ -22,21 +22,24 @@ import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewHolder> {
 
     final RecyclerViewItemClickListener clickListener;
     final RecyclerViewItemLongClickListener longClickListener;
 
-    public UserListAdapter(Context context,ArrayList<User> users,boolean fromSearch,RecyclerViewItemClickListener clickListener,RecyclerViewItemLongClickListener longClickListener) {
-        this.users = users;
+    public UserListAdapter(Context context, ArrayList<Long> userIds, RecyclerViewItemClickListener clickListener, RecyclerViewItemLongClickListener longClickListener) {
+        this.userIds = userIds;
         this.context = context;
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
     }
 
 
-    ArrayList<User> users;
+    ArrayList<Long> userIds;
     Context context;
 
     @NonNull
@@ -46,19 +49,15 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
         return new MViewHolder(view);
     }
 
-    public void removeItem(int position){
-        notifyItemRemoved(position);
-        users.remove(position);
-    }
-
     @Override
     public void onBindViewHolder(@NonNull UserListAdapter.MViewHolder holder, int position) {
-        DocumentReference documentReference = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(users.get(position).getId(),My.id));
+        DocumentReference documentReference = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(userIds.get(position),My.id));
         Hey.getDocument(context, documentReference, doc -> {
             DocumentSnapshot snapshot = (DocumentSnapshot) doc;
             Object ol = snapshot.get(Keys.newMessagesTo +My.id);
             long l = ol==null ? 0 : (long) ol;
-            holder.setUser(context,users.get(position),l,clickListener,longClickListener,position);
+            holder.setUser(context, userIds.get(position),l,clickListener,longClickListener,position);
+
         }, errorMessage -> {
 
         });
@@ -66,7 +65,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
 
     @Override
     public int getItemCount() {
-        return users.size();
+        return userIds.size();
     }
 
     static class MViewHolder extends RecyclerView.ViewHolder{
@@ -81,37 +80,38 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
             view = itemView;
         }
 
-        void setUser(Context context,User user,long n,RecyclerViewItemClickListener clickListener,RecyclerViewItemLongClickListener longClickListener,int position){
-            String name = user.getName(),surname = user.getSurname(),full = surname+" "+name;
-            this.name.setText(full);
-            changeSubtitle(context,user,n);
-            File file = new File(user.getLocalFileName());
-            Hey.workWithProfileImage(user, doc -> imageView.setImageURI(Uri.fromFile(file)), errorMessage -> {
+        void setUser(Context context,long id,long n,RecyclerViewItemClickListener clickListener,RecyclerViewItemLongClickListener longClickListener,int position){
 
-            });
-            view.setOnClickListener(v -> clickListener.onItemClick(null,null,position));
-            view.setOnLongClickListener(v -> {
-                longClickListener.onItemLongClick(null,imageView,position);
-                return true;
-            });
-            DocumentReference ref = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(My.id,user.getId()));
-            Hey.addDocumentListener(context, ref, doc -> {
-                Hey.print("listener","new message");
-                Object o = ((DocumentSnapshot) doc).get(Keys.newMessagesTo+My.id);
-                long l = o==null ? 0 : (long) o;
-                changeSubtitle(context,user,l);
-            }, errorMessage -> {
+            Hey.getDocument(context, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)), doc -> {
+                User user = User.fromDoc((DocumentSnapshot) doc);
+                MViewHolder.this.name.setText(user.getFullName());
+                changeSubtitle(context,user.getSeen(),n);
+                File file = new File(user.getLocalFileName());
+                Hey.workWithProfileImage(user, doc0 -> imageView.setImageURI(Uri.fromFile(file)), errorMessage -> {
+                });
+                DocumentReference ref = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(My.id,id));
+                view.setOnClickListener(v -> clickListener.onItemClick(null,null,position));
+                view.setOnLongClickListener(v -> {
+                    longClickListener.onItemLongClick(new Message(Collections.singletonMap(Keys.message,user.getFullName()),""),imageView,position);
+                    return true;
+                });
+                Hey.addDocumentListener(context, ref, doc1 -> {
+                    Object o = doc1.get(Keys.newMessagesTo+My.id);
+                    long l = o==null ? 0 : (long) o;
+                    changeSubtitle(context,user.getSeen(),l);
+                }, errorMessage -> {
 
-            });
+                });
+            }, errorMessage -> { });
         }
 
-        private void changeSubtitle(Context context,User user,long l) {
+        private void changeSubtitle(Context context,long seenTime,long l) {
             String s;
             if (l == 0) {
-                s = context.getString(R.string.activity) + Hey.getSeenTime(context, user.getSeen());
+                Hey.print("seen",Hey.getSeenTime(context,seenTime));
+                s = context.getString(R.string.activity) + Hey.getSeenTime(context, seenTime);
                 seen.setTextColor(Color.BLACK);
-            }
-            else {
+            } else {
                 seen.setTextColor(Color.RED);
                 s = l + " " + context.getString(R.string.newMessage);
             }

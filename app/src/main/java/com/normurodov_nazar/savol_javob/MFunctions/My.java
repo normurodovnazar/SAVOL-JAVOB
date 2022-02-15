@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class My {
     public static String number,name,surname,fullName;
 
-    public static long imageSize,id,seen, units,numberOfMyPublishedQuestions,numberOfMyAnswers,numberOfCorrectAnswers,numberOfIncorrectAnswers,questionLimit,unitsForPerDay;
+    public static long unitsForAd,imageSize,id,seen, units,numberOfMyPublishedQuestions,numberOfMyAnswers,numberOfCorrectAnswers,numberOfIncorrectAnswers,questionLimit,unitsForPerDay;
 
     public static FirebaseAuth auth;
 
@@ -17,14 +17,16 @@ public class My {
     public static int width;
     public static String folder;
     public static String token;
+    public static String activeId = "";
     public static ArrayList<String> result = new ArrayList<>();
     public static User user;
     public static String theme;
     public static boolean noProblem = true;
-    public static boolean descending = true;
+    public static String petName;
+    public static boolean actionCompleted = false;
+    public static boolean updateSuccess = false;
 
     public static void setDataFromDoc(DocumentSnapshot doc){
-        Hey.print("setDataFromDoc",doc.toString());
         Long SN = doc.getLong(Keys.seen),iU = doc.getLong(Keys.imageSize),mQO = doc.getLong(Keys.units),nOMPQ = doc.getLong(Keys.numberOfMyPublishedQuestions),
                 nOMA = doc.getLong(Keys.numberOfMyAnswers),nOCA = doc.getLong(Keys.numberOfCorrectAnswers),nOIA = doc.getLong(Keys.numberOfIncorrectAnswers);
         String T = doc.getString(Keys.token),n = doc.getString(Keys.number),iD = doc.getId(),nm = doc.getString(Keys.name),sm = doc.getString(Keys.surname);
@@ -40,7 +42,7 @@ public class My {
         id = Long.parseLong(iD);
         if(SN!=null) seen = SN;else noProblem = true;
         if (T!=null) token = T; else noProblem = true;
-        fullName = surname+" "+name;
+        fullName = name+" "+surname;
     }
 
     public static void setDataFromUser(User user){

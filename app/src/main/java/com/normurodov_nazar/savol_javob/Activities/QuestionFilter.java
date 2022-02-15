@@ -26,7 +26,7 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
     TextView directionT,themeT,dateT,statusQuestionT;
 
 
-    boolean descending = true,before = true, correct = true;
+    boolean descending = true,before = true, correct = true,hide = false;
     String themeS = "";
     long time = Calendar.getInstance().getTimeInMillis();
 
@@ -37,6 +37,11 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_question_filter);
         initVars();
+        if (hide) {
+            statusQuestionB.setVisibility(View.INVISIBLE);
+            statusQuestionT.setVisibility(View.INVISIBLE);
+        }
+        showChanges();
     }
 
     private void initVars() {
@@ -46,6 +51,13 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
         dateT = findViewById(R.id.dateT);
         statusQuestionT = findViewById(R.id.statusT);
 
+        Intent data = getIntent();
+        themeS = data.getStringExtra(Keys.theme);
+        correct = data.getBooleanExtra(Keys.correct,true);
+        descending = data.getBooleanExtra(Keys.order,true);
+        before = data.getBooleanExtra(Keys.divider,true);
+        time = data.getLongExtra(Keys.time,Hey.getCurrentTime());
+        hide = data.getBooleanExtra(Keys.hidden,false);
         theme = findViewById(R.id.themeF);theme.setOnClickListener(this);
         direction = findViewById(R.id.direction);direction.setOnClickListener(this);
         selectDate = findViewById(R.id.datePickerF);selectDate.setOnClickListener(this);
@@ -77,7 +89,7 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
             } else Hey.showToast(this, getString(R.string.selectThemeAtLeast));
         } else {
             if (theme.equals(v)) {
-                themeR.launch(new Intent(this, SelectTheme.class));
+                themeR.launch(new Intent(this, SelectTheme.class).putExtra("s",true));
             }
             if (direction.equals(v)) {
                 Hey.showPopupMenu(this, direction, new ArrayList<>(Arrays.asList(getString(R.string.ascending), getString(R.string.descending))), (position, name) -> {

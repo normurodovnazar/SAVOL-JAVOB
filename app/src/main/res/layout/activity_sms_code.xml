@@ -27,7 +27,6 @@
         android:layout_height="wrap_content"
         android:background="@drawable/text_fields_in_big_screens"
         android:drawableStart="@drawable/phone_icon"
-        android:drawableLeft="@drawable/phone_icon"
         android:drawablePadding="5dp"
         android:ems="10"
         android:hint="@string/input_code"

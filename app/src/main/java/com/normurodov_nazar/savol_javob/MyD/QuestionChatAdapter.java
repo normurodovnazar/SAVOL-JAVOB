@@ -34,11 +34,12 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     final RecyclerViewItemClickListener imageClick;
     final RecyclerViewItemClickListener profileImageClick;
     final RecyclerViewItemLongClickListener longClickListener;
+    final ItemClickForQuestion loadMore;
     ArrayList<Message> messages;
     final Context context;
     final String theme;
 
-    public QuestionChatAdapter(Context context, ArrayList<Message> messages, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, RecyclerViewItemLongClickListener longClickListener, String theme) {
+    public QuestionChatAdapter(Context context, ArrayList<Message> messages, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, RecyclerViewItemLongClickListener longClickListener,ItemClickForQuestion loadMore, String theme) {
         this.questionId = questionId;
         this.textClick = textClick;
         this.messages = messages;
@@ -47,31 +48,40 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         this.profileImageClick = profileImageClick;
         this.longClickListener = longClickListener;
         this.theme = theme;
+        this.loadMore = loadMore;
     }
 
     public void addItems(ArrayList<Message> messages, int itemCount) {
         int startPosition = this.messages.size();
         this.messages.addAll(messages);
-        notifyItemRangeInserted(startPosition, itemCount);
+        notifyItemRangeInserted(startPosition+2, itemCount);
     }
 
     public void removeItem(Message message) {
         int i = Hey.getIndexInArray(message, messages);
         if (i != -1) {
             messages.remove(i);
-            notifyItemRemoved(i);
+            notifyItemRemoved(i+1);
         }
+    }
+
+    public void addItemsToTop(ArrayList<Message> newMessages){
+        messages.addAll(0,newMessages);
+        notifyItemRangeInserted(1, newMessages.size());
     }
 
     public void changeItem(Message message, int i) {
         messages.set(i, message);
-        notifyItemChanged(i);
+        notifyItemChanged(i+1);
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         switch (viewType) {
+            case 0:
+                View loadMore = LayoutInflater.from(context).inflate(R.layout.load_more_button, parent, false);
+                return new LoadMore(loadMore);
             case -1:
                 View meT = LayoutInflater.from(context).inflate(R.layout.message_from_me, parent, false);
                 return new TextFromMe(meT);
@@ -101,70 +111,76 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemViewType(int position) {
-        Message message = messages.get(position);
-        if (message.getSender() == My.id)
-            switch (message.getType()) {
+        if (position!=0) {
+            Message message = messages.get(position-1);
+            if (message.getSender() == My.id)
+                switch (message.getType()) {
+                    case Keys.textMessage:
+                        return -1;
+                    case Keys.imageMessage:
+                        return -2;
+                    case Keys.answer:
+                        return -3;
+                    case Keys.question:
+                        return -4;
+                }
+            else switch (message.getType()) {
                 case Keys.textMessage:
-                    return -1;
+                    return 1;
                 case Keys.imageMessage:
-                    return -2;
+                    return 2;
                 case Keys.answer:
-                    return -3;
+                    return 3;
                 case Keys.question:
-                    return -4;
+                    return 4;
             }
-        else switch (message.getType()) {
-            case Keys.textMessage:
-                return 1;
-            case Keys.imageMessage:
-                return 2;
-            case Keys.answer:
-                return 3;
-            case Keys.question:
-                return 4;
         }
         return 0;
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Message data = messages.get(position);
-        if (data.getSender() == My.id) {
-            switch (data.getType()) {
-                case Keys.textMessage:
-                    ((TextFromMe) holder).setData(data, textClick, position);
-                    break;
-                case Keys.imageMessage:
-                    ((ImageFromMe) holder).setData(data, imageClick, longClickListener, position);
-                    break;
-                case Keys.answer:
-                    ((AnswerFromMe) holder).setData(data, questionId, textClick, imageClick, position, String.valueOf(messages.get(0).getSender()));
-                    break;
-                case Keys.question:
-                    ((QuestionFromMe) holder).setData(data, textClick, imageClick, longClickListener, position);
-                    break;
-            }
-        } else {
-            switch (data.getType()) {
-                case Keys.textMessage:
-                    ((TextFromOther) holder).setData(data, profileImageClick, position);
-                    break;
-                case Keys.imageMessage:
-                    ((ImageFromOther) holder).setData(data, imageClick, profileImageClick, position);
-                    break;
-                case Keys.answer:
-                    ((AnswerFromOther) holder).setData(data, questionId,theme.contains(Keys.correct) ? theme.replace(Keys.correct,"") : theme.replace(Keys.incorrect,""), imageClick, profileImageClick, position, String.valueOf(messages.get(0).getSender()));
-                    break;
-                case Keys.question:
-                    ((QuestionFromOther) holder).setData(data, imageClick, profileImageClick, position);
-                    break;
+        if (position==0) {
+            ((LoadMore) holder).setData(loadMore,messages.size()>=50);
+        }else {
+            Message data = messages.get(position-1);
+            if (data.getSender() == My.id) {
+                switch (data.getType()) {
+                    case Keys.textMessage:
+                        ((TextFromMe) holder).setData(data, textClick, position);
+                        break;
+                    case Keys.imageMessage:
+                        ((ImageFromMe) holder).setData(data, imageClick, longClickListener, position);
+                        break;
+                    case Keys.answer:
+                        ((AnswerFromMe) holder).setData(data, questionId, textClick, imageClick, position, String.valueOf(messages.get(0).getSender()));
+                        break;
+                    case Keys.question:
+                        ((QuestionFromMe) holder).setData(data, textClick, imageClick, longClickListener, position);
+                        break;
+                }
+            } else {
+                switch (data.getType()) {
+                    case Keys.textMessage:
+                        ((TextFromOther) holder).setData(data, profileImageClick, position);
+                        break;
+                    case Keys.imageMessage:
+                        ((ImageFromOther) holder).setData(data, imageClick, profileImageClick, position);
+                        break;
+                    case Keys.answer:
+                        ((AnswerFromOther) holder).setData(data, questionId,theme.contains(Keys.correct) ? theme.replace(Keys.correct,"") : theme.replace(Keys.incorrect,""), imageClick, profileImageClick, position, String.valueOf(messages.get(0).getSender()));
+                        break;
+                    case Keys.question:
+                        ((QuestionFromOther) holder).setData(data, imageClick, profileImageClick, position);
+                        break;
+                }
             }
         }
     }
 
     @Override
     public int getItemCount() {
-        return messages.size();
+        return messages.size()+1;
     }
 
     static class TextFromMe extends RecyclerView.ViewHolder {
@@ -182,7 +198,7 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
             message.setText(data.getMessage());
             itemView.setOnClickListener(v -> listener.onItemClick(data, itemView, i));
-            if (data.getRead()) read.setImageResource(R.drawable.ic_read);
+            read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
         }
     }
 
@@ -200,7 +216,7 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         void setData(Message data, RecyclerViewItemClickListener imageClick, RecyclerViewItemLongClickListener longClickListener, int i) {
             time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
             Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
-            if (data.getRead()) read.setImageResource(R.drawable.ic_read);
+            read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
             itemView.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
             itemView.setOnLongClickListener(v -> {
                 longClickListener.onItemLongClick(data, itemView, i);
@@ -232,10 +248,10 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect.setVisibility(View.VISIBLE);
         }
 
-        void setData(Message data, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, int i,String senderId) {
+        void setData(Message data, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, int i, String senderId) {
             message.setText(data.getMessage());
             time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
-            if (data.getRead()) read.setImageResource(R.drawable.ic_read);
+            read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
             Hey.workWithImageMessage(data, doc -> image.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
             image.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
             message.setOnClickListener(v -> textClick.onItemClick(data, itemView, i));
@@ -254,13 +270,14 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
             });
             Hey.addDocumentListener(itemView.getContext(), reference, doc -> {
-                if (doc.exists())
-                    if (doc.getBoolean(Keys.correct)){
+                if (doc.exists()){
+                    Boolean condition = doc.getBoolean(Keys.correct);
+                    if (condition!=null) if (condition){
                         answerFromMe.setBackgroundResource(R.drawable.message_my_me_green);
                     }else {
                         answerFromMe.setBackgroundResource(R.drawable.message_by_me_red);
                     }
-                else answerFromMe.setBackgroundResource(R.drawable.message_by_me_bg);
+                } else answerFromMe.setBackgroundResource(R.drawable.message_by_me_bg);
             }, errorMessage -> {
 
             });
@@ -282,7 +299,7 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         void setData(Message data, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, RecyclerViewItemLongClickListener longClickListener, int i) {
             message.setText(data.getMessage());
             time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
-            if (data.getRead()) read.setImageResource(R.drawable.ic_read);
+            read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
             Hey.workWithImageMessage(data, doc -> image.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
             image.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
             message.setOnClickListener(v -> textClick.onItemClick(data, itemView, i));
@@ -378,8 +395,7 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect = itemView.findViewById(R.id.incorrect);
         }
 
-        void setData(Message data, String questionId,String actualTheme, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, int i,String senderId) {
-            Hey.print("themeAnswer",actualTheme);
+        void setData(Message data, String questionId, String actualTheme, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, int i, String senderId) {
             time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
             message.setText(data.getMessage());
             Hey.setUserNameToMessage(itemView, data, fullName);
@@ -422,22 +438,26 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             });
 
             Hey.addDocumentListener(itemView.getContext(), otherDoc, doc -> {
-                if (doc.exists())
-                    if (doc.getBoolean(Keys.correct)){
+                if (doc.exists()){
+                    Boolean condition = doc.getBoolean(Keys.correct);
+                    if (condition!=null) if (condition){
                         answerFromOther.setBackgroundResource(R.drawable.message_by_other_green);
                     }else {
                         answerFromOther.setBackgroundResource(R.drawable.message_by_other_red);
                     }
+                }
                 else answerFromOther.setBackgroundResource(R.drawable.message_by_other);
             }, errorMessage -> { });
 
             Hey.addDocumentListener(itemView.getContext(), myDoc, doc -> {
-                if (doc.exists())
-                    if (doc.getBoolean(Keys.correct)) {
+                if (doc.exists()){
+                    Boolean condition = doc.getBoolean(Keys.correct);
+                    if (condition!=null) if (condition) {
                         relation = Relation.correct;
                     } else {
                         relation = Relation.incorrect;
                     }
+                }
                 else relation = Relation.none;
                 setView();
             }, errorMessage -> {
@@ -642,6 +662,22 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
             profileImage.setOnClickListener(v -> profileImageClick.onItemClick(data, null, i));
             imageView.setOnClickListener(v -> imageClick.onItemClick(data, imageView, i));
+        }
+    }
+
+    static class LoadMore extends RecyclerView.ViewHolder{
+        Button button;
+        public LoadMore(@NonNull View itemView) {
+            super(itemView);
+            button = itemView.findViewById(R.id.loadMore);
+        }
+
+        void setData(ItemClickForQuestion listener,boolean showButton){
+            button.setVisibility(showButton ? View.VISIBLE : View.GONE);
+            button.setOnClickListener(view -> {
+                Hey.setButtonAsLoading(itemView.getContext(), button);
+                listener.onItemClick(0,"",button);
+            });
         }
     }
 }

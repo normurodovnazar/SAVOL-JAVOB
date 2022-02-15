@@ -2,7 +2,6 @@ package com.normurodov_nazar.savol_javob.MyD;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -82,7 +81,6 @@ public class ImageUploadingDialog extends Dialog {
                     }else Hey.showUnknownError(context);
         })
         .addOnProgressListener(snapshot -> {
-            Hey.print("progress changed",Hey.getPercentage(snapshot));
             int i = (int) (snapshot.getBytesTransferred()*100/snapshot.getTotalByteCount());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) bar.setProgress(100-i,true);
             else bar.setProgress(100-i);
@@ -91,11 +89,8 @@ public class ImageUploadingDialog extends Dialog {
     }
 
     private void onError(Exception e) {
-        Hey.print("error",e.getMessage());
-        if(e.getMessage() != null)
-            switch (e.getMessage()){
-            default:
-                Hey.showAlertDialog(context,e.getMessage()).setOnDismissListener(dialogInterface -> errorListener.onError(null));
+        if(e.getMessage() != null) {
+            Hey.showAlertDialog(context, e.getMessage()).setOnDismissListener(dialogInterface -> errorListener.onError(null));
         }
         dismiss();
     }

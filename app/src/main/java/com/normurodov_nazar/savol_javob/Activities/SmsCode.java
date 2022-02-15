@@ -39,7 +39,7 @@ public class SmsCode extends AppCompatActivity {
         number = My.number;
         t = findViewById(R.id.smsSent);e = findViewById(R.id.smsCode);
         b = findViewById(R.id.checkButton);
-        t.setText(number);
+        t.setText(getString(R.string.smsSent).replace("xxx",number));
         auth = My.auth;
         time = new CountDownTimer(120*1000L,1L) {
             @Override

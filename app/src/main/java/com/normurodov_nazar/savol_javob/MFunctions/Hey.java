@@ -16,6 +16,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -26,9 +28,13 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -54,16 +60,25 @@ import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.Message;
 import com.normurodov_nazar.savol_javob.MyD.MyDialog;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
+import com.normurodov_nazar.savol_javob.MyD.MySingleton;
 import com.normurodov_nazar.savol_javob.MyD.ProgressListener;
+import com.normurodov_nazar.savol_javob.MyD.Question;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
+import com.normurodov_nazar.savol_javob.MyD.UriListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -80,15 +95,14 @@ public class Hey {
         ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(CLIPBOARD_SERVICE);
         ClipData clipData = new ClipData(new ClipDescription("a", new String[0]), new ClipData.Item(text));
         clipboardManager.setPrimaryClip(clipData);
-        Toast.makeText(context, context.getText(R.string.copied), Toast.LENGTH_SHORT).show();
+        showToast(context,context.getString(string.copied));
     }
 
     public static ArrayList<Integer> getDifferenceBetweenMessageChanges(ArrayList<Message> old, ArrayList<Message> newM) {
         ArrayList<Integer> positions = new ArrayList<>();
         for (int i = 0; i < old.size(); i++) {
-            if (old.get(i).getType().equals(Keys.textMessage) && !old.get(i).getMessage().equals(newM.get(i).getMessage())) {
-                Hey.print("oldM", old.get(i).getMessage());
-                Hey.print("newM", newM.get(i).getMessage());
+            String messageType = old.get(i).getType();
+            if ((messageType.equals(Keys.textMessage)||messageType.equals(Keys.question)||messageType.equals(Keys.answer)) && !old.get(i).getMessage().equals(newM.get(i).getMessage())) {
                 positions.add(i);
             }
         }
@@ -98,8 +112,7 @@ public class Hey {
     public static ArrayList<Integer> getDifferenceOfReadUnreadMessages(ArrayList<Message> old, ArrayList<Message> newM) {
         ArrayList<Integer> positions = new ArrayList<>();
         for (int i = 0; i < old.size(); i++) {
-            if (!old.get(i).getRead() && newM.get(i).getRead()) {
-                print("need to change", newM.get(i).getMessage());
+            if (!old.get(i).isRead() && newM.get(i).isRead()) {
                 positions.add(i);
             }
         }
@@ -108,10 +121,9 @@ public class Hey {
 
     public static void getAllUnreadMessagesForMeAndRead(ArrayList<Message> messages, CollectionReference chats) {
         for (Message m : messages)
-            if (m.getSender() != My.id && !m.getRead()) {
+            if (m.getSender() != My.id && !m.isRead()) {
                 Map<String, Object> data = new HashMap<>();
                 data.put(Keys.read, true);
-                print("Marked as read", m.toMap().toString());
                 chats.document(m.getId()).update(data);
             }
     }
@@ -127,7 +139,6 @@ public class Hey {
     }
 
     public static void downloadFile(Context context, String folder, String fileName, File destinationFile, ProgressListener progressListener, SuccessListener successListener, ErrorListener errorListener) {
-        Hey.print("downloadingFileTo", destinationFile.getPath());
         FirebaseStorage.getInstance().getReference().child(folder).child(fileName).getFile(destinationFile).addOnFailureListener(e -> Hey.showAlertDialog(context, context.getString(string.error_download_file) + ":" + e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(e.getLocalizedMessage()))).addOnProgressListener(snapshot -> progressListener.onProgressChanged(snapshot.getBytesTransferred(), snapshot.getTotalByteCount())).addOnSuccessListener(taskSnapshot -> successListener.onSuccess(null));
     }
 
@@ -149,11 +160,7 @@ public class Hey {
             for (DocumentSnapshot doc : docs) {
                 if (Long.parseLong(doc.getId()) == id) contains = true;
             }
-            if (!contains)
-                addDocumentToCollection(context, c, String.valueOf(id), new HashMap<>(), doc -> print("addToCollection", "not contains added"), errorMessage -> {
-
-                });
-            else print("addToCollection", "contains");
+            if (!contains) addDocumentToCollection(context, c, String.valueOf(id), new HashMap<>(), doc -> { }, errorMessage -> { });
         }, errorMessage -> {
 
         });
@@ -193,8 +200,8 @@ public class Hey {
     /**
      * called listener every updates in this chat
      */
-    public static ListenerRegistration addMessagesListener(Context context, CollectionReference collectionReference, CollectionListener collectionListener, ErrorListener errorListener) {
-        return collectionReference.orderBy(Keys.time, Query.Direction.ASCENDING).addSnapshotListener((value, error) -> {
+    public static ListenerRegistration addMessagesListener(Context context, CollectionReference collectionReference,long startAt,CollectionListener collectionListener, ErrorListener errorListener) {
+        return collectionReference.orderBy(Keys.time, Query.Direction.ASCENDING).startAt(startAt).addSnapshotListener((value, error) -> {
             if (value != null) {
                 List<DocumentSnapshot> list = value.getDocuments();
                 ArrayList<Message> messages = new ArrayList<>();
@@ -209,7 +216,10 @@ public class Hey {
                     errorListener.onError(error.getLocalizedMessage());
                 });
         });
+
     }
+
+
 
     public static void searchUsersFromServer(Context context, String text, boolean byName, DocumentsListener documentsListener, ErrorListener errorListener) {
         FirebaseFirestore.getInstance().collection(Keys.users).whereEqualTo(byName ? Keys.name : Keys.surname, text).get()
@@ -366,20 +376,45 @@ public class Hey {
     public static LoadingDialog showLoadingDialog(Context context) {
         LoadingDialog loadingDialog = new LoadingDialog(context);
         loadingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        loadingDialog.setCancelable(false);
+        loadingDialog.setCancelable(true);
         loadingDialog.show();
+        loadingDialog.setOnDismissListener(dialogInterface -> {
+            if (loadingDialog.isFromUser()) {
+                MyDialogWithTwoButtons x = Hey.showDeleteDialog(context,context.getString(string.cancelLoading),null,false);
+                x.setOnDismissListener(dialogInterface1 -> {
+                    if (!x.getResult()) loadingDialog.show();
+                });
+            }
+        });
         return loadingDialog;
     }
+
+    public static LoadingDialog showLoadingDialog(Context context,ItemClickListener userCancel) {
+        LoadingDialog loadingDialog = new LoadingDialog(context);
+        loadingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        loadingDialog.setCancelable(true);
+        loadingDialog.show();
+        loadingDialog.setOnDismissListener(dialogInterface -> {
+            if (loadingDialog.isFromUser()) {
+                MyDialogWithTwoButtons x = Hey.showDeleteDialog(context,context.getString(string.cancelLoading),null,false);
+                x.setOnDismissListener(dialogInterface1 -> {
+                    if (!x.getResult()) loadingDialog.show(); else userCancel.onItemClick(0,"");
+                });
+            }
+        });
+        return loadingDialog;
+    }
+
 
     public static void showDeleteImageDialog(Context context, Message message, SuccessListener successListener, ErrorListener errorListener) {
         LoadingDialog dialog = showLoadingDialog(context);
         FirebaseStorage.getInstance().getReference().child(Keys.chats).child(message.getId()).delete().addOnFailureListener(e -> {
             Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage());
             errorListener.onError(e.getLocalizedMessage());
-            dialog.dismiss();
+            dialog.closeDialog();
         }).addOnCompleteListener(task -> {
             successListener.onSuccess(null);
-            dialog.dismiss();
+            dialog.closeDialog();
         });
     }
 
@@ -406,7 +441,6 @@ public class Hey {
 
     public static int getPercentage(long progress, long total) {
         long l = 100 * progress / total;
-        Hey.print("a", progress + "/" + total);
         return (int) l;
     }
 
@@ -513,12 +547,8 @@ public class Hey {
     }
 
     public static void deleteDocument(Context context, DocumentReference doc, SuccessListener successListener) {
-        print("a", "delete started");
         doc.delete().addOnFailureListener(e -> showAlertDialog(context, context.getString(string.error_deleting) + e.getLocalizedMessage()))
-                .addOnSuccessListener(unused -> {
-                    print("a", "Document deleted");
-                    successListener.onSuccess(null);
-                });
+                .addOnSuccessListener(unused -> successListener.onSuccess(null));
     }
 
     /**
@@ -528,7 +558,6 @@ public class Hey {
      * @param errorListener   called when error occurs
      */
     public static void sendMessage(Context context, CollectionReference chats, Message message, SuccessListener successListener, ErrorListener errorListener) {
-        print("a", "send message");
         amIOnline(new StatusListener() {
             @Override
             public void online() {
@@ -540,7 +569,7 @@ public class Hey {
 
             @Override
             public void offline() {
-                Toast.makeText(context, context.getString(string.error_connection), Toast.LENGTH_SHORT).show();
+                showToast(context,context.getString(string.error_connection));
                 errorListener.onError("");
             }
         }, errorListener, context);
@@ -613,9 +642,15 @@ public class Hey {
         return f + " %";
     }
 
-    public static ArrayList<Message> getDifferenceOfArrays(ArrayList<Message> messages, ArrayList<Message> oldMessages) {
+    public static ArrayList<Message> getDifferenceOfMessages(ArrayList<Message> messages, ArrayList<Message> oldMessages) {
         ArrayList<Message> temp = new ArrayList<>();
         for (int i = oldMessages.size(); i < messages.size(); i++) temp.add(messages.get(i));
+        return temp;
+    }
+
+    public static ArrayList<Question> getDifferenceOfQuestions(ArrayList<Question> newQ, ArrayList<Question> oldQ) {
+        ArrayList<Question> temp = new ArrayList<>();
+        for (int i = oldQ.size(); i < newQ.size(); i++) temp.add(newQ.get(i));
         return temp;
     }
 
@@ -649,15 +684,12 @@ public class Hey {
         if (file.exists()) {
             if (file.length() == user.getImageSize()) {
                 a.onSuccess(null);
-                print("image", "file exists and not corrupted");
             } else {
                 file.delete();
                 b.onError(null);
-                print("image", "file exists and but corrupted");
             }
         } else {
             b.onError(null);
-            print("image", "file isn't exists");
         }
     }
 
@@ -695,5 +727,113 @@ public class Hey {
 
     public static void updateDocument(Context context, DocumentReference doc, Map<String, Object> data, SuccessListener successListener, ErrorListener errorListener) {
         doc.update(data).addOnSuccessListener(unused -> successListener.onSuccess(null)).addOnFailureListener(e -> Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(null)));
+    }
+
+    public static void sendNotification(Context context, String title, String message,String tokenOrTopic,Map<String,String> d,SuccessListener successListener,ErrorListener errorListener) {
+        JSONObject notification = new JSONObject(),body = new JSONObject(),data = new JSONObject();
+        try {
+            String t = d.get(Keys.type);
+            String type = t==null ? "" : t;
+            body.put("title",title);
+            body.put("body",message);
+            notification.put("to",type.equals(Keys.privateChat) ? tokenOrTopic : Keys.topics+tokenOrTopic);
+            notification.put("notification",body);
+            switch (type){
+                case Keys.privateChat:
+                    data.put(Keys.id,d.get(Keys.id));
+                    break;
+                case Keys.publicQuestions:
+                case Keys.needQuestions:
+                    data.put(Keys.id,d.get(Keys.id));
+                    data.put(Keys.theme,d.get(Keys.theme));
+                    data.put(Keys.sender,d.get(Keys.sender));
+                    break;
+            }
+            data.put(Keys.type,type);
+            notification.put("data",data);
+            Hey.print("notification",notification.toString());
+        } catch (JSONException e) {
+            errorListener.onError(e.getLocalizedMessage());
+            showToast(context,context.getString(string.error)+":"+e.getLocalizedMessage());
+        }
+        sendToFirebase(notification,context,successListener,errorListener);
+    }
+
+    static void sendToFirebase(JSONObject notification,Context context,SuccessListener successListener,ErrorListener errorListener){
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST,Keys.fcmApi, notification, response -> successListener.onSuccess(null), error -> {
+            errorListener.onError(error.getLocalizedMessage());
+            showToast(context,error.getLocalizedMessage());
+        }){
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String,String> params = new HashMap<>();
+                params.put("Authorization",My.petName);
+                params.put("Content-Type",Keys.contentType);
+                return params;
+            }
+        };
+        MySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
+    public static String reverseString(String serverKey) {
+        String[] a = serverKey.split("");
+        StringBuilder leftToRight = new StringBuilder();
+        for (int i=a.length-1;i>=0;i--){
+            leftToRight.append(a[i]);
+        }
+        return leftToRight.toString();
+    }
+
+    public static void updateActivity() {
+        if (My.id != 0 && !My.updateSuccess){
+            Hey.print("a","dsa");
+            FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).update(Collections.singletonMap(Keys.seen,Hey.getCurrentTime())).addOnSuccessListener(unused -> My.updateSuccess = true);
+        }
+    }
+
+    public static boolean isMessageAddedToTop(ArrayList<Message> oldMessages,ArrayList<Message> messages) {
+        return oldMessages.get(0).getTime()>messages.get(0).getTime();
+    }
+
+    public static ArrayList<Message> getMessagesOnTop(ArrayList<Message> oldMessages, ArrayList<Message> messages) {
+        ArrayList<Message> temp = new ArrayList<>();
+        long limitId = oldMessages.get(0).getTime();
+        for(Message m : messages){
+            if (m.getTime()<limitId) temp.add(m); else break;
+        }
+        return temp;
+    }
+
+    public static boolean isMessagesAddedToBottom(ArrayList<Message> oldMessages,ArrayList<Message> messages) {
+        return oldMessages.get(oldMessages.size()-1).getTime()<messages.get(messages.size()-1).getTime();
+    }
+
+    public static void showErrorMessage(Context context,Activity activity,String errorMessage,boolean finish) {
+        showAlertDialog(context,context.getString(string.error)+":"+errorMessage).setOnDismissListener(dialogInterface -> {
+            if (finish) activity.finish();
+        });
+    }
+
+    public static PopupMenu chooseImage(Context context, View view, ActivityResultLauncher<Intent> memoryLauncher,ActivityResultLauncher<Intent> captureLauncher, UriListener listener){
+        return showPopupMenu(context, view, new ArrayList<>(Arrays.asList(context.getString(string.camera), context.getString(string.memory))), (position, name) -> {
+            if (position==0) {
+                Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                File photo = null;
+                try {
+                    photo = createTempFile(context);
+                }catch (IOException e){ Hey.showAlertDialog(context,e.getLocalizedMessage());}
+                if (photo !=null){
+                    Uri photoUri = FileProvider.getUriForFile(context,"com.normurodov_nazar.savol_javob.fileProvider",photo);
+                    listener.onUri(photoUri);
+                    pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);
+                }
+                captureLauncher.launch(pictureIntent);
+            }else pickImage(memoryLauncher);
+        },true);
+    }
+
+    public static File createTempFile(Context context)throws IOException {
+        File storage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        return File.createTempFile(String.valueOf(Hey.getCurrentTime()),".jpg",storage);
     }
 }

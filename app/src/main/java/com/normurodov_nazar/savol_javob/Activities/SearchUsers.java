@@ -14,9 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -34,7 +32,6 @@ public class SearchUsers extends AppCompatActivity {
     EditText searchField;
     RecyclerView recyclerView;
     ProgressBar progressBar;
-    CollectionReference collection = FirebaseFirestore.getInstance().collection(Keys.users);
     boolean byName = true;
 
     @Override
@@ -46,12 +43,12 @@ public class SearchUsers extends AppCompatActivity {
         search.setOnClickListener(v -> searchResults());
     }
 
-    private void setAdapterToRecyclerView(ArrayList<User> users) {
-        UserListAdapter adapter = new UserListAdapter(this, users, true, (message, itemView, position) -> {
+    private void setAdapterToRecyclerView(ArrayList<Long> userIds) {
+        UserListAdapter adapter = new UserListAdapter(this, userIds, (message, itemView, position) -> {
             Intent i = new Intent(this, SingleChat.class);
-            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, users.get(position).getId()));
+            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, userIds.get(position)));
             startActivity(i);
-            Hey.addToChats(this, My.id, users.get(position).getId());
+            Hey.addToChats(this, My.id, userIds.get(position));
         }, (message, itemView, position) -> {
 
         });
@@ -66,14 +63,14 @@ public class SearchUsers extends AppCompatActivity {
                 if (text.length() >= 4) {
                     viewLoading();
                     Hey.searchUsersFromServer(this, text, byName, docs -> {
-                        ArrayList<User> users = new ArrayList<>();
+                        ArrayList<Long> userIds = new ArrayList<>();
                         for (DocumentSnapshot ds : docs) {
                             User user = User.fromDoc(ds);
-                            if (user.getId() != My.id ) users.add(user);
+                            if (user.getId() != My.id ) userIds.add(user.getId());
                         }
-                        if (users.isEmpty()) noResultsFound();
+                        if (userIds.isEmpty()) noResultsFound();
                         else {
-                            setAdapterToRecyclerView(users);
+                            setAdapterToRecyclerView(userIds);
                             viewResults();
                         }
                     }, errorMessage -> noResultsFound());
@@ -108,7 +105,6 @@ public class SearchUsers extends AppCompatActivity {
                     byName = false;
                     searchResults();
                     filter.setText(R.string.bySurname);
-                    Hey.print("byName", "false");
                 }
             });
         } else {
@@ -117,7 +113,6 @@ public class SearchUsers extends AppCompatActivity {
                     byName = true;
                     searchResults();
                     filter.setText(R.string.byName);
-                    Hey.print("byName", "true");
                 }
             });
         }

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,13 +17,11 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
-import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
@@ -69,11 +66,11 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         Hey.animateFadeOut(next, 1800);
         imagePickLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                this::onPickImageResult
+                this::memoryResult
         );
     }
 
-    private void onPickImageResult(ActivityResult result) {
+    private void memoryResult(ActivityResult result) {
         if (result.getData() != null) {
             Uri uri = result.getData().getData();
             cropImage(uri);
@@ -106,11 +103,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                     Log.e("onActivityResult", "Result is not null:" + res.getPath());
                     i.setImageURI(res);
                     mFilePath = res.getPath();
-                    Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
-                        imageSize = new File(mFilePath).length();
-                        Hey.print("imageSize", String.valueOf(imageSize));
-                        Hey.print("mFilePath", String.valueOf(mFilePath));
-                    }, (position, name) -> {
+                    Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> imageSize = new File(mFilePath).length(), (position, name) -> {
 
                     }, errorMessage -> {
 
@@ -130,14 +123,6 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
             }
             changeImageButtonAsDefault();
         }
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode==KeyEvent.KEYCODE_VOLUME_UP){
-            Hey.print("aaa", String.valueOf(imageSize));
-            return true;
-        }else return super.onKeyDown(keyCode, event);
     }
 
     @SuppressLint("NonConstantResourceId")
@@ -191,7 +176,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void createUserById() {
-        User me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 0L, mToken);
+        User me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true);
         FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).set(me.toMap()).addOnCompleteListener(task1 -> {
             Intent intent = new Intent(NewUser.this, Home.class);
             if (task1.isSuccessful()) {

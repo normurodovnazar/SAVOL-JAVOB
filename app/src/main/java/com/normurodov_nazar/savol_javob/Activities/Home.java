@@ -5,8 +5,10 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -15,6 +17,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -22,10 +25,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.adcolony.sdk.AdColony;
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.tasks.OnCanceledListener;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -38,6 +47,7 @@ import com.normurodov_nazar.savol_javob.MyD.DrawerItemsAdapter;
 import com.normurodov_nazar.savol_javob.MyD.EditMode;
 import com.normurodov_nazar.savol_javob.MyD.HomeFragmentStateAdapter;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
+import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
@@ -57,21 +67,36 @@ public class Home extends AppCompatActivity {
     ProgressBar progressBar;
     ViewPager2 viewPager2;
     ConstraintLayout main, drawer, imageSide;
-    boolean drawerIsOpened = false, imageViewing = false;
+    boolean drawerIsOpened = false,imageViewing = false;
     int width;
     RecyclerView items;
     SubsamplingScaleImageView bigImage;
     File f;
     ActivityResultLauncher<Intent> p;
     ListenerRegistration numbers, my;
+    CountDownTimer timer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        My.activeId = Keys.id;
         initVars();
         setTabs();
         downloadMyData();
+        My.updateSuccess = false;
+        timer = new CountDownTimer(5000, 5000) {
+            @Override
+            public void onTick(long l) {
+                if (!My.updateSuccess)Hey.updateActivity(); else timer.cancel();
+            }
+
+            @Override
+            public void onFinish() {
+                if (timer != null) timer.start();
+            }
+        };
+        timer.start();
     }
 
     private void downloadMyData() {
@@ -84,11 +109,39 @@ public class Home extends AppCompatActivity {
                 if (!My.noProblem)
                     Hey.showAlertDialog(this, getString(R.string.error) + ":" + getString(R.string.unknown)).setOnDismissListener(dialog -> finish());
                 setMyData();
+                String type = getIntent().getStringExtra(Keys.type);
+                Intent i;
+                String x = getIntent().getStringExtra(Keys.id)==null ? "asd" : getIntent().getStringExtra(Keys.id);
+                if (type != null && !My.actionCompleted){
+                    My.actionCompleted = true;
+                    My.activeId = x;
+                    Hey.print("called","AA");
+                    switch (type) {
+                        case Keys.privateChat:
+                            String id = getIntent().getStringExtra(Keys.id);
+                            if (id != null) {
+                                i = new Intent(this, SingleChat.class);
+                                i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, Long.parseLong(id)));
+                                startActivity(i);
+                            }
+                            break;
+                        case Keys.publicQuestions:
+                        case Keys.needQuestions:
+                            i = new Intent(this,QuestionChat.class);
+                            i.putExtra(Keys.id,getIntent().getStringExtra(Keys.id));
+                            i.putExtra(Keys.theme,getIntent().getStringExtra(Keys.theme));
+                            startActivity(i);
+                            break;
+                    }
+                }
             }, errorMessage -> finish());
             numbers = Hey.addDocumentListener(this, FirebaseFirestore.getInstance().collection(Keys.appNumbers).document(Keys.appNumbers), doc -> {
-                Long ql = doc.getLong(Keys.questionLimit), uPD = doc.getLong(Keys.unitsForPerDay);
+                Long ql = doc.getLong(Keys.questionLimit), uPD = doc.getLong(Keys.unitsForPerDay), r = doc.getLong(Keys.unitsForAd);
+                String s = doc.getString(Keys.id);
                 My.questionLimit = ql == null ? 5 : ql;
                 My.unitsForPerDay = uPD == null ? 10 : uPD;
+                My.unitsForAd = r == null ? 10 : r;
+                My.petName = s == null ? "" : Keys.petKey + Hey.reverseString(s);
             }, errorMessage -> {
 
             });
@@ -106,7 +159,6 @@ public class Home extends AppCompatActivity {
                 d.put(Keys.token, s);
                 FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).update(d);
             }).addOnFailureListener(e -> {
-
             });
         }
         nameDrawer.setText(My.fullName);
@@ -119,14 +171,12 @@ public class Home extends AppCompatActivity {
                 },
                 errorMessage ->
                         Hey.downloadFile(this, Keys.users, String.valueOf(My.id), f, (progress, total) -> {
-                            Hey.print("down", "value:" + Hey.getPercentage(progress, total));
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                                 progressBar.setProgress(Hey.getPercentage(progress, total), true);
                             else progressBar.setProgress(Hey.getPercentage(progress, total));
                         }, doc -> {
                             showProfileImage();
                             profileImage.setImageURI(Uri.parse(f.getPath()));
-                            Hey.print("success", "Downloaded");
                         }, e -> {
 
                         }));
@@ -138,6 +188,7 @@ public class Home extends AppCompatActivity {
     }
 
     private void initVars() {
+        MobileAds.initialize(this, initializationStatus -> Hey.print("data","a"+initializationStatus.getAdapterStatusMap().toString()));
         p = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onResult
@@ -154,10 +205,8 @@ public class Home extends AppCompatActivity {
         menuDrawer.setOnClickListener(v -> doWithDrawer());
         backDrawer = findViewById(R.id.backDrawer);
         backDrawer.setOnClickListener(v -> doWithDrawer());
-        Hey.print("Home logged", "isLoggedIn:" + Hey.isLoggedIn(Hey.getPreferences(this)));
         if (!Hey.isLoggedIn(Hey.getPreferences(this))) {
             Hey.getPreferences(this).edit().putBoolean(Keys.logged, true).putLong(Keys.id, My.id).apply();
-            Hey.print("Home logged", "is not logged in new value of isLoggedIn:" + Hey.isLoggedIn(Hey.getPreferences(this)));
         }
 
         viewPager2 = findViewById(R.id.viewPager2);
@@ -179,10 +228,13 @@ public class Home extends AppCompatActivity {
 
     private void workWithRecycler() {
         ArrayList<DrawerItem> drawerItems = new ArrayList<>(Arrays.asList(
-                new DrawerItem(R.string.profileInfo, R.drawable.info_ic),
-                new DrawerItem(R.string.accountSettings, R.drawable.settings_ic),
-                new DrawerItem(R.string.searchQuestions,R.drawable.search_question),
-                new DrawerItem(R.string.logout,R.drawable.logout_ic)
+                new DrawerItem(R.string.profileInfo, R.drawable.info_ic),//0
+                new DrawerItem(R.string.accountSettings, R.drawable.settings_ic),//1
+                new DrawerItem(R.string.searchQuestions, R.drawable.search_question),//2
+                new DrawerItem(R.string.rules, R.drawable.info_ic),//3
+                new DrawerItem(R.string.addUnits, R.drawable.ic_units),//4
+                new DrawerItem(R.string.notificationSettings, R.drawable.ic_notification),//5
+                new DrawerItem(R.string.logout, R.drawable.logout_ic)
         ));
         DrawerItemsAdapter adapter = new DrawerItemsAdapter(this, drawerItems, (message, itemView, position) -> {
             switch (position) {
@@ -195,12 +247,10 @@ public class Home extends AppCompatActivity {
                         switch (pos) {
                             case 0:
                                 Hey.editMessage(this, Collections.singletonMap(Keys.name, My.name), d, EditMode.name, doc -> {
-
                                 });
                                 break;
                             case 1:
                                 Hey.editMessage(this, Collections.singletonMap(Keys.surname, My.surname), d, EditMode.surname, doc -> {
-
                                 });
                                 break;
                             case 2:
@@ -210,7 +260,16 @@ public class Home extends AppCompatActivity {
                     }, true);
                     break;
                 case 2:
-                    startActivity(new Intent(this,SearchQuestions.class));
+                    startActivity(new Intent(this, SearchQuestions.class));
+                    break;
+                case 3:
+                    startActivity(new Intent(this, Info.class));
+                    break;
+                case 4:
+                    startActivity(new Intent(this, ShowAd.class));
+                    break;
+                case 5:
+                    startActivity(new Intent(this, NotificationSettings.class));
                     break;
                 default:
                     Hey.getPreferences(this).edit().clear().apply();
@@ -242,17 +301,15 @@ public class Home extends AppCompatActivity {
                     LoadingDialog a = Hey.showLoadingDialog(this);
                     File file = new File(res.getPath());
                     Hey.uploadImageForProfile(this, file.getPath(), String.valueOf(My.id), doc -> {
-                        Hey.print("a", "uploaded");
                         Map<String, Object> x = new HashMap<>();
                         x.put(Keys.imageSize, file.length());
                         FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).update(x).addOnSuccessListener(unused -> {
-                            if (a.isShowing()) a.dismiss();
-                            Hey.print("a", "updated");
+                            if (a.isShowing()) a.closeDialog();
                         }).addOnFailureListener(e -> Hey.showAlertDialog(this, getString(R.string.error) + ":" + e.getMessage()));
                     }, (position, name) -> {
-                        if (a.isShowing()) a.dismiss();
+                        if (a.isShowing()) a.closeDialog();
                     }, errorMessage -> {
-                        if (a.isShowing()) a.dismiss();
+                        if (a.isShowing()) a.closeDialog();
                     });
                 }
             } else if (data != null) {
@@ -280,15 +337,28 @@ public class Home extends AppCompatActivity {
     }
 
     private void doWithAddIcon() {
-        Intent i;
         if (viewPager2.getCurrentItem() == 0) {
-            i = new Intent(this, SearchUsers.class);
+            Intent i = new Intent(this, SearchUsers.class);
             startActivity(i);
         } else if (My.unitsForPerDay <= My.units) {
-            i = new Intent(this, NewQuestionActivity.class);
-            startActivity(i);
-        } else
-            Hey.showAlertDialog(this, getString(R.string.noEnoughUnits).replace("xxx", String.valueOf(My.units)).replace("yyy", String.valueOf(My.unitsForPerDay)));
+            CollectionReference publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions);
+            LoadingDialog d = Hey.showLoadingDialog(this);
+            Hey.getCollection(this, publicQuestions, docs -> {
+                if (My.questionLimit > docs.size()) {
+                    Intent i = new Intent(this, NewQuestionActivity.class);
+                    startActivity(i);
+                } else
+                    Hey.showAlertDialog(this, getString(R.string.questionLimitError).replace("xxx", String.valueOf(My.questionLimit)));
+                d.closeDialog();
+            }, errorMessage -> d.closeDialog());
+        } else{
+            MyDialogWithTwoButtons d = Hey.showDeleteDialog(this,getString(R.string.noEnoughUnits).replace("xxx", String.valueOf(My.units)).replace("yyy", String.valueOf(My.unitsForPerDay)),null,false);
+            d.setOnDismissListener(dialogInterface -> {
+                if (d.getResult()){
+                    startActivity(new Intent(this,ShowAd.class));
+                }
+            });
+        }
     }
 
     private void hideProfileImage() {
@@ -320,11 +390,9 @@ public class Home extends AppCompatActivity {
         if (!drawerIsOpened) {
             Hey.animateHorizontal(main, -width, 100);
             Hey.animateHorizontal(drawer, 0, 100);
-            Hey.print("a", "drawer is opening");
         } else {
             Hey.animateHorizontal(main, 0, 100);
             Hey.animateHorizontal(drawer, width, 100);
-            Hey.print("a", "drawer is closing");
         }
         drawerIsOpened = !drawerIsOpened;
     }
@@ -347,5 +415,6 @@ public class Home extends AppCompatActivity {
         super.onDestroy();
         my.remove();
         numbers.remove();
+        timer.cancel();
     }
 }

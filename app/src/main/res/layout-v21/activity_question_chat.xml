@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activities.QuestionChat">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainQ"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:visibility="visible"
+            android:background="@color/black"
+            android:id="@+id/topItemQuestion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageButton
+                android:id="@+id/backQuestionChat"
+                android:layout_marginHorizontal="10dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/back"
+                android:background="@drawable/icon_button_bg"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginVertical="5dp"/>
+
+            <Button
+                android:id="@+id/answerToQuestion"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:ellipsize="middle"
+                android:text="@string/answer"
+                android:background="@drawable/floating_button_bg"
+                android:gravity="center"
+                android:layout_marginHorizontal="10dp"
+                app:layout_constraintTop_toTopOf="@id/menuInQuestionChat"
+                app:layout_constraintStart_toEndOf="@id/backQuestionChat"
+                app:layout_constraintBottom_toBottomOf="@id/menuInQuestionChat"
+                app:layout_constraintEnd_toStartOf="@id/menuInQuestionChat" />
+
+            <ImageButton
+                android:id="@+id/menuInQuestionChat"
+                android:layout_marginHorizontal="10dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/menu"
+                android:background="@drawable/icon_button_bg"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginVertical="5dp"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:visibility="visible"
+            android:background="@color/black"
+            android:id="@+id/bottomItemQuestion"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageButton
+                android:id="@+id/imageQuestion"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:padding="4dp"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginVertical="3dp"
+                android:background="@drawable/icon_button_bg"
+                android:src="@drawable/send_image_icon"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:textColor="@color/white"
+                android:lineSpacingExtra="1dp"
+                android:textCursorDrawable="@drawable/white_cursor_drawable"
+                android:id="@+id/textInQuestion"
+                android:paddingVertical="2dp"
+                android:paddingHorizontal="5dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintTop_toTopOf="@id/imageQuestion"
+                app:layout_constraintBottom_toBottomOf="@id/imageQuestion"
+                app:layout_constraintStart_toEndOf="@id/imageQuestion"
+                app:layout_constraintEnd_toStartOf="@id/sendQuestion"
+                android:layout_marginHorizontal="5dp"
+                android:layout_marginVertical="2dp"
+                android:background="@drawable/text_field_bg"
+                android:hint="@string/write_message"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:textColorHint="@color/other"
+                android:gravity="center_vertical" />
+            <ImageButton
+                android:id="@+id/sendQuestion"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:layout_constraintTop_toTopOf="@id/imageQuestion"
+                app:layout_constraintBottom_toBottomOf="@id/imageQuestion"
+                android:padding="4dp"
+                android:layout_marginHorizontal="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:background="@drawable/icon_button_bg"
+                android:src="@drawable/send_icon"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerQuestion"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/bottomItemQuestion"
+            app:layout_constraintTop_toBottomOf="@id/topItemQuestion"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <ProgressBar
+            android:id="@+id/progressBarQuestion"
+            android:indeterminateTint="@color/black"
+            app:layout_constraintBottom_toTopOf="@id/bottomItemQuestion"
+            app:layout_constraintTop_toBottomOf="@id/topItemQuestion"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+        android:visibility="gone"
+        android:id="@+id/bigImageQ"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

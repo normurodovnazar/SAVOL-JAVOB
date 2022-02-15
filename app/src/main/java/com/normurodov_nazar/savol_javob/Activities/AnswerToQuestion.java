@@ -1,12 +1,5 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -17,6 +10,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.firestore.CollectionReference;
@@ -24,11 +24,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
-import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.Message;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
-import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
@@ -44,10 +42,11 @@ public class AnswerToQuestion extends AppCompatActivity {
     ConstraintLayout main;
     SubsamplingScaleImageView scaleImageView;
 
-    ActivityResultLauncher<Intent> launcher;
+    ActivityResultLauncher<Intent> memoryLauncher,captureLauncher;
+    Uri capture;
     long imageSentTime;
     File file;
-    String chatId;
+    String chatId,questionId,theme;
     CollectionReference chats;
     boolean imageShowing = false;
 
@@ -60,10 +59,14 @@ public class AnswerToQuestion extends AppCompatActivity {
 
     private void initVars() {
         chatId = getIntent().getStringExtra(Keys.id);
-        if (chatId==null){
-            Hey.showToast(this,getString(R.string.error_unknown));
+        questionId = getIntent().getStringExtra(Keys.question);
+        theme = getIntent().getStringExtra(Keys.theme);
+        if (chatId==null || questionId==null || theme==null){
+            Hey.showToast(this,getString(R.string.error));
             finish();
-        }else chats = FirebaseFirestore.getInstance().collection(Keys.chats).document(chatId).collection(Keys.chats);
+        }else {
+            chats = FirebaseFirestore.getInstance().collection(Keys.chats).document(chatId).collection(Keys.chats);
+        }
         main = findViewById(R.id.mainPart);
         scaleImageView = findViewById(R.id.bigImageQ);
         explanation = findViewById(R.id.explanation);
@@ -73,9 +76,13 @@ public class AnswerToQuestion extends AppCompatActivity {
         publish.setOnClickListener(v -> publishQ());
         imageView = findViewById(R.id.imageOfAnswer);
         imageView.setOnClickListener(v -> showImage());
-        launcher = registerForActivityResult(
+        memoryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                this::onResult
+                this::onResultMemory
+        );
+        captureLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                this::onResultCapture
         );
     }
 
@@ -102,11 +109,18 @@ public class AnswerToQuestion extends AppCompatActivity {
         else super.onBackPressed();
     }
 
-    private void onResult(ActivityResult result) {
+    private void onResultMemory(ActivityResult result) {
         if (result.getData() != null) {
             Uri uri = result.getData().getData();
             imageSentTime = Hey.getCurrentTime();
             Hey.cropImage(this, this, uri, new File(My.folder + My.id + imageSentTime + ".png"), false, errorMessage -> { });
+        }
+    }
+
+    private void onResultCapture(ActivityResult result){
+        if (result.getResultCode() == RESULT_OK) {
+            imageSentTime = Hey.getCurrentTime();
+            Hey.cropImage(this, this, capture, new File(My.folder + My.id+imageSentTime + ".png"), false, errorMessage -> {});
         }
     }
 
@@ -132,7 +146,7 @@ public class AnswerToQuestion extends AppCompatActivity {
     }
 
     private void getImage() {
-        Hey.pickImage(launcher);
+        Hey.chooseImage(this,image,memoryLauncher,captureLauncher,uri-> capture = uri);
     }
 
     private void publishQ() {
@@ -143,7 +157,6 @@ public class AnswerToQuestion extends AppCompatActivity {
                 @Override
                 public void online() {
                     Hey.uploadImageToChat(AnswerToQuestion.this, file.getPath(), String.valueOf(My.id)+imageSentTime, doc -> {
-                        Hey.print("a", "uploaded");
                         Map<String, Object> answer = new HashMap<>();
                         answer.put(Keys.type, Keys.answer);
                         answer.put(Keys.sender, My.id);
@@ -152,30 +165,34 @@ public class AnswerToQuestion extends AppCompatActivity {
                         answer.put(Keys.read, false);
                         answer.put(Keys.imageSize,file.length());
                         Hey.sendMessage(AnswerToQuestion.this, chats, new Message(answer), doc1 -> {
+                            Map<String,String> x = new HashMap<>();
+                            x.put(Keys.type,Keys.needQuestions);
+                            x.put(Keys.id,questionId);
+                            x.put(Keys.theme,theme);
+                            x.put(Keys.sender, String.valueOf(My.id));
+                            Hey.sendNotification(AnswerToQuestion.this, My.fullName, getString(R.string.sentAnswer).replace("xxx", theme.replace(Keys.correct,"").replace(Keys.incorrect,"")), questionId, x, doc22 -> { }, errorMessage -> { });
                             Hey.updateDocument(AnswerToQuestion.this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), Collections.singletonMap(Keys.numberOfMyAnswers, My.numberOfMyAnswers + 1), doc2 -> {
-                                if(a.isShowing()) a.dismiss();
+                                if(a.isShowing()) a.closeDialog();
                                 finish();
                             }, errorMessage -> {
 
                             });
                         }, errorMessage -> {
-                            if(a.isShowing()) a.dismiss();
+                            if(a.isShowing()) a.closeDialog();
                         });
                     }, (position, name) -> {
-                        if(a.isShowing()) a.dismiss();
+                        if(a.isShowing()) a.closeDialog();
                     }, errorMessage -> {
-                        if(a.isShowing()) a.dismiss();
+                        if(a.isShowing()) a.closeDialog();
                     });
                 }
 
                 @Override
                 public void offline() {
                     Hey.showToast(AnswerToQuestion.this,getString(R.string.error_connection));
-                    a.dismiss();
+                    a.closeDialog();
                 }
-            }, errorMessage -> {
-                a.dismiss();
-            },this);
+            }, errorMessage -> a.closeDialog(),this);
         } else Hey.showToast(this,getString(R.string.explanationAndImage));
 
     }

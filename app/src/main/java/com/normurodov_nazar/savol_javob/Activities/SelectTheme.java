@@ -1,33 +1,30 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.ProgressBar;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.normurodov_nazar.savol_javob.MFunctions.Hey;
+import com.google.firebase.firestore.Query;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
-import com.normurodov_nazar.savol_javob.MFunctions.My;
-import com.normurodov_nazar.savol_javob.MyD.DocumentsListener;
-import com.normurodov_nazar.savol_javob.MyD.ErrorListener;
-import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
+import com.normurodov_nazar.savol_javob.MyD.ThemeAdapter;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 public class SelectTheme extends AppCompatActivity {
-    ListView themesList;
-    ArrayList<String> arrayList = new ArrayList<>();
-
+    RecyclerView recycler;
+    ProgressBar bar;
+    ArrayList<Map<String,String>> allThemes = new ArrayList<>();
+    boolean forSelection;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,37 +33,30 @@ public class SelectTheme extends AppCompatActivity {
     }
 
     private void initVars() {
-        themesList = findViewById(R.id.themes);
-        Hey.getCollection(this, FirebaseFirestore.getInstance().collection(Keys.theme), docs -> {
-            for (DocumentSnapshot d : docs) arrayList.add(d.getId());
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this,R.layout.list_item,arrayList);
-            themesList.setAdapter(arrayAdapter);
-            themesList.setOnItemClickListener((adapterView, view, i, l) -> {
-                setResult(RESULT_OK,new Intent().putExtra(Keys.theme,arrayList.get(i)));
+        forSelection = getIntent().getBooleanExtra("s",true);
+        bar = findViewById(R.id.progressTheme);
+        recycler = findViewById(R.id.recyclerThemes);
+        FirebaseFirestore.getInstance().collection(Keys.theme).orderBy(Keys.time, Query.Direction.ASCENDING).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            bar.setVisibility(View.INVISIBLE);
+            String lang = getString(R.string.lang);
+            for (DocumentSnapshot d : queryDocumentSnapshots.getDocuments()) {
+                Map<String,String> data = new HashMap<>();
+                data.put(Keys.theme,d.getString(lang));
+                data.put(Keys.id, String.valueOf(d.getLong(Keys.time)));
+                allThemes.add(data);
+            }
+
+            ThemeAdapter adapter = new ThemeAdapter(SelectTheme.this, allThemes, forSelection, (message, itemView, position) -> {
+                Intent i = new Intent();
+                i.putExtra(Keys.theme, allThemes.get(position).get(Keys.theme));
+                i.putExtra(Keys.id,allThemes.get(position).get(Keys.id));
+                setResult(RESULT_OK,i);
                 finish();
             });
-        }, errorMessage -> {
+            recycler.setAdapter(adapter);
+            recycler.setLayoutManager(new LinearLayoutManager(SelectTheme.this));
+        }).addOnFailureListener(e -> {
 
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        setResult(RESULT_CANCELED);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode==KeyEvent.KEYCODE_VOLUME_UP){
-            String s = "Chiziqli tenglamalar";
-            Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.theme), s, new HashMap<>(), doc -> {
-                Hey.print("added",s);
-            }, errorMessage -> {
-                Hey.print("error",errorMessage);
-            });
-            return true;
-        }
-        else return super.onKeyDown(keyCode, event);
     }
 }

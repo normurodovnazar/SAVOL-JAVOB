@@ -10,8 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
@@ -59,7 +57,7 @@ public class EditMessageDialog extends Dialog {
                         x.put(Keys.message,m);
                         break;
                 }
-                document.update(x).addOnSuccessListener(unused -> successListener.onSuccess(x)).addOnFailureListener(e -> Hey.showAlertDialog(getContext(),e.getLocalizedMessage()));
+                Hey.updateDocument(getContext(), document, x, doc -> successListener.onSuccess(x), errorMessage -> { });
                 dismiss();
             } else Toast.makeText(getContext(), getContext().getString(R.string.emty), Toast.LENGTH_SHORT).show();
         });

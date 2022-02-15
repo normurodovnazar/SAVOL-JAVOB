@@ -1,7 +1,9 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
 public class Keys {
-
+    public static final String fcmApi = "https://fcm.googleapis.com/fcm/send";
+    public static final String petKey = "key=";
+    public static final String contentType = "application/json";
     public static final String token = "Token";
     public static final String sharedPreferences = "com.normurodov_nazar.savol_javob.preferences";
     public static final String p = "phone";
@@ -23,7 +25,6 @@ public class Keys {
     public static final String numberOfIncorrectAnswers = "numberOfIncorrectAnswers";
     public static final String errorInternetWhenNumber = "A network error (such as timeout, interrupted connection or unreachable host) has occurred.";
     public static final String errorNumberInvalid = "The format of the phone number provided is incorrect. Please enter the phone number in a format that can be parsed into E.164 format. E.164 phone numbers are written in the format [+][country code][subscriber number including area code]. [ TOO_SHORT ]";
-    public static final String errorRecaptcha = "";
     public static final String errorVerificationCode = "The sms verification code used to create the phone auth credential is invalid. Please resend the verification code sms and be sure use the verification code provided by the user.";
     public static final String errorInternetWhenCode = "A network error (such as timeout, interrupted connection or unreachable host) has occurred.";
     public static final String message = "Message";
@@ -43,12 +44,19 @@ public class Keys {
     public static final String answer = "Answer";
     public static String correct = "Correct";
     public static String incorrect = "Incorrect";
-    public static String savedQuestions = "SavedQuestions";
     public static String questionLimit = "QuestionLimit";
     public static String unitsForPerDay = "UnitsForPerDay";
     public static String visibleTime = "PublicUntil";
-    public static String needQuestions = "NeedQuestions";
+    public static final String needQuestions = "NeedQuestions";
     public static String order = "Order";
     public static String divider = "Divider";
     public static String status = "Status";
+    public static String unitsForAd = "UnitsForAd";
+    public static String adId = "ca-app-pub-5231072471693036/3823152799";
+    public static String hidden = "Hidden";
+    public static String sound = "Sound";
+    public static String vibrate = "Vibrate";
+    public static final String privateChat = "PrivateChat";
+    public static String topics = "/topics/";
+    public static String fromNotification = "asdkjsd";
 }

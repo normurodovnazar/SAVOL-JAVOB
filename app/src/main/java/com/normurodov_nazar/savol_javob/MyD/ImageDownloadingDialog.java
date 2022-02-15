@@ -2,7 +2,6 @@ package com.normurodov_nazar.savol_javob.MyD;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
@@ -59,7 +58,6 @@ public class ImageDownloadingDialog extends Dialog {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 progress.setProgress(100 - i, true);
             else progress.setProgress(100 - i);
-            Hey.print("progress", Hey.getProgress(taskSnapshot));
             progressDownload.setText(Hey.getProgress(taskSnapshot));
             percentage.setText(Hey.getPercentage(taskSnapshot));
         });

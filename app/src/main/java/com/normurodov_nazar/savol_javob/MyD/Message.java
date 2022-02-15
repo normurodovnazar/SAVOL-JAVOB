@@ -12,6 +12,10 @@ public class Message {
     long sender,time,incorrect,correct,imageSize;
     boolean read;
 
+    /**
+     * Used for sending messages
+     * @param data map for message data
+     */
     public Message(Map<String, Object> data) {
         this.data = data;
         message = (String) data.get(Keys.message);
@@ -24,6 +28,11 @@ public class Message {
         Long a = (Long) data.get(Keys.imageSize);
         imageSize = a==null ? -1 : a;
         id = sender+""+time;
+    }
+
+    public Message(Map<String,Object> data,String a){
+        this.data = data;
+        message = (String) data.get(Keys.message);
     }
 
     public void setMessage(String message) {
@@ -40,6 +49,7 @@ public class Message {
 
     public static Message fromDoc(DocumentSnapshot doc){
         Map<String,Object> data = doc.getData();
+        assert data != null;
         return new Message(data);
     }
 
@@ -69,5 +79,5 @@ public class Message {
 
     public String getType(){return (String) data.get(Keys.type);}
 
-    public boolean getRead(){return read;}
+    public boolean isRead(){return read;}
 }

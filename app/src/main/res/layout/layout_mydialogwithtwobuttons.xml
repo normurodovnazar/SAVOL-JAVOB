@@ -22,24 +22,20 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-
             android:gravity="end"
             android:textSize="20sp"
             android:padding="7dp"
             android:layout_marginEnd="10dp"
             android:textColor="@color/white"
             android:background="@drawable/message_by_me_bg"
-            android:ellipsize="start"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="30dp" />
+            android:ellipsize="start" />
         <TextView
             android:id="@+id/timeMessageFromMeSelector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="@id/messageFromMeSelector"
             app:layout_constraintTop_toBottomOf="@id/messageFromMeSelector"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp" />
+            android:layout_marginEnd="8dp" />
     </LinearLayout>
 
     <TextView
@@ -68,7 +64,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/sss"
-            android:layout_marginHorizontal="15dp"/>
+            android:layout_marginHorizontal="15dp"
+            style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:text="@string/no"
@@ -77,7 +74,8 @@
             android:layout_marginHorizontal="15dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/sss"/>
+            android:background="@drawable/sss"
+            style="?android:attr/buttonBarButtonStyle" />
     </LinearLayout>
 
 

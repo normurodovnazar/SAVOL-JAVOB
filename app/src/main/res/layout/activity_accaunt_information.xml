@@ -51,6 +51,7 @@
             android:layout_height="wrap_content"/>
 
         <Button
+            android:visibility="invisible"
             android:id="@+id/gotoChatButton"
             app:layout_constraintTop_toBottomOf="@id/cardForInfo"
             app:layout_constraintStart_toStartOf="parent"

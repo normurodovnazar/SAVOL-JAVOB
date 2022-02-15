@@ -108,6 +108,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
             @Override
             public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
                 My.verificationCompleted=true;
+
                 auth.signInWithCredential(phoneAuthCredential).addOnCompleteListener(task -> {
                     if(task.isSuccessful()){
                         if(task.getResult()!=null){
@@ -168,7 +169,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
                     @Override
                     public void exists(DocumentSnapshot doc) {
                         My.setDataFromDoc(doc);
-                        Hey.print("Exists","a:"+doc.toString());
                         startActivity(new Intent(AuthUser.this, Home.class));
                         finish();
                     }
@@ -183,12 +183,10 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
             public void offline() {
                 Hey.showAlertDialog(AuthUser.this,getString(R.string.error_connection));
             }
-        }, errorMessage -> {
-        }, this);
+        }, errorMessage -> {}, this);
     }
 
     void generateUniqueId(){
-        Hey.print("A","not exists creating new user");
         int id = Hey.generateID();
         Hey.isDocumentExists(this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)),
                 new Exists() {
@@ -199,7 +197,6 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
                     @Override
                     public void notExists() {
-                        Hey.print("New user","a:"+id);
                         My.id = id;
                         startActivity(new Intent(AuthUser.this, NewUser.class));
                         finish();

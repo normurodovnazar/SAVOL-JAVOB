@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.normurodov_nazar.savol_javob.R;
 
 public class LoadingDialog extends Dialog {
+    boolean fromUser = true;
     public LoadingDialog(@NonNull Context context) {
         super(context);
     }
@@ -19,5 +20,14 @@ public class LoadingDialog extends Dialog {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.loading_dialog);
+    }
+
+    public void closeDialog(){
+        fromUser = false;
+        dismiss();
+    }
+
+    public boolean isFromUser() {
+        return fromUser;
     }
 }

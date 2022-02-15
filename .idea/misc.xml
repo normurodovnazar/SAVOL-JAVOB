@@ -3,37 +3,91 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/add_person_ic.xml" value="0.21388888888888888" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/answered_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/back.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/black_cursor_drawable.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/button_bg_pressed.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/button_bg_unpressed.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/copy_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/custom_item_bg.xml" value="0.19427083333333334" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/custom_item_pressed_bg.xml" value="0.22407407407407406" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/delete_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/dialog_bg.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/download_black_ic.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/download_ic.xml" value="0.22407407407407406" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/download_white_ic.xml" value="0.1" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/edit_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/error.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/floating_button_bg.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/floating_button_pressed_bg.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/floating_button_unpressed_bg.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_add.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_clear.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_dislike.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_dislike_selected.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_filter.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_filter_another.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_filter_clear.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_launcher_background.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_no_starred.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_notification.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_read.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_search_cancel.xml" value="0.21296296296296297" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_serach_x.xml" value="0.2212962962962963" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_starred.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_thumb_down.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_thumb_unselected.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_units.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/ic_unread.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/language_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/menu.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/message_by_me_bg.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/message_by_me_red.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/message_by_other.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/message_by_other_green.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/message_by_other_red.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/message_from_me_green.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/redo_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/search.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/search_question.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/send_icon.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/send_image_icon.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/settings_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/tab2_icon.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/tab_indicator.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/text_field_bg.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/text_fields_in_big_screens.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/unanswered_ic.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/drawable/white_cursor_drawable.xml" value="0.28489583333333335" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-land/activity_home.xml" value="0.24479166666666666" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-land/activity_new_user.xml" value="0.43020833333333336" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-land/activity_search_users.xml" value="0.1734375" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/activity_home.xml" value="0.33" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/activity_notification_settings.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/activity_question_chat.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/activity_search_questions.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/activity_search_users.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/activity_single_chat.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/fragment_my_questions.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/fragment_need_questions.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/fragment_personal_chat.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/fragment_public_questions.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/loading_dialog.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout-v21/upload_image_dialog.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_accaunt_information.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_answer_to_question.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_app_stats.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_auth_user.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_for_test.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_for_test2.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_home.xml" value="0.25" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_info.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_main.xml" value="0.33" />
-        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_new_question.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_new_question.xml" value="0.1" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_new_user.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_notification_settings.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_question_chat.xml" value="0.25" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_question_filter.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_search_questions.xml" value="0.26875" />
@@ -41,16 +95,21 @@
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_select_item.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_select_theme.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_show_ad.xml" value="0.26875" />
-        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_single_chat.xml" value="0.33" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_show_question.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_single_chat.xml" value="0.1" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/activity_sms_code.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/add_item.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/answer_from_me.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/answer_from_other.xml" value="0.5" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/dialog.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/download_image_dialog.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/drawer_item.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/drawer_layout.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/first_tab.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/fragment_favourite_questions.xml" value="0.1" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/fragment_my_questions.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/fragment_need_questions.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/fragment_personal_chat.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/fragment_public_questions.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/image_from_other_q.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/image_message_from_me.xml" value="0.25" />
@@ -59,17 +118,22 @@
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/layout_edit_message_dialog.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/layout_mydialogwithtwobuttons.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/list_item.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/load_more_button.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/loading_dialog.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/message_from_me.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/message_from_other.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/message_from_other_in_group_profile_image.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/question_layout.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/second_tab.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/text_from_other_q.xml" value="0.33" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/theme_view.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/upload_image_dialog.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/layout/user_item.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/menu/delete_item.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/menu/message_popup.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/menu/single_chat_menu.xml" value="0.26875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.33" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.28489583333333335" />
       </map>
     </option>
   </component>

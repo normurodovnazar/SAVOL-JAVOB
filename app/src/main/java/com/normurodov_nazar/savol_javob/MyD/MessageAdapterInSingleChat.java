@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,37 +25,48 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
     final Context context;
     final RecyclerViewItemClickListener listener;
     final RecyclerViewItemLongClickListener longClickListener;
+    final ItemClickForQuestion loadMore;
 
-    public MessageAdapterInSingleChat(ArrayList<Message> messages, Context context, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener) {
+    public MessageAdapterInSingleChat(ArrayList<Message> messages, Context context, RecyclerViewItemClickListener listener, RecyclerViewItemLongClickListener longClickListener,ItemClickForQuestion loadMore) {
         this.messages = messages;
         this.context = context;
         this.listener = listener;
         this.longClickListener=longClickListener;
+        this.loadMore = loadMore;
     }
 
     public void removeItem(Message message){
-        int index= Hey.getIndexInArray(message,messages);
-        if (index!=-1){
-            messages.remove(message);
-            notifyItemRemoved(index);
+        int i = Hey.getIndexInArray(message, messages);
+        Hey.print("i", String.valueOf(i));
+        if (i!=-1){
+            messages.remove(i);
+            notifyItemRemoved(i+1);
         }
     }
 
-    public void addItems(ArrayList<Message> messages,int itemCount){
+    public void addItems(ArrayList<Message> newMessages, int itemCount){
         int startPosition = this.messages.size();
-        this.messages.addAll(messages);
-        notifyItemRangeInserted(startPosition,itemCount);
+        this.messages.addAll(newMessages);
+        notifyItemRangeInserted(startPosition+2,itemCount);
     }
 
-    public void changeItem(int position,Message message){
+    public void addItemsToTop(ArrayList<Message> newMessages){
+        messages.addAll(0,newMessages);
+        notifyItemRangeInserted(1,newMessages.size());
+    }
+
+    public void changeItem(int position, Message message){
         messages.set(position, message);
-        notifyItemChanged(position);
+        notifyItemChanged(position+1);
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         switch (viewType){
+            case 0:
+                View loadMore = LayoutInflater.from(context).inflate(R.layout.load_more_button,parent,false);
+                return new LoadMore(loadMore);
             case 1:
                 View meT = LayoutInflater.from(context).inflate(R.layout.message_from_me,parent,false);
                 return new MessageFromMeHolder(meT,true);
@@ -72,18 +84,18 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Message messageSingleChat = messages.get(position);
-        if(messageSingleChat.sender==My.id){
-            ((MessageFromMeHolder) holder).setChatItem(messageSingleChat,listener,longClickListener,position);
+        Message messageSingleChat = messages.get(position==0 ? 0 : position-1);
+        if (position==0) ((LoadMore) holder).setData(loadMore,messages.size()>=50); else if(messageSingleChat.sender==My.id){
+            ((MessageFromMeHolder) holder).setChatItem(messageSingleChat,listener,longClickListener,position-1);
         }else {
-            ((MessageFromOtherHolder) holder).setChatItem(messageSingleChat,listener,position);
+            ((MessageFromOtherHolder) holder).setChatItem(messageSingleChat,listener,position-1);
         }
     }
 
     @Override
     public int getItemViewType(int position) {
-        Message message = messages.get(position);
-        if(message.sender==My.id) {
+        Message message = messages.get(position==0 ? 0 : position-1);
+        if (position==0) return 0; else if(message.sender==My.id) {
             if(message.getType().equals(Keys.textMessage)) return 1; else return 3;
         } else {
             if(message.getType().equals(Keys.textMessage)) return 2; else return 4;
@@ -92,7 +104,7 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return messages.size();
+        return messages.size()+1;
     }
 
     static class MessageFromMeHolder extends RecyclerView.ViewHolder{
@@ -114,7 +126,7 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
             }
         }
 
-        void setChatItem(Message data, RecyclerViewItemClickListener listener,RecyclerViewItemLongClickListener longClickListener,int position){
+        void setChatItem(Message data, RecyclerViewItemClickListener listener, RecyclerViewItemLongClickListener longClickListener, int position){
             time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
             itemView.setOnClickListener(v -> listener.onItemClick(data,itemView,position));
             if(isTextMessage) {
@@ -126,7 +138,7 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
                 });
                 Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
             }
-            if (data.getRead()) read.setImageResource(R.drawable.ic_read);
+            read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
         }
     }
 
@@ -147,7 +159,7 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
             }
         }
 
-        void setChatItem(Message data,RecyclerViewItemClickListener itemClickListener,int position){
+        void setChatItem(Message data, RecyclerViewItemClickListener itemClickListener, int position){
             time.setText(Hey.getSeenTime(itemView.getContext(), data.time));
             if (isTextMessage){
                 message.setText(data.message);
@@ -155,6 +167,22 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
                 itemView.setOnClickListener(v -> itemClickListener.onItemClick(data,itemView,position));
                 Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> imageView.setImageResource(R.drawable.download_black_ic));
             }
+        }
+    }
+
+    static class LoadMore extends RecyclerView.ViewHolder{
+        Button button;
+        public LoadMore(@NonNull View itemView) {
+            super(itemView);
+            button = itemView.findViewById(R.id.loadMore);
+        }
+
+        void setData(ItemClickForQuestion listener,boolean showButton){
+            button.setVisibility(showButton ? View.VISIBLE : View.GONE);
+            button.setOnClickListener(view -> {
+                Hey.setButtonAsLoading(itemView.getContext(), button);
+                listener.onItemClick(0,"",button);
+            });
         }
     }
 }
