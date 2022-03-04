@@ -3,7 +3,6 @@ package com.normurodov_nazar.savol_javob.Fragments;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,12 +14,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.normurodov_nazar.savol_javob.Activities.QuestionChat;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
@@ -36,7 +32,7 @@ public class PublicQuestions extends Fragment {
     RecyclerView recyclerView;
     TextView text;
     ProgressBar progressBar;
-    ArrayList<Question> questions = new ArrayList<>();
+    final ArrayList<Question> questions = new ArrayList<>();
     ListenerRegistration registration;
 
     public PublicQuestions() {
@@ -46,7 +42,6 @@ public class PublicQuestions extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override

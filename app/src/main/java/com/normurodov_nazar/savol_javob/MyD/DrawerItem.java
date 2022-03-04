@@ -6,6 +6,7 @@ public class DrawerItem {
     @IdRes final int titleId;
     @IdRes final int imageId;
 
+
     /**
      *
      * @param title string resource id

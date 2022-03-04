@@ -59,7 +59,7 @@ public class EditMessageDialog extends Dialog {
                 }
                 Hey.updateDocument(getContext(), document, x, doc -> successListener.onSuccess(x), errorMessage -> { });
                 dismiss();
-            } else Toast.makeText(getContext(), getContext().getString(R.string.emty), Toast.LENGTH_SHORT).show();
+            } else Toast.makeText(getContext(), getContext().getString(R.string.empty), Toast.LENGTH_SHORT).show();
         });
         cancel = findViewById(R.id.cancel_b);cancel.setOnClickListener(v -> dismiss());
         switch (editMode){

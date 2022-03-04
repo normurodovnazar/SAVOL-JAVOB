@@ -1,7 +1,6 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,25 +21,22 @@ import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewHolder> {
 
-    final RecyclerViewItemClickListener clickListener;
-    final RecyclerViewItemLongClickListener longClickListener;
+    final UserClickListener click;
+    final UserClickListener longClick;
 
-    public UserListAdapter(Context context, ArrayList<Long> userIds, RecyclerViewItemClickListener clickListener, RecyclerViewItemLongClickListener longClickListener) {
+    public UserListAdapter(Context context, ArrayList<Long> userIds, UserClickListener userClickListener, UserClickListener longClick) {
         this.userIds = userIds;
         this.context = context;
-        this.clickListener = clickListener;
-        this.longClickListener = longClickListener;
+        this.click = userClickListener;
+        this.longClick = longClick;
     }
 
 
-    ArrayList<Long> userIds;
-    Context context;
+    final ArrayList<Long> userIds;
+    final Context context;
 
     @NonNull
     @Override
@@ -52,12 +48,12 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
     @Override
     public void onBindViewHolder(@NonNull UserListAdapter.MViewHolder holder, int position) {
         DocumentReference documentReference = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(userIds.get(position),My.id));
+        holder.animateView();
         Hey.getDocument(context, documentReference, doc -> {
             DocumentSnapshot snapshot = (DocumentSnapshot) doc;
             Object ol = snapshot.get(Keys.newMessagesTo +My.id);
             long l = ol==null ? 0 : (long) ol;
-            holder.setUser(context, userIds.get(position),l,clickListener,longClickListener,position);
-
+            holder.setUser(context, userIds.get(position),l, click,longClick);
         }, errorMessage -> {
 
         });
@@ -69,9 +65,10 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
     }
 
     static class MViewHolder extends RecyclerView.ViewHolder{
-        TextView name,seen;
-        ImageView imageView;
-        View view;
+        final TextView name;
+        final TextView seen;
+        final ImageView imageView;
+        final View view;
         public MViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.name_user_item);
@@ -80,19 +77,25 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
             view = itemView;
         }
 
-        void setUser(Context context,long id,long n,RecyclerViewItemClickListener clickListener,RecyclerViewItemLongClickListener longClickListener,int position){
+        void animateView(){
+            Hey.setIconButtonAsLoading(itemView);
+        }
 
+        void setUser(Context context, long id, long n, UserClickListener userClickListener, UserClickListener longClick){
             Hey.getDocument(context, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)), doc -> {
+                Hey.setIconButtonAsDefault(itemView);
                 User user = User.fromDoc((DocumentSnapshot) doc);
                 MViewHolder.this.name.setText(user.getFullName());
                 changeSubtitle(context,user.getSeen(),n);
                 File file = new File(user.getLocalFileName());
-                Hey.workWithProfileImage(user, doc0 -> imageView.setImageURI(Uri.fromFile(file)), errorMessage -> {
-                });
+                if (user.hasProfileImage()) {
+                    Hey.print(user.getFullName(),"Has profile image");
+                    Hey.workWithProfileImage(user, doc0 -> imageView.setImageURI(Uri.fromFile(file)), errorMessage -> { });
+                }else Hey.print(user.getFullName(),"Hasn't profile image");
                 DocumentReference ref = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(My.id,id));
-                view.setOnClickListener(v -> clickListener.onItemClick(null,null,position));
+                view.setOnClickListener(v -> userClickListener.onUserClick(user));
                 view.setOnLongClickListener(v -> {
-                    longClickListener.onItemLongClick(new Message(Collections.singletonMap(Keys.message,user.getFullName()),""),imageView,position);
+                    longClick.onUserClick(user);
                     return true;
                 });
                 Hey.addDocumentListener(context, ref, doc1 -> {
@@ -108,11 +111,11 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
         private void changeSubtitle(Context context,long seenTime,long l) {
             String s;
             if (l == 0) {
-                Hey.print("seen",Hey.getSeenTime(context,seenTime));
-                s = context.getString(R.string.activity) + Hey.getSeenTime(context, seenTime);
-                seen.setTextColor(Color.BLACK);
+                Hey.print("seen",Hey.getTimeText(context,seenTime));
+                s = context.getString(R.string.activity) + Hey.getTimeText(context, seenTime);
+                seen.setTextColor(context.getResources().getColor(R.color.black));
             } else {
-                seen.setTextColor(Color.RED);
+                seen.setTextColor(context.getResources().getColor(R.color.red));
                 s = l + " " + context.getString(R.string.newMessage);
             }
             this.seen.setText(s);

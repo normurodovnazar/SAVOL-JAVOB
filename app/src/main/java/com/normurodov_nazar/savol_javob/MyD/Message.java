@@ -8,7 +8,8 @@ import java.util.Map;
 public class Message {
 
     final Map<String,Object> data;
-    String message,id;
+    final String message;
+    String id;
     long sender,time,incorrect,correct,imageSize;
     boolean read;
 
@@ -30,13 +31,9 @@ public class Message {
         id = sender+""+time;
     }
 
-    public Message(Map<String,Object> data,String a){
+    public Message(Map<String, Object> data,String a){
         this.data = data;
         message = (String) data.get(Keys.message);
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public long getImageSize() {
@@ -59,14 +56,6 @@ public class Message {
 
     public String getId() {
         return id;
-    }
-
-    public long getIncorrect() {
-        return incorrect;
-    }
-
-    public long getCorrect() {
-        return correct;
     }
 
     public long getTime() {

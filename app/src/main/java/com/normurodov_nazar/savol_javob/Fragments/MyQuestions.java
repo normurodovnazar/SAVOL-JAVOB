@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -15,13 +14,10 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -47,12 +43,13 @@ public class MyQuestions extends Fragment {
     ImageView filter,clearFilter;
 
     ActivityResultLauncher<Intent> launcher;
-    CollectionReference myQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.allQuestions);
+    final CollectionReference myQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.allQuestions);
     Query query;
     String theme = "";
     boolean correct = true,descending = true,before = true;
     long time = Hey.getCurrentTime();
-    int loadCount = 5;
+    int loadCount = 6;
+    DocumentSnapshot limit;
 
     QuestionAdapter adapter;
     public MyQuestions() {
@@ -83,7 +80,10 @@ public class MyQuestions extends Fragment {
         for (DocumentSnapshot s : queryDocumentSnapshots.getDocuments()) {
             questions.add(Question.fromDoc(s));
         }
-        if (questions.size()==0) showNoQuestions(); else showQuestions(questions,true);
+        if (questions.size()==0) showNoQuestions(); else {
+            limit = queryDocumentSnapshots.getDocuments().get(queryDocumentSnapshots.getDocuments().size()-1);
+            showQuestions(questions,true);
+        }
     }
 
     void prepareQuestions(ArrayList<Question> questions){
@@ -98,17 +98,19 @@ public class MyQuestions extends Fragment {
                 i.putExtra(Keys.theme,questions.get(position).getTheme());
                 startActivity(i);
             }else {
-                query.limit(loadCount+5).get().addOnSuccessListener(queryDocumentSnapshots -> {
-                    loadCount+=5;
+                query.startAfter(limit).limit(loadCount).get().addOnSuccessListener(queryDocumentSnapshots -> {
                     ArrayList<Question> newQ = new ArrayList<>();
-                    for (DocumentSnapshot s : queryDocumentSnapshots.getDocuments()) {
-                        Question q = Question.fromDoc(s);
-                        newQ.add(q);
+                    for(DocumentSnapshot q : queryDocumentSnapshots.getDocuments()) newQ.add(Question.fromDoc(q));
+                    if (newQ.isEmpty()){
+                        Hey.showToast(getContext(),getString(R.string.noMoreQ));
+                        loadMore.setVisibility(View.GONE);
+                    }else {
+                        limit = queryDocumentSnapshots.getDocuments().get(queryDocumentSnapshots.getDocuments().size()-1);
+                        adapter.addItems(newQ);
+                        Hey.setButtonAsDefault(getContext(),loadMore,getString(R.string.loadMore));
                     }
-                    if (Hey.getDifferenceOfQuestions(newQ,questions).size()==0) Hey.showToast(getContext(),getString(R.string.noMoreQ));
-                    adapter.addItems(Hey.getDifferenceOfQuestions(newQ,questions));
-                    Hey.setButtonAsDefault(getContext(),loadMore,getString(R.string.loadMore));
                 }).addOnFailureListener(this::showError);
+
             }
         });
         recyclerView.setAdapter(adapter);
@@ -119,7 +121,7 @@ public class MyQuestions extends Fragment {
     private void initVars(View v) {
         clearFilter = v.findViewById(R.id.clearFilterMy);
         clearFilter.setOnClickListener(a->{
-            loadCount = 5;
+            loadCount = 1;
             loadMyLastQuestions();
         });
         filter = v.findViewById(R.id.filterMy);

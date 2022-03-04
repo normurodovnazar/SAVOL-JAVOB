@@ -16,9 +16,10 @@ import com.normurodov_nazar.savol_javob.R;
 public class MyDialogWithTwoButtons extends Dialog {
     Button yes, no;
     TextView info, m, t;
-    Message message;
-    String i;
-    boolean result = false,forDelete;
+    final Message message;
+    final String i;
+    boolean result = false;
+    final boolean forDelete;
 
     public MyDialogWithTwoButtons(@NonNull Context context, String i, Message message, boolean forDelete) {
         super(context);
@@ -49,7 +50,7 @@ public class MyDialogWithTwoButtons extends Dialog {
         if (forDelete)
             if (message.getType().equals(Keys.textMessage)) {
                 m.setText(message.getMessage());
-                t.setText(Hey.getSeenTime(getContext(), message.getTime()));
+                t.setText(Hey.getTimeText(getContext(), message.getTime()));
             } else {
                 m.setVisibility(View.GONE);
                 t.setVisibility(View.GONE);

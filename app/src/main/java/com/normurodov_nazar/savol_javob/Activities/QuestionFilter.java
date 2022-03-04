@@ -127,7 +127,7 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
     void showChanges(){
         if (!themeS.isEmpty()) themeT.setText(getString(R.string.theme)+themeS);
         directionT.setText(getString(R.string.order)+getString(descending ? R.string.descending : R.string.ascending));
-        dateT.setText(getString(R.string.date)+Hey.getSeenTime(this,time));
+        dateT.setText(getString(R.string.date)+Hey.getTimeText(this,time));
         statusQuestionT.setText(getString(R.string.statusQuestion)+":"+getString(correct ? R.string.answered : R.string.unanswered));
         divider.setText(before ? R.string.before : R.string.after);
     }

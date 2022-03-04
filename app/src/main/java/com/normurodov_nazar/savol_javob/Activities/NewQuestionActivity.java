@@ -1,15 +1,15 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -19,18 +19,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.Question;
-import com.normurodov_nazar.savol_javob.MyD.StatusListener;
-import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.R;
 import com.yalantis.ucrop.UCrop;
 
@@ -40,127 +36,76 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NewQuestionActivity extends AppCompatActivity {
+    TextView privacy;
+    CheckBox checkBox;
     ConstraintLayout main;
     Button image, publish, selectTheme;
-    EditText message,number;
+    EditText message, number;
     ImageView questionImage;
     SubsamplingScaleImageView scaleImageView;
-    String filePath = "", theme = "",themeId = "";
+    String filePath = "", theme = "", themeId = "";
     boolean imageSelected = false;
-    ActivityResultLauncher<Intent> imageR, themeR;
-    Map<String, Object> data = new HashMap<>();
+    ActivityResultLauncher<Intent> memoryLauncher, captureLauncher, themeR;
+    final Map<String, Object> data = new HashMap<>();
     long time;
+    Uri capture;
     boolean imageShowing = false;
     File file;
-    CollectionReference publicQuestions,
-            allQuestions = FirebaseFirestore.getInstance().collection(Keys.allQuestions), chats = FirebaseFirestore.getInstance().collection(Keys.chats),
-    myAllQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.allQuestions);
+    CollectionReference publicQuestions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_question);
-        publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions+getString(R.string.lang));
+        publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions + getString(R.string.lang));
         initVars();
     }
 
     private void publishQuestion() {
-        String n = message.getText().toString(),x = number.getText().toString();
+        String n = message.getText().toString(), x = number.getText().toString();
         int i = -1;
-        try{
-            i = Integer.parseInt(x);
-        } catch (NumberFormatException e){
-            Hey.showToast(this,e.getLocalizedMessage());
-        }
-        if (i!=-1) if (My.units >= i * My.unitsForPerDay){
-            if (theme.isEmpty()) Hey.showToast(this, getString(R.string.themeReq));
-            else if (n.isEmpty()) Hey.showToast(this, getString(R.string.emty));
+        if (checkBox.isChecked()){
+            if (x.isEmpty()) {
+                Hey.showToast(this, getString(R.string.setVisibleTime));
+            } else
+                try {
+                    i = Integer.parseInt(x);
+                } catch (NumberFormatException e) {
+                    Hey.showToast(this, e.getLocalizedMessage());
+                }
+            if (i<=0) Hey.showToast(this, getString(R.string.setVisibleTime));
+            else if (theme.isEmpty()) Hey.showToast(this, getString(R.string.themeReq));
+            else if (n.isEmpty()) Hey.showToast(this, getString(R.string.empty));
             else if (!imageSelected) Hey.showToast(this, getString(R.string.you_need_upload_image));
             else {
                 data.put(Keys.sender, My.id);
                 data.put(Keys.time, time);
                 data.put(Keys.message, n);
-                data.put(Keys.theme, theme+Keys.incorrect);
-                data.put(Keys.imageSize,file.length());
-                data.put(Keys.visibleTime,time+ 24L *60*60*1000*i);
+                data.put(Keys.theme, theme + Keys.incorrect);
+                data.put(Keys.imageSize, file.length());
+                data.put(Keys.visibleTime, time + 24L * 60 * 60 * 1000 * i);
                 Question question = new Question(data);
-                int finalI = i;
-                Hey.amIOnline(new StatusListener() {
-                    @Override
-                    public void online() {
-                        LoadingDialog d = Hey.showLoadingDialog(NewQuestionActivity.this);
-                        Hey.getCollection(NewQuestionActivity.this, publicQuestions, docs -> {
-                            if (My.questionLimit > docs.size()) {
-                                Hey.uploadImageToChat(NewQuestionActivity.this, filePath, question.getQuestionId(), doc ->
-                                        Hey.addDocumentToCollection(NewQuestionActivity.this, allQuestions, question.getQuestionId(), question.toMap(), doc0 ->
-                                                Hey.addDocumentToCollection(NewQuestionActivity.this, publicQuestions, question.getQuestionId(), question.toMap(), doc1 ->
-                                                        Hey.addDocumentToCollection(NewQuestionActivity.this, myAllQuestions, question.getQuestionId(), question.toMap(), doc22 -> {
-                                            Map<String, Object> data = new HashMap<>();
-                                            data.put(Keys.time, question.getTime());
-                                            data.put(Keys.type, Keys.question);
-                                            data.put(Keys.sender, question.getSender());
-                                            data.put(Keys.message, question.getMessage());
-                                            data.put(Keys.read, false);
-                                            data.put(Keys.imageSize,file.length());
-                                            Map<String,Object> x1 = new HashMap<>();
-                                            x1.put(Keys.numberOfMyPublishedQuestions,My.numberOfMyPublishedQuestions+1);
-                                            x1.put(Keys.units,My.units-My.unitsForPerDay* finalI);
-                                            Hey.addDocumentToCollection(NewQuestionActivity.this, chats.document(question.getQuestionId()).collection(Keys.chats), question.getQuestionId(), data, doc2 -> Hey.updateDocument(NewQuestionActivity.this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), x1, doc3 -> {
-                                                Map<String,String> x = new HashMap<>();
-                                                x.put(Keys.id,question.getQuestionId());
-                                                x.put(Keys.theme,question.getTheme());
-                                                x.put(Keys.type,Keys.publicQuestions);
-                                                x.put(Keys.sender, String.valueOf(My.id));
-                                                Hey.sendNotification(NewQuestionActivity.this, My.fullName, getString(R.string.newQuestionMessage).replace("aaa",theme), theme.replaceAll(" ",""),x, doc4 -> {
-
-                                                }, errorMessage -> {
-                                                    if (d.isShowing()) d.closeDialog();
-                                                });
-                                                FirebaseMessaging.getInstance().subscribeToTopic(Keys.topics+question.getQuestionId());
-                                                if (d.isShowing()) d.closeDialog();
-                                                finish();
-                                            }, errorMessage -> {
-                                                if (d.isShowing()) d.closeDialog();
-                                            }), errorMessage -> {
-                                                if (d.isShowing()) d.closeDialog();
-                                            });
-                                        }, errorMessage -> {
-                                            if (d.isShowing()) d.closeDialog();
-                                        }), errorMessage -> {
-                                            if (d.isShowing()) d.closeDialog();
-                                        }), errorMessage -> { if (d.isShowing()) d.closeDialog(); }), (position, name) -> {
-                                }, errorMessage -> {
-                                    if (d.isShowing()) d.closeDialog();
-                                });
-                            }
-                            else {
-                                if (d.isShowing()) d.closeDialog();
-                                Hey.showAlertDialog(NewQuestionActivity.this, getString(R.string.questionLimitError).replace("xxx", String.valueOf(My.questionLimit)));
-                            }
-                        }, errorMessage -> {
-                            if (d.isShowing()) d.closeDialog();
-                        });
-                    }
-
-                    @Override
-                    public void offline() {
-                        Hey.showToast(NewQuestionActivity.this, getString(R.string.error_connection));
-                    }
-                }, errorMessage -> {
-                }, this);
+                LoadingDialog dialog = Hey.showLoadingDialog(this);
+                Hey.publishQuestion(this, question, i, filePath, false, doc -> {
+                    dialog.closeDialog();
+                    finish();
+                }, errorMessage -> dialog.closeDialog());
             }
-        } else Hey.showAlertDialog(this,getString(R.string.notEnoughUnitsForDay).replaceAll("xxx", String.valueOf(i)).replaceAll("yyy", String.valueOf(My.units)).replaceAll("zzz", String.valueOf(My.unitsForPerDay)));
+        }else Hey.showToast(this,getString(R.string.dontAgree));
     }
 
     private void initVars() {
+        checkBox = findViewById(R.id.checkbox);
+        privacy = findViewById(R.id.privacy);Hey.gotoPrivacy(this,privacy);
         main = findViewById(R.id.mainNQ);
         selectTheme = findViewById(R.id.selectTheme);
         selectTheme.setOnClickListener(v -> {
             Intent i = new Intent(this, SelectTheme.class);
-            i.putExtra("s",true);
+            i.putExtra("s", true);
             themeR.launch(i);
         });
-        imageR = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onPickImageResult);
+        memoryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onMemoryResult);
+        captureLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onCaptureResult);
         themeR = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onThemeResult);
         image = findViewById(R.id.selectImage);
         image.setOnClickListener(v -> chooseImage());
@@ -180,10 +125,7 @@ public class NewQuestionActivity extends AppCompatActivity {
             imageShowing = true;
             main.setVisibility(View.INVISIBLE);
             scaleImageView.setVisibility(View.VISIBLE);
-            scaleImageView.setMaxScale(15);
-            scaleImageView.setMinScale(0.1f);
-            scaleImageView.setBackgroundColor(Color.BLACK);
-            scaleImageView.setImage(ImageSource.uri(Uri.fromFile(file)));
+            Hey.setBigImage(scaleImageView, file);
         }
     }
 
@@ -193,16 +135,28 @@ public class NewQuestionActivity extends AppCompatActivity {
             if (o != null) {
                 theme = o.getStringExtra(Keys.theme);
                 themeId = o.getStringExtra(Keys.id);
-                selectTheme.setText(getString(R.string.theme)+theme);
+                String s = getString(R.string.theme) + theme;
+                selectTheme.setText(s);
             }
         }
     }
 
-    private void onPickImageResult(ActivityResult result) {
-        if (result.getData() != null) {
-            Uri uri = result.getData().getData();
-            Hey.cropImage(this, this, uri, new File(filePath), false, errorMessage -> { });
+    private void onMemoryResult(ActivityResult result) {
+        Hey.print("onMemoryResult", result.toString());
+        if (result.getResultCode() == RESULT_OK) {
+            if (result.getData() != null) {
+                Uri uri = result.getData().getData();
+                Hey.cropImage(this, this, uri, new File(filePath), false, errorMessage -> {
+                });
+            } else Hey.showToast(this, getString(R.string.error));
         }
+    }
+
+    private void onCaptureResult(ActivityResult result) {
+        Hey.print("onCaptureResult", result.toString());
+        if (result.getResultCode() == RESULT_OK)
+            Hey.cropImage(this, this, capture, new File(filePath), false, errorMessage -> {
+            });
     }
 
     @Override
@@ -215,8 +169,12 @@ public class NewQuestionActivity extends AppCompatActivity {
                     imageSelected = true;
                     filePath = res.getPath();
                     file = new File(filePath);
+                    long startTime = Hey.getCurrentTime();
+                    Hey.compressImage(this,file);
+                    long endTime = Hey.getCurrentTime();
+                    Hey.print("cropDuration", String.valueOf(endTime/1000-startTime/1000));
+                    questionImage.setImageResource(R.drawable.search_glass);
                     questionImage.setImageURI(Uri.fromFile(file));
-                    Log.e("onActivityResult", "Result is not null:" + res.getPath());
                 } else {
                     Log.e("onActivityResult", "Result is null");
                     Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
@@ -234,6 +192,6 @@ public class NewQuestionActivity extends AppCompatActivity {
     }
 
     private void chooseImage() {
-        Hey.pickImage(imageR);
+        Hey.chooseImage(this, image, memoryLauncher, captureLauncher, uri -> capture = uri);
     }
 }

@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,7 +42,8 @@ import java.util.concurrent.TimeUnit;
 public class AuthUser extends AppCompatActivity implements View.OnClickListener {
 
     ActivityResultLauncher<Intent> launcher;
-    TextView text;
+    TextView text,privacy;
+    CheckBox checkBox;
     EditText phone;
     Button button;
     SharedPreferences preferences;
@@ -85,15 +87,15 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     }
 
     private void initVars() {
+        checkBox = findViewById(R.id.checkbox);
+        privacy = findViewById(R.id.privacy);Hey.gotoPrivacy(this,privacy);
         preferences = getPreferences(MODE_PRIVATE);
         text = findViewById(R.id.textView);
         phone = findViewById(R.id.phone);
         button = findViewById(R.id.button);
-
         Hey.animateFadeOut(text,300);
         Hey.animateHorizontally(phone,400,500);
         Hey.animateVertically(button,350,800);
-
         button.setOnClickListener(this);
     }
 
@@ -188,6 +190,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     void generateUniqueId(){
         int id = Hey.generateID();
+
         Hey.isDocumentExists(this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)),
                 new Exists() {
                     @Override
@@ -229,7 +232,9 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     @Override
     public void onClick(View view) {
-       if(!loading) onButtonClicked();
+       if(!loading) {
+           if (checkBox.isChecked()) onButtonClicked(); else Hey.showToast(this,getString(R.string.dontAgree));
+       }
     }
 
     private void onButtonClicked() {
@@ -260,5 +265,11 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
         phone.setEnabled(false);
         Hey.setButtonAsLoading(this,button);
         loading = true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        My.applied = false;
     }
 }

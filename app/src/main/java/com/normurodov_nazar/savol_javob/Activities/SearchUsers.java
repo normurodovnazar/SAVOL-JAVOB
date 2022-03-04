@@ -44,12 +44,12 @@ public class SearchUsers extends AppCompatActivity {
     }
 
     private void setAdapterToRecyclerView(ArrayList<Long> userIds) {
-        UserListAdapter adapter = new UserListAdapter(this, userIds, (message, itemView, position) -> {
+        UserListAdapter adapter = new UserListAdapter(this, userIds, user -> {
             Intent i = new Intent(this, SingleChat.class);
-            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, userIds.get(position)));
+            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id,user.getId()));
+            i.putExtra(Keys.privateChat,false);
             startActivity(i);
-            Hey.addToChats(this, My.id, userIds.get(position));
-        }, (message, itemView, position) -> {
+        }, user -> {
 
         });
         recyclerView.setAdapter(adapter);
@@ -59,31 +59,28 @@ public class SearchUsers extends AppCompatActivity {
     private void searchResults() {
         String text = searchField.getText().toString();
         if (!text.isEmpty())
-            if (Hey.withUpper(text)){
-                if (text.length() >= 4) {
-                    viewLoading();
-                    Hey.searchUsersFromServer(this, text, byName, docs -> {
-                        ArrayList<Long> userIds = new ArrayList<>();
-                        for (DocumentSnapshot ds : docs) {
-                            User user = User.fromDoc(ds);
-                            if (user.getId() != My.id ) userIds.add(user.getId());
-                        }
-                        if (userIds.isEmpty()) noResultsFound();
-                        else {
-                            setAdapterToRecyclerView(userIds);
-                            viewResults();
-                        }
-                    }, errorMessage -> noResultsFound());
-                }
-                else Hey.showToast(this, getString(R.string.characterError));
-            }else Hey.showToast(this,getString(R.string.mustBeUpper));
+            if (Hey.withUpper(text)) {
+                viewLoading();
+                Hey.searchUsersFromServer(this, text, byName, docs -> {
+                    ArrayList<Long> userIds = new ArrayList<>();
+                    for (DocumentSnapshot ds : docs) {
+                        User user = User.fromDoc(ds);
+                        if (user.getId() != My.id) if (!user.isHiddenFromSearch())userIds.add(user.getId());
+                    }
+                    if (userIds.isEmpty()) noResultsFound();
+                    else {
+                        setAdapterToRecyclerView(userIds);
+                        viewResults();
+                    }
+                }, errorMessage -> noResultsFound());
+            } else Hey.showToast(this, getString(R.string.mustBeUpper));
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode==KeyEvent.KEYCODE_VOLUME_UP){
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
             return true;
-        }else return super.onKeyDown(keyCode, event);
+        } else return super.onKeyDown(keyCode, event);
     }
 
     private void initState() {

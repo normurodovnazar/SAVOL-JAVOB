@@ -44,12 +44,13 @@ public class NeedQuestions extends Fragment {
     ImageView filter,clearFilter;
 
     ActivityResultLauncher<Intent> launcher;
-    CollectionReference needQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.needQuestions);
+    final CollectionReference needQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.needQuestions);
     Query query;
     String theme = "";
     boolean correct = true,descending = true,before = true;
     long time = Hey.getCurrentTime();
-    int loadCount = 5;
+    int loadCount = 6;
+    DocumentSnapshot limit;
 
     QuestionAdapter adapter;
     public NeedQuestions() {
@@ -80,12 +81,18 @@ public class NeedQuestions extends Fragment {
         for (DocumentSnapshot s : queryDocumentSnapshots.getDocuments()) {
             questions.add(Question.fromDoc(s));
         }
-        if (questions.size()==0) showNoQuestions(); else showQuestions(questions,true);
+        if (questions.size()==0) showNoQuestions(); else {
+            limit = queryDocumentSnapshots.getDocuments().get(queryDocumentSnapshots.getDocuments().size()-1);
+            showQuestions(questions,true);
+        }
     }
 
     void prepareQuestions(ArrayList<Question> questions){
-        if (questions.size()==0) showNoQuestions(); else showQuestions(questions,false);
+        if (questions.size()==0) showNoQuestions(); else {
+            showQuestions(questions,false);
+        }
     }
+
 
     private void showQuestions(ArrayList<Question> questions,boolean moreFunction) {
         adapter = new QuestionAdapter(getContext(), questions, QuestionFrom.needQuestion,moreFunction, (position, name, loadMore) -> {
@@ -95,16 +102,17 @@ public class NeedQuestions extends Fragment {
                 i.putExtra(Keys.theme,questions.get(position).getTheme());
                 startActivity(i);
             }else {
-                query.limit(loadCount+5).get().addOnSuccessListener(queryDocumentSnapshots -> {
-                    loadCount+=5;
+                query.startAfter(limit).limit(loadCount).get().addOnSuccessListener(queryDocumentSnapshots -> {
                     ArrayList<Question> newQ = new ArrayList<>();
-                    for (DocumentSnapshot s : queryDocumentSnapshots.getDocuments()) {
-                        Question q = Question.fromDoc(s);
-                        newQ.add(q);
+                    for(DocumentSnapshot q : queryDocumentSnapshots.getDocuments()) newQ.add(Question.fromDoc(q));
+                    if (newQ.isEmpty()){
+                        Hey.showToast(getContext(),getString(R.string.noMoreQ));
+                        loadMore.setVisibility(View.GONE);
+                    }else {
+                        limit = queryDocumentSnapshots.getDocuments().get(queryDocumentSnapshots.getDocuments().size()-1);
+                        adapter.addItems(newQ);
+                        Hey.setButtonAsDefault(getContext(),loadMore,getString(R.string.loadMore));
                     }
-                    if (Hey.getDifferenceOfQuestions(newQ,questions).size()==0) Hey.showToast(getContext(),getString(R.string.noMoreQ));
-                    adapter.addItems(Hey.getDifferenceOfQuestions(newQ,questions));
-                    Hey.setButtonAsDefault(getContext(),loadMore,getString(R.string.loadMore));
                 }).addOnFailureListener(this::showError);
             }
         });

@@ -1,7 +1,6 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,13 +24,14 @@ import com.normurodov_nazar.savol_javob.R;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     final Context context;
     final ArrayList<Question> questions;
     final ItemClickForQuestion listener;
     final boolean loadMoreFunction;
-    QuestionFrom from;
+    final QuestionFrom from;
 
     public QuestionAdapter(Context context, ArrayList<Question> questions, QuestionFrom from,boolean loadMoreFunction, ItemClickForQuestion listener) {
         this.context = context;
@@ -83,10 +83,15 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     static class QViewHolder extends RecyclerView.ViewHolder {
-        ConstraintLayout form;
-        TextView sender, time, theme, whoNeed, visibleTime;
-        Button iNeed;
-        Context context;
+        final ConstraintLayout form;
+        final TextView sender;
+        final TextView time;
+        final TextView theme;
+        final TextView whoNeed;
+        final TextView visibleTime;
+        final Button iNeed;
+        final Button makePublic;
+        final Context context;
         Long n;
         Boolean need = null;
         DocumentReference myIdInUsers, questionDoc, referenceInMyNeedQuestions;
@@ -101,6 +106,7 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             sender = itemView.findViewById(R.id.sender);
             time = itemView.findViewById(R.id.time);
             theme = itemView.findViewById(R.id.theme);
+            makePublic = itemView.findViewById(R.id.makePublic);
             iNeed = itemView.findViewById(R.id.iNeed);
             visibleTime = itemView.findViewById(R.id.visibleTime);
             context = itemView.getContext();
@@ -113,14 +119,19 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             form.setVisibility(View.VISIBLE);
             this.question = question;
             itemView.setOnClickListener(v -> listener.onItemClick(pos, "", null));
-            time.setText(context.getString(R.string.time) + Hey.getSeenTime(context, question.getTime()));
-            visibleTime.setText(context.getString(R.string.visibleTime) + Hey.getSeenTime(context, question.getVisibleTime()));
+            String a = context.getString(R.string.time) + Hey.getTimeText(context, question.getTime());
+            time.setText(a);
+            String b = context.getString(R.string.visibleTime) + Hey.getTimeText(context, question.getVisibleTime());
+            visibleTime.setText(b);
             String t = question.getTheme(), x = t.contains(Keys.incorrect) ? t.replace(Keys.incorrect, "") : t.replace(Keys.correct, "");
-            theme.setText(context.getString(R.string.theme) + x);
+            String c = context.getString(R.string.theme) + x;
+            theme.setText(c);
             questionDoc = FirebaseFirestore.getInstance().collection(Keys.allQuestions).document(question.getQuestionId());
             userList = questionDoc.collection(Keys.users);
             myIdInUsers = userList.document(String.valueOf(My.id));
             referenceInMyNeedQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.needQuestions).document(question.getQuestionId());
+            if (from==QuestionFrom.myQuestion || from==QuestionFrom.needQuestion || from==QuestionFrom.searchQuestion) makePublic.setVisibility(View.VISIBLE);
+            makePublic.setOnClickListener(v->makingPublic());
             if (question.getSender() != My.id) {
                 whoNeed.setVisibility(View.GONE);
                 iNeed.setVisibility(View.VISIBLE);
@@ -152,6 +163,44 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     whoNeed.setText(context.getString(R.string.needsUsers).replace("xxx", String.valueOf(n)));
                 }, errorMessage -> setAsNotLoading());
             }
+        }
+
+        private void makingPublic() {
+            Hey.showAlertDialog(context,context.getString(R.string.chooseHowManyDays)).setOnDismissListener(x->{
+                ArrayList<String> days = new ArrayList<>();
+                for (int i=1;i<=9;i++) {
+                    if (i==1) days.add(i+" "+context.getString(R.string.dayVisible)); else days.add(i+" "+context.getString(R.string.daysVisible));
+                }
+                int[] d = new int[1];
+                d[0] = -1;
+                Hey.showPopupMenu(context, makePublic, days, (position, name) -> d[0] = position+1,true).setOnDismissListener(xa->{
+                    if (d[0]!=-1){
+                        loadingPublic();
+                        LoadingDialog loadingDialog = Hey.showLoadingDialog(context);
+                        Map<String,Object> data = question.toMap();
+                        long time = Hey.getCurrentTime();
+                        data.put(Keys.visibleTime,time + 24L * 60 * 60 * 1000 * d[0]);
+                        Hey.publishQuestion(context, new Question(data), d[0], null, true, doc -> {
+                            notLoadingPublic();
+                            loadingDialog.closeDialog();
+                            Hey.showToast(context,context.getString(R.string.posted));
+                        }, errorMessage -> {
+                            notLoadingPublic();
+                            loadingDialog.closeDialog();
+                        });
+                    }
+                });
+            });
+        }
+
+        private void loadingPublic() {
+            loading = true;
+            Hey.setButtonAsLoading(context,makePublic);
+        }
+
+        private void notLoadingPublic() {
+            loading = false;
+            Hey.setButtonAsDefault(context,makePublic,context.getString(R.string.makePublic));
         }
 
         private void onPress() {
@@ -197,14 +246,14 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         void setAsSelected() {
             setAsNotLoading();
             iNeed.setBackgroundResource(R.drawable.button_bg_pressed);
-            iNeed.setTextColor(Color.WHITE);
+            iNeed.setTextColor(context.getResources().getColor(R.color.white));
             iNeed.setText(text);
         }
 
         void setAsUnselected() {
             setAsNotLoading();
-            iNeed.setBackgroundResource(R.drawable.sss);
-            iNeed.setTextColor(Color.BLACK);
+            iNeed.setBackgroundResource(R.drawable.button_background);
+            iNeed.setTextColor(context.getResources().getColor(R.color.black));
             iNeed.setText(text);
         }
 
@@ -221,7 +270,8 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         private void setName(String docId) {
             Hey.getUserFromUserId(itemView.getContext(), docId, doc -> {
                 User user = (User) doc;
-                sender.setText(context.getString(R.string.sender) + user.getFullName());
+                String x = context.getString(R.string.sender) + (!user.isHiddenFromQuestionChat() ? user.getFullName() : context.getString(R.string.hidden));
+                sender.setText(x);
             }, errorMessage -> {
 
             });
@@ -229,7 +279,7 @@ public class QuestionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     static class BViewHolder extends RecyclerView.ViewHolder {
-        Button loadMore;
+        final Button loadMore;
 
         public BViewHolder(@NonNull View itemView) {
             super(itemView);

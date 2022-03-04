@@ -50,9 +50,9 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeHolder>
     }
 
     static class ThemeHolder extends RecyclerView.ViewHolder {
-        TextView themeView;
-        ImageView status;
-        Context c;
+        final TextView themeView;
+        final ImageView status;
+        final Context c;
 
         public ThemeHolder(@NonNull View itemView) {
             super(itemView);
@@ -63,6 +63,8 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeHolder>
 
         void setTheme(String theme, boolean forSelect, RecyclerViewItemClickListener listener, int p) {
             themeView.setText(theme);
+            String topicTheme = Hey.getTopicFromTheme(theme);
+            Hey.print("topic",topicTheme);
             if (forSelect) status.setVisibility(View.INVISIBLE);
             else {
                 SharedPreferences preferences = Hey.getPreferences(c);
@@ -77,7 +79,7 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeHolder>
                         if (preferences.getBoolean(Keys.privateChat,true)) setStar(); else removeStar();
                         break;
                     default:
-                        if (preferences.getBoolean(theme.replaceAll(" ",""),false)) setStar(); else removeStar();
+                        if (preferences.getBoolean(topicTheme,false)) setStar(); else removeStar();
                         break;
                 }
                 status.setOnClickListener(view -> {
@@ -120,21 +122,21 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeHolder>
                             Hey.amIOnline(new StatusListener() {
                                 @Override
                                 public void online() {
-                                    if (preferences.getBoolean(theme.replaceAll(" ",""),false)){
-                                        FirebaseMessaging.getInstance().unsubscribeFromTopic(Keys.topics + theme.replaceAll(" ","")).addOnSuccessListener(unused -> {
+                                    if (preferences.getBoolean(topicTheme,false)){
+                                        FirebaseMessaging.getInstance().unsubscribeFromTopic(Keys.topics + topicTheme).addOnSuccessListener(unused -> {
                                             Hey.showToast(c,c.getString(R.string.notificationsDisabled).replace("aaa",theme));
                                             dialog.closeDialog();
-                                            preferences.edit().putBoolean(theme.replaceAll(" ",""),false).apply();
+                                            preferences.edit().putBoolean(topicTheme,false).apply();
                                             removeStar();
                                         }).addOnFailureListener(e -> {
                                             dialog.closeDialog();
                                             Hey.showToast(c,c.getString(R.string.error)+":"+e.getLocalizedMessage());
                                         });
                                     }else {
-                                        FirebaseMessaging.getInstance().subscribeToTopic(Keys.topics + theme.replaceAll(" ","")).addOnSuccessListener(unused -> {
+                                        FirebaseMessaging.getInstance().subscribeToTopic(Keys.topics + topicTheme).addOnSuccessListener(unused -> {
                                             Hey.showToast(c,c.getString(R.string.notificationEnabled).replace("aaa",theme));
                                             dialog.closeDialog();
-                                            preferences.edit().putBoolean(theme.replaceAll(" ",""),true).apply();
+                                            preferences.edit().putBoolean(topicTheme,true).apply();
                                             setStar();
                                         }).addOnFailureListener(e -> {
                                             dialog.closeDialog();

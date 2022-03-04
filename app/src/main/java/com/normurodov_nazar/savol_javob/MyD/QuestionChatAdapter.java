@@ -1,7 +1,6 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,14 +31,15 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     final String questionId;
     final RecyclerViewItemClickListener textClick;
     final RecyclerViewItemClickListener imageClick;
-    final RecyclerViewItemClickListener profileImageClick;
+    final UserClickListener profileImageClick;
+    final UserClickListener profileImageLongCLick;
     final RecyclerViewItemLongClickListener longClickListener;
     final ItemClickForQuestion loadMore;
-    ArrayList<Message> messages;
+    final ArrayList<Message> messages;
     final Context context;
     final String theme;
 
-    public QuestionChatAdapter(Context context, ArrayList<Message> messages, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, RecyclerViewItemLongClickListener longClickListener,ItemClickForQuestion loadMore, String theme) {
+    public QuestionChatAdapter(Context context, ArrayList<Message> messages, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener profileImageLongCLick, RecyclerViewItemLongClickListener longClickListener, ItemClickForQuestion loadMore, String theme) {
         this.questionId = questionId;
         this.textClick = textClick;
         this.messages = messages;
@@ -49,30 +49,31 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         this.longClickListener = longClickListener;
         this.theme = theme;
         this.loadMore = loadMore;
+        this.profileImageLongCLick = profileImageLongCLick;
     }
 
     public void addItems(ArrayList<Message> messages, int itemCount) {
         int startPosition = this.messages.size();
         this.messages.addAll(messages);
-        notifyItemRangeInserted(startPosition+2, itemCount);
+        notifyItemRangeInserted(startPosition + 2, itemCount);
     }
 
     public void removeItem(Message message) {
         int i = Hey.getIndexInArray(message, messages);
         if (i != -1) {
             messages.remove(i);
-            notifyItemRemoved(i+1);
+            notifyItemRemoved(i + 1);
         }
     }
 
-    public void addItemsToTop(ArrayList<Message> newMessages){
-        messages.addAll(0,newMessages);
+    public void addItemsToTop(ArrayList<Message> newMessages) {
+        messages.addAll(0, newMessages);
         notifyItemRangeInserted(1, newMessages.size());
     }
 
     public void changeItem(Message message, int i) {
         messages.set(i, message);
-        notifyItemChanged(i+1);
+        notifyItemChanged(i + 1);
     }
 
     @NonNull
@@ -111,8 +112,8 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemViewType(int position) {
-        if (position!=0) {
-            Message message = messages.get(position-1);
+        if (position != 0) {
+            Message message = messages.get(position - 1);
             if (message.getSender() == My.id)
                 switch (message.getType()) {
                     case Keys.textMessage:
@@ -140,10 +141,10 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (position==0) {
-            ((LoadMore) holder).setData(loadMore,messages.size()>=50);
-        }else {
-            Message data = messages.get(position-1);
+        if (position == 0) {
+            ((LoadMore) holder).setData(loadMore, messages.size() >= 50);
+        } else {
+            Message data = messages.get(position - 1);
             if (data.getSender() == My.id) {
                 switch (data.getType()) {
                     case Keys.textMessage:
@@ -162,16 +163,16 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             } else {
                 switch (data.getType()) {
                     case Keys.textMessage:
-                        ((TextFromOther) holder).setData(data, profileImageClick, position);
+                        ((TextFromOther) holder).setData(data, profileImageClick,profileImageLongCLick,textClick, position);
                         break;
                     case Keys.imageMessage:
-                        ((ImageFromOther) holder).setData(data, imageClick, profileImageClick, position);
+                        ((ImageFromOther) holder).setData(data, longClickListener,imageClick, profileImageClick,profileImageLongCLick, position);
                         break;
                     case Keys.answer:
-                        ((AnswerFromOther) holder).setData(data, questionId,theme.contains(Keys.correct) ? theme.replace(Keys.correct,"") : theme.replace(Keys.incorrect,""), imageClick, profileImageClick, position, String.valueOf(messages.get(0).getSender()));
+                        ((AnswerFromOther) holder).setData(data, questionId, theme.contains(Keys.correct) ? theme.replace(Keys.correct, "") : theme.replace(Keys.incorrect, ""), textClick, imageClick, profileImageClick,profileImageLongCLick, position, String.valueOf(messages.get(0).getSender()));
                         break;
                     case Keys.question:
-                        ((QuestionFromOther) holder).setData(data, imageClick, profileImageClick, position);
+                        ((QuestionFromOther) holder).setData(data,textClick,imageClick, profileImageClick,profileImageLongCLick, position);
                         break;
                 }
             }
@@ -180,12 +181,13 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return messages.size()+1;
+        return messages.size() + 1;
     }
 
     static class TextFromMe extends RecyclerView.ViewHolder {
-        TextView message, time;
-        ImageView read;
+        final TextView message;
+        final TextView time;
+        final ImageView read;
 
         public TextFromMe(@NonNull View itemView) {
             super(itemView);
@@ -195,7 +197,7 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         }
 
         void setData(Message data, RecyclerViewItemClickListener listener, int i) {
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             message.setText(data.getMessage());
             itemView.setOnClickListener(v -> listener.onItemClick(data, itemView, i));
             read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
@@ -203,19 +205,24 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     }
 
     static class ImageFromMe extends RecyclerView.ViewHolder {
-        TextView time;
-        ImageView imageView, read;
+        final TextView time;
+        final TextView imageSize;
+        final ImageView imageView;
+        final ImageView read;
 
         public ImageFromMe(@NonNull View itemView) {
             super(itemView);
             time = itemView.findViewById(R.id.timeImageFromMeFromMe);
             read = itemView.findViewById(R.id.statusOfImageMessage);
             imageView = itemView.findViewById(R.id.imageMessageByMe);
+            imageSize = itemView.findViewById(R.id.imageSize);
         }
 
         void setData(Message data, RecyclerViewItemClickListener imageClick, RecyclerViewItemLongClickListener longClickListener, int i) {
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
-            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
+            imageSize.setText(Hey.getMb(data.getImageSize()));
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
+            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
+            });
             read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
             itemView.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
             itemView.setOnLongClickListener(v -> {
@@ -226,17 +233,25 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     }
 
     static class AnswerFromMe extends RecyclerView.ViewHolder {
-        TextView message, time;
-        ImageView read, image;
-        ConstraintLayout answerFromMe;
+        final TextView message;
+        final TextView time;
+        final TextView imageSize;
+        final ImageView read;
+        final ImageView image;
+        final ConstraintLayout answerFromMe;
 
-        Button correct, incorrect;
+        final Button correct;
+        final Button incorrect;
         DocumentReference reference, thisAnswer, numbersDocument;
         long cN, iN;
         String correctText = "?", incorrectText = "?";
 
+        final Context context;
+
         public AnswerFromMe(@NonNull View itemView) {
             super(itemView);
+            context = itemView.getContext();
+            imageSize = itemView.findViewById(R.id.imageSize);
             answerFromMe = itemView.findViewById(R.id.answerFromMe);
             message = itemView.findViewById(R.id.textAnswerFromMe);
             time = itemView.findViewById(R.id.timeAnswerFromMe);
@@ -249,32 +264,34 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         }
 
         void setData(Message data, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, int i, String senderId) {
+            imageSize.setText(Hey.getMb(data.getImageSize()));
             message.setText(data.getMessage());
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
+            time.setText(Hey.getTimeText(context, data.getTime()));
             read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
-            Hey.workWithImageMessage(data, doc -> image.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
+            Hey.workWithImageMessage(data, doc -> image.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
+            });
             image.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
             message.setOnClickListener(v -> textClick.onItemClick(data, itemView, i));
             thisAnswer = FirebaseFirestore.getInstance().collection(Keys.chats).document(questionId).collection(Keys.chats).document(data.getId());
             reference = thisAnswer.collection(Keys.users).document(senderId);
             numbersDocument = thisAnswer.collection(Keys.users).document(Keys.number);
-            Hey.addDocumentListener(itemView.getContext(), numbersDocument, doc -> {
+            Hey.addDocumentListener(context, numbersDocument, doc -> {
                 Long iO = doc.getLong(Keys.incorrect), cO = doc.getLong(Keys.correct);
                 iN = iO == null ? 0 : iO;
                 cN = cO == null ? 0 : cO;
-                correctText = itemView.getContext().getString(R.string.correct) + "(" + cN + ")";
-                incorrectText = itemView.getContext().getString(R.string.incorrect) + "(" + iN + ")";
+                correctText = context.getString(R.string.correct) + "(" + cN + ")";
+                incorrectText = context.getString(R.string.incorrect) + "(" + iN + ")";
                 correct.setText(correctText);
                 incorrect.setText(incorrectText);
             }, errorMessage -> {
 
             });
-            Hey.addDocumentListener(itemView.getContext(), reference, doc -> {
-                if (doc.exists()){
+            Hey.addDocumentListener(context, reference, doc -> {
+                if (doc.exists()) {
                     Boolean condition = doc.getBoolean(Keys.correct);
-                    if (condition!=null) if (condition){
+                    if (condition != null) if (condition) {
                         answerFromMe.setBackgroundResource(R.drawable.message_my_me_green);
-                    }else {
+                    } else {
                         answerFromMe.setBackgroundResource(R.drawable.message_by_me_red);
                     }
                 } else answerFromMe.setBackgroundResource(R.drawable.message_by_me_bg);
@@ -285,11 +302,15 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     }
 
     static class QuestionFromMe extends RecyclerView.ViewHolder {
-        TextView message, time;
-        ImageView read, image;
+        final TextView message;
+        final TextView time;
+        final TextView imageSize;
+        final ImageView read;
+        final ImageView image;
 
         public QuestionFromMe(@NonNull View itemView) {
             super(itemView);
+            imageSize = itemView.findViewById(R.id.imageSize);
             message = itemView.findViewById(R.id.textAnswerFromMe);
             time = itemView.findViewById(R.id.timeAnswerFromMe);
             read = itemView.findViewById(R.id.statusAnswerFromMe);
@@ -297,10 +318,12 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         }
 
         void setData(Message data, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, RecyclerViewItemLongClickListener longClickListener, int i) {
+            imageSize.setText(Hey.getMb(data.getImageSize()));
             message.setText(data.getMessage());
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
-            Hey.workWithImageMessage(data, doc -> image.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
+            Hey.workWithImageMessage(data, doc -> image.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
+            });
             image.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
             message.setOnClickListener(v -> textClick.onItemClick(data, itemView, i));
             itemView.setOnLongClickListener(v -> {
@@ -311,8 +334,10 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     }
 
     static class TextFromOther extends RecyclerView.ViewHolder {
-        TextView message, time, fullName;
-        ImageView imageView;
+        final TextView message;
+        final TextView time;
+        final TextView fullName;
+        final ImageView imageView;
 
         public TextFromOther(@NonNull View itemView) {
             super(itemView);
@@ -322,69 +347,101 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             fullName = itemView.findViewById(R.id.fullNameTextFromOther);
         }
 
-        void setData(Message data, RecyclerViewItemClickListener profileImageClick, int i) {
+        void setData(Message data, UserClickListener profileImageClick,UserClickListener longClick,RecyclerViewItemClickListener textClick, int i) {
+            itemView.setOnClickListener(v-> textClick.onItemClick(data,itemView,i));
             message.setText(data.getMessage());
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
-            Hey.setUserNameToMessage(itemView, data, fullName);
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> {
                 User user = (User) doc;
-                Hey.workWithProfileImage(user, doc1 -> {
-                    File f = new File(user.getLocalFileName());
-                    imageView.setImageURI(Uri.fromFile(f));
-                }, errorMessage -> {
+                imageView.setOnClickListener(v -> profileImageClick.onUserClick(user));
+                imageView.setOnLongClickListener(view -> {
+                    longClick.onUserClick(user);
+                    return true;
                 });
+                if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
+                if (user.hasProfileImage()) {
+                    Hey.print(user.getFullName(),"Has profile image");
+                    Hey.workWithProfileImage(user, doc1 -> {
+                        File f = new File(user.getLocalFileName());
+                        imageView.setImageURI(Uri.fromFile(f));
+                    }, errorMessage -> {
+                    });
+                }else Hey.print(user.getFullName(),"Hasn't profile image");
             }, errorMessage -> {
 
             });
-            imageView.setOnClickListener(v -> profileImageClick.onItemClick(data, itemView, i));
         }
     }
 
     static class ImageFromOther extends RecyclerView.ViewHolder {
-        TextView time, fullName;
-        ImageView imageView, profileImage;
+        final TextView time;
+        final TextView fullName;
+        final TextView imageSize;
+        final ImageView imageView;
+        final ImageView profileImage;
 
         public ImageFromOther(@NonNull View itemView) {
             super(itemView);
+            imageSize = itemView.findViewById(R.id.imageSize);
             time = itemView.findViewById(R.id.timeImageFromOtherQ);
             fullName = itemView.findViewById(R.id.fullNameImageFromOtherQ);
             imageView = itemView.findViewById(R.id.imageByOtherQ);
             profileImage = itemView.findViewById(R.id.profileQ);
         }
 
-        void setData(Message data, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, int i) {
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
-
+        void setData(Message data,RecyclerViewItemLongClickListener longClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener longClickProfile, int i) {
+            imageSize.setText(Hey.getMb(data.getImageSize()));
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> {
                 User user = (User) doc;
-                Hey.workWithProfileImage(user, doc1 -> {
-                    File f = new File(user.getLocalFileName());
-                    profileImage.setImageURI(Uri.fromFile(f));
-                }, errorMessage -> {
+                profileImage.setOnLongClickListener(z->{
+                    longClickProfile.onUserClick(user);
+                    return true;
                 });
+                profileImage.setOnClickListener(v -> profileImageClick.onUserClick(user));
+                if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
+                if (user.hasProfileImage()){
+                    Hey.print(user.getFullName(),"Has profile image");
+                    Hey.workWithProfileImage(user, doc1 -> {
+                        File f = new File(user.getLocalFileName());
+                        profileImage.setImageURI(Uri.fromFile(f));
+                    }, errorMessage -> {
+                    });
+                }else Hey.print(user.getFullName(),"Hasn't profile image");
             }, errorMessage -> {
 
             });
-            profileImage.setOnClickListener(v -> profileImageClick.onItemClick(data, profileImage, i));
-            Hey.setUserNameToMessage(itemView, data, fullName);
-            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> { });
+            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
+            });
             itemView.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
+            itemView.setOnLongClickListener(x-> {
+                longClick.onItemLongClick(data,itemView,i);
+                return true;
+            });
         }
     }
 
     static class AnswerFromOther extends RecyclerView.ViewHolder {
-        ImageView imageView, profileImage;
-        ConstraintLayout answerFromOther;
-        TextView message, time, fullName;
-        Button correct, incorrect;
-        DocumentReference myDoc, thisAnswer, numbersDocument, senderDoc,otherDoc,thisQuestionInAll;
+        final ImageView imageView;
+        final ImageView profileImage;
+        final ConstraintLayout answerFromOther;
+        final TextView message;
+        final TextView time;
+        final TextView fullName;
+        final TextView imageSize;
+        final Button correct;
+        final Button incorrect;
+        DocumentReference myDoc, thisAnswer, numbersDocument, senderDoc, otherDoc, thisQuestionInAll;
         Relation relation;
         long cN, iN, senderCN, senderIN, senderU;
         boolean loading = true;
         String correctText = "?", incorrectText = "?";
+        final Context context;
 
         public AnswerFromOther(@NonNull View itemView) {
             super(itemView);
+            imageSize = itemView.findViewById(R.id.imageSize);
+            context = itemView.getContext();
             answerFromOther = itemView.findViewById(R.id.answerFromOther);
             imageView = itemView.findViewById(R.id.imageAnswerFromOther);
             profileImage = itemView.findViewById(R.id.profileImageAnswerFromOther);
@@ -395,20 +452,20 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect = itemView.findViewById(R.id.incorrect);
         }
 
-        void setData(Message data, String questionId, String actualTheme, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, int i, String senderId) {
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
+        void setData(Message data, String questionId, String actualTheme,RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener longClickProfile, int i, String senderId) {
+            imageSize.setText(Hey.getMb(data.getImageSize()));
+            time.setText(Hey.getTimeText(context, data.getTime()));
             message.setText(data.getMessage());
-            Hey.setUserNameToMessage(itemView, data, fullName);
-            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
+            message.setOnClickListener(view -> textClick.onItemClick(data,itemView,i));
+            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> { });
             imageView.setOnClickListener(v -> imageClick.onItemClick(data, null, i));
-            profileImage.setOnClickListener(v -> profileImageClick.onItemClick(data, null, i));
             thisQuestionInAll = FirebaseFirestore.getInstance().collection(Keys.allQuestions).document(questionId);
             thisAnswer = FirebaseFirestore.getInstance().collection(Keys.chats).document(questionId).collection(Keys.chats).document(data.getId());
             myDoc = thisAnswer.collection(Keys.users).document(String.valueOf(My.id));
             otherDoc = thisAnswer.collection(Keys.users).document(senderId);
             numbersDocument = thisAnswer.collection(Keys.users).document(Keys.number);
             senderDoc = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(data.getSender()));
-            Hey.addDocumentListener(itemView.getContext(), senderDoc, doc -> {
+            Hey.addDocumentListener(context, senderDoc, doc -> {
                 if (!doc.getMetadata().isFromCache()) {
                     Long l = doc.getLong(Keys.numberOfCorrectAnswers), ll = doc.getLong(Keys.numberOfIncorrectAnswers), u = doc.getLong(Keys.units);
                     senderCN = l == null ? 0 : l;
@@ -416,54 +473,59 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                     senderU = u == null ? 0 : u;
                 }
                 User user = User.fromDoc(doc);
-                Hey.workWithProfileImage(user, doc1 -> {
-                    File f = new File(user.getLocalFileName());
-                    profileImage.setImageURI(Uri.fromFile(f));
-                }, errorMessage -> {
+                profileImage.setOnLongClickListener(z->{
+                    longClickProfile.onUserClick(user);
+                    return true;
                 });
-            }, errorMessage -> { });
+                profileImage.setOnClickListener(v -> profileImageClick.onUserClick(user));
+                if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
+                if (user.hasProfileImage()) {
+                    Hey.print(user.getFullName(),"Has profile image");
+                    Hey.workWithProfileImage(user, doc1 -> {
+                        File f = new File(user.getLocalFileName());
+                        profileImage.setImageURI(Uri.fromFile(f));
+                    }, errorMessage -> {
+                    });
+                }else Hey.print(user.getFullName(),"Hasn't profile image");
+            }, errorMessage -> {
+            });
             loadingView();
-
-            Hey.addDocumentListener(itemView.getContext(), numbersDocument, doc -> {
+            Hey.addDocumentListener(context, numbersDocument, doc -> {
                 Long iO = doc.getLong(Keys.incorrect), cO = doc.getLong(Keys.correct);
                 iN = iO == null ? 0 : iO;
                 cN = cO == null ? 0 : cO;
-                correctText = itemView.getContext().getString(R.string.correct) + "(" + cN + ")";
-                incorrectText = itemView.getContext().getString(R.string.incorrect) + "(" + iN + ")";
+                correctText = context.getString(R.string.correct) + "(" + cN + ")";
+                incorrectText = context.getString(R.string.incorrect) + "(" + iN + ")";
                 correct.setText(correctText);
                 incorrect.setText(incorrectText);
                 if (relation != null) setView();
             }, errorMessage -> {
 
             });
-
-            Hey.addDocumentListener(itemView.getContext(), otherDoc, doc -> {
-                if (doc.exists()){
+            Hey.addDocumentListener(context, otherDoc, doc -> {
+                if (doc.exists()) {
                     Boolean condition = doc.getBoolean(Keys.correct);
-                    if (condition!=null) if (condition){
+                    if (condition != null) if (condition) {
                         answerFromOther.setBackgroundResource(R.drawable.message_by_other_green);
-                    }else {
+                    } else {
                         answerFromOther.setBackgroundResource(R.drawable.message_by_other_red);
                     }
-                }
-                else answerFromOther.setBackgroundResource(R.drawable.message_by_other);
-            }, errorMessage -> { });
-
-            Hey.addDocumentListener(itemView.getContext(), myDoc, doc -> {
-                if (doc.exists()){
+                } else answerFromOther.setBackgroundResource(R.drawable.message_by_other);
+            }, errorMessage -> {
+            });
+            Hey.addDocumentListener(context, myDoc, doc -> {
+                if (doc.exists()) {
                     Boolean condition = doc.getBoolean(Keys.correct);
-                    if (condition!=null) if (condition) {
+                    if (condition != null) if (condition) {
                         relation = Relation.correct;
                     } else {
                         relation = Relation.incorrect;
                     }
-                }
-                else relation = Relation.none;
+                } else relation = Relation.none;
                 setView();
             }, errorMessage -> {
 
             });
-
             correct.setOnClickListener(v -> {
                 if (!loading) {
                     loadingView();
@@ -472,13 +534,15 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                         public void online() {
                             switch (relation) {
                                 case none:
-                                    if (Long.parseLong(senderId)==My.id) thisQuestionInAll.set(Collections.singletonMap(Keys.theme,actualTheme+Keys.correct),SetOptions.merge());
+                                    if (Long.parseLong(senderId) == My.id)
+                                        thisQuestionInAll.set(Collections.singletonMap(Keys.theme, actualTheme + Keys.correct), SetOptions.merge());
                                     incrementCorrectForUser();
                                     numbersDocument.set(Collections.singletonMap(Keys.correct, cN + 1), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
                                     myDoc.set(Collections.singletonMap(Keys.correct, true), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
                                     break;
                                 case incorrect:
-                                    if (Long.parseLong(senderId)==My.id) thisQuestionInAll.set(Collections.singletonMap(Keys.theme,actualTheme+Keys.correct),SetOptions.merge());
+                                    if (Long.parseLong(senderId) == My.id)
+                                        thisQuestionInAll.set(Collections.singletonMap(Keys.theme, actualTheme + Keys.correct), SetOptions.merge());
                                     incrementCorrectForUser();
                                     decrementIncorrectForUser();
                                     numbersDocument.set(Collections.singletonMap(Keys.correct, cN + 1), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
@@ -486,7 +550,8 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                                     myDoc.update(Collections.singletonMap(Keys.correct, true)).addOnFailureListener(e -> notLoadingView());
                                     break;
                                 case correct:
-                                    if (Long.parseLong(senderId)==My.id) thisQuestionInAll.set(Collections.singletonMap(Keys.theme,actualTheme+Keys.incorrect),SetOptions.merge());
+                                    if (Long.parseLong(senderId) == My.id)
+                                        thisQuestionInAll.set(Collections.singletonMap(Keys.theme, actualTheme + Keys.incorrect), SetOptions.merge());
                                     decrementCorrectForUser();
                                     numbersDocument.set(Collections.singletonMap(Keys.correct, cN - 1), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
                                     myDoc.delete().addOnFailureListener(e -> notLoadingView());
@@ -497,11 +562,11 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                         @Override
                         public void offline() {
                             notLoadingView();
-                            Hey.showToast(itemView.getContext(), itemView.getContext().getString(R.string.error_connection));
+                            Hey.showToast(context, context.getString(R.string.error_connection));
                         }
-                    }, errorMessage -> notLoadingView(), itemView.getContext());
+                    }, errorMessage -> notLoadingView(), context);
                 } else
-                    Hey.showToast(itemView.getContext(), itemView.getContext().getString(R.string.wait));
+                    Hey.showToast(context, context.getString(R.string.wait));
             });
             incorrect.setOnClickListener(v -> {
                 if (!loading) {
@@ -511,13 +576,15 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                         public void online() {
                             switch (relation) {
                                 case none:
-                                    if (Long.parseLong(senderId)==My.id) thisQuestionInAll.set(Collections.singletonMap(Keys.theme,actualTheme+Keys.incorrect),SetOptions.merge());
+                                    if (Long.parseLong(senderId) == My.id)
+                                        thisQuestionInAll.set(Collections.singletonMap(Keys.theme, actualTheme + Keys.incorrect), SetOptions.merge());
                                     incrementIncorrectForUser(false);
                                     numbersDocument.set(Collections.singletonMap(Keys.incorrect, iN + 1), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
                                     myDoc.set(Collections.singletonMap(Keys.correct, false)).addOnFailureListener(e -> notLoadingView());
                                     break;
                                 case correct:
-                                    if (Long.parseLong(senderId)==My.id) thisQuestionInAll.set(Collections.singletonMap(Keys.theme,actualTheme+Keys.incorrect),SetOptions.merge());
+                                    if (Long.parseLong(senderId) == My.id)
+                                        thisQuestionInAll.set(Collections.singletonMap(Keys.theme, actualTheme + Keys.incorrect), SetOptions.merge());
                                     incrementIncorrectForUser(true);
                                     decrementCorrectForUser();
                                     numbersDocument.set(Collections.singletonMap(Keys.incorrect, iN + 1), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
@@ -525,7 +592,8 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                                     myDoc.update(Collections.singletonMap(Keys.correct, false)).addOnFailureListener(e -> notLoadingView());
                                     break;
                                 case incorrect:
-                                    if (Long.parseLong(senderId)==My.id) thisQuestionInAll.set(Collections.singletonMap(Keys.theme,actualTheme+Keys.correct),SetOptions.merge());
+                                    if (Long.parseLong(senderId) == My.id)
+                                        thisQuestionInAll.set(Collections.singletonMap(Keys.theme, actualTheme + Keys.correct), SetOptions.merge());
                                     decrementIncorrectForUser();
                                     numbersDocument.set(Collections.singletonMap(Keys.incorrect, iN - 1), SetOptions.merge()).addOnFailureListener(e -> notLoadingView());
                                     myDoc.delete().addOnFailureListener(e -> notLoadingView());
@@ -536,11 +604,11 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                         @Override
                         public void offline() {
                             notLoadingView();
-                            Hey.showToast(itemView.getContext(), itemView.getContext().getString(R.string.error_connection));
+                            Hey.showToast(context, context.getString(R.string.error_connection));
                         }
-                    }, errorMessage -> notLoadingView(), itemView.getContext());
+                    }, errorMessage -> notLoadingView(), context);
                 } else
-                    Hey.showToast(itemView.getContext(), itemView.getContext().getString(R.string.wait));
+                    Hey.showToast(context, context.getString(R.string.wait));
             });
         }
 
@@ -576,44 +644,45 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
         void setButtonAsSelected(Button b) {
             b.setBackgroundResource(R.drawable.button_bg_pressed);
-            b.setTextColor(Color.WHITE);
+            b.setTextColor(context.getResources().getColor(R.color.white));
         }
 
         void setButtonAsDefault(Button b) {
-            b.setBackgroundResource(R.drawable.sss);
-            b.setTextColor(Color.BLACK);
+            b.setBackgroundResource(R.drawable.button_background);
+            b.setTextColor(context.getResources().getColor(R.color.black));
         }
 
         void loadingView() {
-            Hey.setButtonAsLoading(itemView.getContext(), correct);
-            Hey.setButtonAsLoading(itemView.getContext(), incorrect);
+            Hey.setButtonAsLoading(context, correct);
+            Hey.setButtonAsLoading(context, incorrect);
             loading = true;
         }
 
         void notLoadingView() {
-            Hey.setButtonAsDefault(itemView.getContext(), correct, correctText);
-            Hey.setButtonAsDefault(itemView.getContext(), incorrect, incorrectText);
+            Hey.setButtonAsDefault(context, correct, correctText);
+            Hey.setButtonAsDefault(context, incorrect, incorrectText);
             loading = false;
         }
 
         void incrementCorrectForUser() {
             Map<String, Object> d = new HashMap<>();
             d.put(Keys.numberOfCorrectAnswers, senderCN + 1);
-            d.put(Keys.units, senderU + My.unitsForPerDay);
+            d.put(Keys.units, senderU + My.unitsForPerDay*5);
             senderDoc.set(d, SetOptions.merge());
         }
 
         void decrementCorrectForUser() {
             Map<String, Object> d = new HashMap<>();
             d.put(Keys.numberOfCorrectAnswers, senderCN - 1);
-            d.put(Keys.units, senderU - My.unitsForPerDay < 0 ? 0 : senderU - My.unitsForPerDay);
+            d.put(Keys.units, senderU - My.unitsForPerDay < 0 ? 0 : senderU - My.unitsForPerDay*5);
             senderDoc.set(d, SetOptions.merge());
         }
 
         void incrementIncorrectForUser(boolean changeUnit) {
             Map<String, Object> d = new HashMap<>();
             d.put(Keys.numberOfIncorrectAnswers, senderIN + 1);
-            if (changeUnit) d.put(Keys.units, senderU - My.unitsForPerDay < 0 ? 0 : senderU - My.unitsForPerDay);
+            if (changeUnit)
+                d.put(Keys.units, senderU - My.unitsForPerDay < 0 ? 0 : senderU - My.unitsForPerDay);
             senderDoc.set(d, SetOptions.merge());
         }
 
@@ -625,12 +694,18 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     }
 
     static class QuestionFromOther extends RecyclerView.ViewHolder {
-        ImageView imageView, profileImage;
-        TextView message, time, fullName;
-        Button correct, incorrect;
+        final ImageView imageView;
+        final ImageView profileImage;
+        final TextView message;
+        final TextView time;
+        final TextView fullName;
+        final TextView imageSize;
+        final Button correct;
+        final Button incorrect;
 
         public QuestionFromOther(@NonNull View itemView) {
             super(itemView);
+            imageSize = itemView.findViewById(R.id.imageSize);
             imageView = itemView.findViewById(R.id.imageAnswerFromOther);
             profileImage = itemView.findViewById(R.id.profileImageAnswerFromOther);
             message = itemView.findViewById(R.id.textAnswerFromOther);
@@ -640,43 +715,51 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect = itemView.findViewById(R.id.incorrect);
         }
 
-        void setData(Message data, RecyclerViewItemClickListener imageClick, RecyclerViewItemClickListener profileImageClick, int i) {
-            time.setText(Hey.getSeenTime(itemView.getContext(), data.getTime()));
+        void setData(Message data,RecyclerViewItemClickListener textClick,RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener longClickProfile, int i) {
+            message.setOnClickListener(view -> textClick.onItemClick(data,itemView,i));
+            imageSize.setText(Hey.getMb(data.getImageSize()));
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             message.setText(data.getMessage());
-            Hey.setUserNameToMessage(itemView, data, fullName);
-            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(new File(Hey.getLocalFile(data)))), errorMessage -> {});
+            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
+            });
             correct.setVisibility(View.INVISIBLE);
             incorrect.setVisibility(View.INVISIBLE);
-
             Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> {
                 User user = (User) doc;
-
-                Hey.workWithProfileImage(user, doc1 -> {
-                    File f = new File(user.getLocalFileName());
-                    profileImage.setImageURI(Uri.fromFile(f));
-                }, errorMessage -> {
+                profileImage.setOnLongClickListener(z->{
+                    longClickProfile.onUserClick(user);
+                    return true;
                 });
+                profileImage.setOnClickListener(v -> profileImageClick.onUserClick(user));
+                if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
+                if (user.hasProfileImage()){
+                    Hey.print(user.getFullName(),"Has profile image");
+                    Hey.workWithProfileImage(user, doc1 -> {
+                        File f = new File(user.getLocalFileName());
+                        profileImage.setImageURI(Uri.fromFile(f));
+                    }, errorMessage -> {
+                    });
+                }else Hey.print(user.getFullName(),"Hasn't profile image");
             }, errorMessage -> {
 
             });
-
-            profileImage.setOnClickListener(v -> profileImageClick.onItemClick(data, null, i));
             imageView.setOnClickListener(v -> imageClick.onItemClick(data, imageView, i));
         }
     }
 
-    static class LoadMore extends RecyclerView.ViewHolder{
-        Button button;
+    static class LoadMore extends RecyclerView.ViewHolder {
+        final Button button;
+
         public LoadMore(@NonNull View itemView) {
             super(itemView);
             button = itemView.findViewById(R.id.loadMore);
         }
 
-        void setData(ItemClickForQuestion listener,boolean showButton){
+        void setData(ItemClickForQuestion listener, boolean showButton) {
             button.setVisibility(showButton ? View.VISIBLE : View.GONE);
             button.setOnClickListener(view -> {
                 Hey.setButtonAsLoading(itemView.getContext(), button);
-                listener.onItemClick(0,"",button);
+                listener.onItemClick(0, "", button);
             });
         }
     }

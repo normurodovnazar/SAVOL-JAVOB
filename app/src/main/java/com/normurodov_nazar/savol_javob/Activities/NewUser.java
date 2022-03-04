@@ -35,7 +35,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     EditText name, surname;
     Button next, imageB;
     String mName = "", mSurname = "", mFilePath = "", mToken = "";
-    long imageSize = 0;
+    long imageSize = -1;
     ActivityResultLauncher<Intent> imagePickLauncher;
     File originalFile;
     boolean loading = false;
@@ -79,7 +79,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
 
     void orElse() {
         changeImageButtonAsDefault();
-        i.setImageResource(R.drawable.tab1_icon);
+        i.setImageResource(R.drawable.user_icon);
         imageSize=0;
     }
 
@@ -99,18 +99,13 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                 changeImageButtonAsDefault();
                 Uri res = UCrop.getOutput(data);
                 if (res != null) {
-                    i.setImageResource(R.drawable.tab1_icon);
+                    i.setImageResource(R.drawable.user_icon);
                     Log.e("onActivityResult", "Result is not null:" + res.getPath());
-                    i.setImageURI(res);
-                    mFilePath = res.getPath();
-                    Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> imageSize = new File(mFilePath).length(), (position, name) -> {
-
-                    }, errorMessage -> {
-
-                    });
-                } else {
-                    Log.e("onActivityResult", "Result is null");
-                    Toast.makeText(this, "xxx", Toast.LENGTH_SHORT).show();
+                    File file = new File(res.getPath());
+                    Hey.compressImage(this,file);
+                    i.setImageURI(Uri.fromFile(file));
+                    mFilePath = file.getPath();
+                    imageSize = file.length();
                 }
             } else if (data != null) {
                 Log.e("onActivityResult", "Result came with error");
@@ -133,8 +128,8 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                 case R.id.next:
                     mName = name.getText().toString();
                     mSurname = surname.getText().toString();
-                    if (mName.equals("") || mSurname.equals("") || imageSize==0)
-                        Toast.makeText(this, getText(R.string.name_surname_url_required), Toast.LENGTH_SHORT).show();
+                    if (mName.equals("") || mSurname.equals(""))
+                        Toast.makeText(this, getText(R.string.name_surname_required), Toast.LENGTH_SHORT).show();
                     else if (Hey.withUpper(mName) && Hey.withUpper(mSurname)){
                         changeNextButtonAsLoading();
                         nextPressed();
@@ -165,6 +160,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
                         createUserById();
                     });
                 } else createUserById();
+
             }
 
             @Override
@@ -176,18 +172,26 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void createUserById() {
-        User me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true);
-        FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).set(me.toMap()).addOnCompleteListener(task1 -> {
-            Intent intent = new Intent(NewUser.this, Home.class);
-            if (task1.isSuccessful()) {
+        if (imageSize!=-1){
+            Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
+                imageSize = new File(mFilePath).length();
+                User me = new User(mName.replaceAll(" ",""), mSurname.replaceAll(" ",""),imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true,false,true);
+                Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.users), String.valueOf(My.id), me.toMap(), doc0 -> {
+                    Intent intent = new Intent(NewUser.this, Home.class);
+                    My.setDataFromUser(me);
+                    startActivity(intent);
+                    finish();
+                }, errorMessage -> changeNextButtonAsDefault());
+            }, (position, name) -> changeNextButtonAsDefault(), errorMessage -> changeNextButtonAsDefault());
+        }else {
+            User me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true,false,true);
+            Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.users), String.valueOf(My.id), me.toMap(), doc0 -> {
+                Intent intent = new Intent(NewUser.this, Home.class);
                 My.setDataFromUser(me);
                 startActivity(intent);
                 finish();
-            } else {
-                Hey.showUnknownError(NewUser.this);
-                changeNextButtonAsDefault();
-            }
-        });
+            }, errorMessage -> changeNextButtonAsDefault());
+        }
     }
 
     private void doWorksWithFile() {

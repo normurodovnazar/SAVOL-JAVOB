@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".Activities.NewQuestionActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainNQ"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/selectTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/button_background"
+            android:padding="15dp"
+            android:text="@string/select_theme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+            android:textColorHint="@color/hint"
+            android:id="@+id/itemText"
+            android:layout_width="0dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/text_fields_in_big_screens"
+            android:drawableStart="@drawable/keyboard"
+            android:drawablePadding="10dp"
+            android:ems="10"
+            android:hint="@string/write_message"
+            android:inputType="text"
+            android:padding="15dp"
+            android:textCursorDrawable="@drawable/black_cursor_drawable"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selectTheme"
+            android:autofillHints="" />
+
+        <EditText
+            android:maxLength="1"
+            android:textColorHint="@color/hint"
+            android:id="@+id/numberOfDays"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@drawable/text_fields_in_big_screens"
+            android:hint="@string/daysAvailable"
+            android:inputType="number"
+            android:padding="15dp"
+            android:textColor="@color/black"
+            android:textCursorDrawable="@drawable/black_cursor_drawable"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/itemText"
+            android:autofillHints="" />
+
+        <Button
+            android:id="@+id/selectImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/button_background"
+            android:padding="15dp"
+            android:text="@string/choose_image"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/numberOfDays" />
+
+        <ImageView
+            android:id="@+id/questionImage"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginVertical="10dp"
+            app:layout_constraintBottom_toTopOf="@id/privacy"
+            app:layout_constraintTop_toBottomOf="@id/selectImage" />
+        <CheckBox
+            android:layout_marginStart="20sp"
+            android:id="@+id/checkbox"
+            android:checked="false"
+            android:buttonTint="@color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/privacy"
+            app:layout_constraintTop_toTopOf="@id/privacy" />
+        <TextView
+            android:id="@+id/privacy"
+            android:textColor="@color/blue"
+            android:text="@string/agreePrivacy"
+            android:gravity="start"
+            app:layout_constraintStart_toEndOf="@id/checkbox"
+            app:layout_constraintBottom_toTopOf="@id/publish"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginVertical="10dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/publish"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="30dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/button_background"
+            android:padding="15dp"
+            android:text="@string/publish"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+        android:id="@+id/bigImageNQ"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

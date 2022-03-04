@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Vibrator;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -33,7 +32,7 @@ public class NotificationService extends FirebaseMessagingService {
     public void onNewToken(@NonNull String s) {
         super.onNewToken(s);
         Log.e("token",s);
-        SharedPreferences preferences = getSharedPreferences(Keys.sharedPreferences,MODE_PRIVATE);
+        SharedPreferences preferences = Hey.getPreferences(this);
         preferences.edit().putString(Keys.token,s).apply();
     }
 
@@ -45,7 +44,15 @@ public class NotificationService extends FirebaseMessagingService {
         vibrate = preferences.getBoolean(Keys.vibrate,true);
         privateChat = preferences.getBoolean(Keys.privateChat,true);
 
-        String title = remoteMessage.getNotification().getTitle(),message = remoteMessage.getNotification().getBody();
+        String title,message;
+        RemoteMessage.Notification notification = remoteMessage.getNotification();
+        if (notification!=null) {
+            title = notification.getTitle();
+            message = notification.getBody();
+        } else {
+            title = " ";
+            message = " ";
+        }
         Map<String,String> data = remoteMessage.getData();
         type = data.get(Keys.type)==null ? "" : data.get(Keys.type);
 
@@ -94,7 +101,7 @@ public class NotificationService extends FirebaseMessagingService {
         String channel_id = "QA_notification_channel";
         PendingIntent p = PendingIntent.getActivity(this,0,i,PendingIntent.FLAG_ONE_SHOT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this,channel_id)
-                .setSmallIcon(R.drawable.tab1_icon)
+                .setSmallIcon(R.drawable.user_icon)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContentTitle(title)

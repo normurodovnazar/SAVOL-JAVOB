@@ -4,17 +4,14 @@
     package="com.normurodov_nazar.savol_javob">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <queries>
         <package android:name="com.android.vending" />
@@ -29,16 +26,21 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Loading">
+        android:theme="@style/Theme.MyTheme">
+        <activity
+            android:name=".Activities.AccountSettings"
+            android:exported="false" />
+
         <provider
-            android:authorities="com.normurodov_nazar.savol_javob.fileProvider"
             android:name="androidx.core.content.FileProvider"
+            android:authorities="com.normurodov_nazar.savol_javob.fileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"/>
+                android:resource="@xml/file_paths" />
         </provider>
+
         <activity
             android:name=".Activities.ShowQuestion"
             android:exported="false" />
@@ -73,7 +75,6 @@
             android:name=".Activities.SmsCode"
             android:windowSoftInputMode="adjustResize|stateHidden" />
         <activity android:name=".Activities.NotificationSettings" />
-        <activity android:name=".Activities.Info" />
 
         <service
             android:name=".NotificationService"

@@ -1,15 +1,18 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Question {
-    Long time,sender,visibleTime;
-    String message,questionId,theme;
+    final Long time;
+    final Long sender;
+    final Long visibleTime;
+    final String message;
+    final String questionId;
+    final String theme;
     final Map<String,Object> data;
 
     public String getQuestionId() {

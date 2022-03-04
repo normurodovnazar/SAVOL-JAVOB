@@ -1,14 +1,15 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,7 +18,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,6 +38,8 @@ import java.util.Map;
 public class AnswerToQuestion extends AppCompatActivity {
     EditText explanation;
     Button image, publish;
+    CheckBox checkBox;
+    TextView privacy;
     ImageView imageView;
     ConstraintLayout main;
     SubsamplingScaleImageView scaleImageView;
@@ -58,6 +60,8 @@ public class AnswerToQuestion extends AppCompatActivity {
     }
 
     private void initVars() {
+        checkBox = findViewById(R.id.checkbox);
+        privacy = findViewById(R.id.privacy);Hey.gotoPrivacy(this,privacy);
         chatId = getIntent().getStringExtra(Keys.id);
         questionId = getIntent().getStringExtra(Keys.question);
         theme = getIntent().getStringExtra(Keys.theme);
@@ -73,7 +77,11 @@ public class AnswerToQuestion extends AppCompatActivity {
         image = findViewById(R.id.imageAnswer);
         image.setOnClickListener(v -> getImage());
         publish = findViewById(R.id.answerQuestion);
-        publish.setOnClickListener(v -> publishQ());
+        publish.setOnClickListener(v -> {
+            if (checkBox.isChecked()){
+                publishQ();
+            }else Hey.showToast(this,getString(R.string.dontAgree));
+        });
         imageView = findViewById(R.id.imageOfAnswer);
         imageView.setOnClickListener(v -> showImage());
         memoryLauncher = registerForActivityResult(
@@ -89,10 +97,7 @@ public class AnswerToQuestion extends AppCompatActivity {
     private void showImage() {
         if (file != null)
             if (!imageShowing) {
-                scaleImageView.setImage(ImageSource.uri(Uri.fromFile(file)));
-                scaleImageView.setBackgroundColor(Color.BLACK);
-                scaleImageView.setMaxScale(15);
-                scaleImageView.setMinScale(0.1f);
+                Hey.setBigImage(scaleImageView,file);
                 scaleImageView.setVisibility(View.VISIBLE);
                 main.setVisibility(View.INVISIBLE);
                 imageShowing = true;
@@ -132,6 +137,7 @@ public class AnswerToQuestion extends AppCompatActivity {
                 Uri res = UCrop.getOutput(data);
                 if (res != null) {
                     file = new File(res.getPath());
+                    Hey.compressImage(this,file);
                     imageView.setImageURI(Uri.fromFile(file));
                 }
             }

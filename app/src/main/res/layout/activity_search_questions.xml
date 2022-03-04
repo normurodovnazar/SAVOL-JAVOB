@@ -4,13 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".Activities.SearchQuestions">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/black"
+        android:background="@color/onlyBlack"
         android:paddingBottom="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -39,9 +40,9 @@
             android:paddingHorizontal="5dp"
             android:gravity="center"
             android:hint="@string/byQuestionId"
-            android:textColorHint="@color/other"
-            android:textCursorDrawable="@drawable/white_cursor_drawable"
-            android:textColor="@color/white"
+            android:textColorHint="@color/hint"
+            android:textCursorDrawable="@drawable/only_white_cursor"
+            android:textColor="@color/onlyWhite"
             android:layout_width="0dp"
             android:layout_height="0dp"/>
 

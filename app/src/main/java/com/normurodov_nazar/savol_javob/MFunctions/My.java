@@ -24,7 +24,9 @@ public class My {
     public static boolean noProblem = true;
     public static String petName;
     public static boolean actionCompleted = false;
-    public static boolean updateSuccess = false;
+    public static boolean updated = false;
+    public static boolean applied = false;
+    public static long blockTime = 0;
 
     public static void setDataFromDoc(DocumentSnapshot doc){
         Long SN = doc.getLong(Keys.seen),iU = doc.getLong(Keys.imageSize),mQO = doc.getLong(Keys.units),nOMPQ = doc.getLong(Keys.numberOfMyPublishedQuestions),

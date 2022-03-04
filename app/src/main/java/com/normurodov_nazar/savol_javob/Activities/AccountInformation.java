@@ -1,7 +1,6 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -14,11 +13,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -28,7 +23,6 @@ import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class AccountInformation extends AppCompatActivity {
     ListView listView;
@@ -42,7 +36,6 @@ public class AccountInformation extends AppCompatActivity {
     SubsamplingScaleImageView bigImage;
     boolean imageViewing = false, fromChat, canScale = false;
     Button gotoChat;
-    DocumentReference userDocument;
 
 
     @Override
@@ -81,17 +74,16 @@ public class AccountInformation extends AppCompatActivity {
     }
 
     private void onTapImage() {
-        if (canScale) {
-            if (!imageViewing) {
-                main.setVisibility(View.INVISIBLE);
-                imageSide.setVisibility(View.VISIBLE);
-                bigImage.setImage(ImageSource.uri(Uri.fromFile(f)));
-                bigImage.setBackgroundColor(Color.BLACK);
-                bigImage.setMaxScale(15);
-                bigImage.setMinScale(0.1f);
-            }
-            imageViewing = !imageViewing;
-        }
+        if (user != null)
+            if (user.hasProfileImage())
+                if (canScale) {
+                    if (!imageViewing) {
+                        main.setVisibility(View.INVISIBLE);
+                        imageSide.setVisibility(View.VISIBLE);
+                        Hey.setBigImage(bigImage,f);
+                    }
+                    imageViewing = !imageViewing;
+                }
     }
 
     @Override
@@ -105,54 +97,52 @@ public class AccountInformation extends AppCompatActivity {
 
     private void downloadData() {
         LoadingDialog d = Hey.showLoadingDialog(this);
-        userDocument = FirebaseFirestore.getInstance().collection(Keys.users).document(id);
-        Hey.getDocument(this, userDocument,
-                doc -> {
-                    d.closeDialog();
-                    user = User.fromDoc((DocumentSnapshot) doc);
-                    fullName.setText(user.getFullName());
-                    if (user.getId()==My.id) gotoChat.setVisibility(View.INVISIBLE); else gotoChat.setVisibility(View.VISIBLE);
-                    seen.setText(Hey.getSeenTime(this, user.getSeen()));
-                    f = new File(user.getLocalFileName());
-                    Hey.workWithProfileImage(user, doc1 -> {
-                        profileImage.setImageURI(Uri.fromFile(f));
-                        canScale = true;
-                    }, errorMessage -> {
-                    });
-                    int i = user.getNumberOfMyAnswers() == 0 ? 0 : (int) (user.getNumberOfCorrectAnswers() * 10000 / user.getNumberOfMyAnswers());
-                    float s = i / 100f;
-                    ArrayList<String> a = new ArrayList<>();
-                    a.add(getString(R.string.phone_number) + " " + (user.isNumberHidden() && !id.equals(String.valueOf(My.id)) ? getString(R.string.hidden) : user.getNumber()));
-                    a.add(getString(R.string.units) + " " + user.getUnits());
-                    a.add(getString(R.string.numberOfPublishedQ) + " " + user.getNumberOfMyPublishedQuestions());
-                    a.add(getString(R.string.numberOfAnswers) + " " + user.getNumberOfMyAnswers());
-                    a.add(getString(R.string.correctAnswers) + " " + user.getNumberOfCorrectAnswers());
-                    a.add(getString(R.string.incorrectAnswers) + " " + user.getNumberOfIncorrectAnswers());
-                    a.add(getString(R.string.status) + " " + s + " %");
-                    if (id.equals(String.valueOf(My.id)))
-                        a.add(getString(user.isNumberHidden() ? R.string.makeVisible : R.string.makeInvisible));
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item, a);
-                    listView.setAdapter(adapter);
-                    listView.setOnItemClickListener((parent, view, position, id) -> {
-                        if (!user.isNumberHidden() && position == 0) {
-                            Intent ph = new Intent(Intent.ACTION_DIAL);
-                            ph.setData(Uri.parse("tel:" + user.getNumber()));
-                            startActivity(ph);
-                        }
-                        if (position == 7) {
-                            LoadingDialog dialog = Hey.showLoadingDialog(this);
-                            Hey.updateDocument(this, userDocument, Collections.singletonMap(Keys.hidden, !user.isNumberHidden()), doc12 -> {
-                                dialog.closeDialog();
-                                Hey.showToast(this, getString(R.string.changed));
-                                downloadData();
-                            }, errorMessage -> dialog.closeDialog());
-                        }
-                    });
-                    listView.setOnItemLongClickListener((parent, view, position, id) -> {
-                        if (!user.isNumberHidden() && position == 0)
-                            Hey.copyToClipboard(AccountInformation.this, user.getNumber());
-                        return true;
-                    });
-                }, errorMessage -> finish());
+        Hey.getUserFromUserId(this, id, doc -> {
+            d.closeDialog();
+            user = (User) doc;
+            fullName.setText(user.isHiddenFromQuestionChat() ? getString(R.string.hidden) : user.getFullName());
+            seen.setText(user.isHiddenFromQuestionChat() ? getString(R.string.hidden) : Hey.getTimeText(this, user.getSeen()));
+            if (user.getId() == My.id) {
+                gotoChat.setVisibility(View.INVISIBLE);
+            } else {
+                gotoChat.setVisibility(user.isHiddenFromQuestionChat() ? View.INVISIBLE : View.VISIBLE);
+            }
+            f = new File(user.getLocalFileName());
+            if (user.hasProfileImage()){
+                Hey.print(user.getFullName(),"Has profile image");
+                Hey.workWithProfileImage(user, doc1 -> {
+                    profileImage.setImageURI(Uri.fromFile(f));
+                    canScale = true;
+                }, errorMessage -> {
+                });
+            }else Hey.print(user.getFullName(),"Hasn't profile image");
+            int i = user.getNumberOfMyAnswers() == 0 ? 0 : (int) (user.getNumberOfCorrectAnswers() * 10000 / user.getNumberOfMyAnswers());
+            float s = i / 100f;
+            ArrayList<String> a = new ArrayList<>();
+            a.add(getString(R.string.phone_number) + " " + (user.isNumberHidden() ? getString(R.string.hidden) : user.getNumber()));
+            a.add(getString(R.string.units) + " " + user.getUnits());
+            a.add(getString(R.string.numberOfPublishedQ) + " " + user.getNumberOfMyPublishedQuestions());
+            a.add(getString(R.string.numberOfAnswers) + " " + user.getNumberOfMyAnswers());
+            a.add(getString(R.string.correctAnswers) + " " + user.getNumberOfCorrectAnswers());
+            a.add(getString(R.string.incorrectAnswers) + " " + user.getNumberOfIncorrectAnswers());
+            a.add(getString(R.string.status) + " " + s + " %");
+            a.add(getString(R.string.id)+" "+user.getId());
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item, a);
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener((parent, view, position, id) -> {
+                if (!user.isNumberHidden() && position == 0) {
+                    Intent ph = new Intent(Intent.ACTION_DIAL);
+                    ph.setData(Uri.parse("tel:" + user.getNumber()));
+                    startActivity(ph);
+                }
+            });
+            listView.setOnItemLongClickListener((parent, view, position, id) -> {
+                if (!user.isNumberHidden() && position == 0) Hey.copyToClipboard(AccountInformation.this, user.getNumber());
+                if (position==7) Hey.copyToClipboard(this, String.valueOf(user.getId()));
+                return true;
+            });
+        }, errorMessage -> {
+
+        });
     }
 }

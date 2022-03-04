@@ -21,7 +21,6 @@ import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
-import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.MyD.UserListAdapter;
 import com.normurodov_nazar.savol_javob.R;
 
@@ -69,20 +68,20 @@ public class PersonalChat extends Fragment {
     }
 
     private void showData() {
-        adapter = new UserListAdapter(getContext(), userIds, (message, itemView, position) -> {
+        adapter = new UserListAdapter(getContext(), userIds, user -> {
             Intent i = new Intent(getContext(), SingleChat.class);
-            i.putExtra(Keys.chatId,Hey.getChatIdFromIds(My.id, userIds.get(position)));
+            i.putExtra(Keys.chatId,Hey.getChatIdFromIds(My.id,user.getId()));
             startActivity(i);
-        }, (message, itemView, position) -> Hey.showPopupMenu(getContext(), itemView, new ArrayList<>(Arrays.asList(getString(R.string.delete), getString(R.string.profileInfo))), (position1, name) -> {
+        }, user -> Hey.showPopupMenu(getContext(), bar, new ArrayList<>(Arrays.asList(getString(R.string.delete), getString(R.string.profileInfo))), (position1, name) -> {
             if (position1==0){
-                MyDialogWithTwoButtons t = Hey.showDeleteDialog(getContext(),getString(R.string.deleteChatRequest).replace("xxx",message.getMessage()),null,false);
+                MyDialogWithTwoButtons t = Hey.showDeleteDialog(getContext(),getString(R.string.deleteChatRequest).replace("xxx",user.getName()),null,false);
                 t.setOnDismissListener(dialog -> {
-                    if (t.getResult()) Hey.removeFromChats(getContext(), userIds.get(position), doc ->{});
+                    if (t.getResult()) Hey.removeFromChats(getContext(), user.getId(), doc ->{});
                 });
             }
             else {
                 Intent info = new Intent(getContext(), AccountInformation.class);
-                info.putExtra(Keys.id, String.valueOf(userIds.get(position)));
+                info.putExtra(Keys.id, String.valueOf(user.getId()));
                 //info.putExtra(Keys.fromChat, false);
                 startActivity(info);
             }

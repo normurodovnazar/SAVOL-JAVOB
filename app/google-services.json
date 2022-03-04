@@ -15,11 +15,27 @@
       },
       "oauth_client": [
         {
-          "client_id": "93013656967-jn7a270oai5k01hcfqghhgumcoonm2ag.apps.googleusercontent.com",
+          "client_id": "93013656967-15gg8u1f68h3043ruf27qmf14pi580h7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.normurodov_nazar.savol_javob",
             "certificate_hash": "72a8e68abddb85a1bc0d5eacd50f6a45a382427d"
+          }
+        },
+        {
+          "client_id": "93013656967-7rjl7decfko78nrpbhfqmscl36qjkls4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.normurodov_nazar.savol_javob",
+            "certificate_hash": "f3e207f2eecc260e22e62e138f07102378de4085"
+          }
+        },
+        {
+          "client_id": "93013656967-dqmtaqatlsjhjn7on5c72333bkd24sj0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.normurodov_nazar.savol_javob",
+            "certificate_hash": "f8c37cbc121bf12e589d272b1b0b9ee2d521644f"
           }
         },
         {

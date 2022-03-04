@@ -17,13 +17,11 @@ import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.R;
 
-import java.io.File;
-
 public class ImageDownloadingDialog extends Dialog {
     final Message message;
     final ErrorListener errorListener;
     final SuccessListener successListener;
-    StorageReference storageReference;
+    final StorageReference storageReference;
     FileDownloadTask downloadTask;
 
     ProgressBar progress;
@@ -72,6 +70,6 @@ public class ImageDownloadingDialog extends Dialog {
         progress = findViewById(R.id.progressImageDownload);
         progressDownload = findViewById(R.id.progress_download);
         percentage = findViewById(R.id.percentage_download);
-        downloadTask = storageReference.getFile(new File(Hey.getLocalFile(message)));
+        downloadTask = storageReference.getFile(Hey.getLocalFile(message));
     }
 }

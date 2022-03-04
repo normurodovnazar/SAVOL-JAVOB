@@ -47,7 +47,7 @@
                 android:max="100"
                 android:progress="100"
                 android:progressTint="@color/black"
-                android:progressBackgroundTint="@color/transparent"
+                android:progressBackgroundTint="@color/white"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -86,7 +86,7 @@
         android:layout_marginHorizontal="10dp"
         android:layout_marginVertical="5dp"
         android:id="@+id/cancel_download"
-        android:background="@drawable/sss"
+        android:background="@drawable/button_background"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"

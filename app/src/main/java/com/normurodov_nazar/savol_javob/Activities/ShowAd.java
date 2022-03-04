@@ -3,7 +3,6 @@ package com.normurodov_nazar.savol_javob.Activities;
 import static com.normurodov_nazar.savol_javob.MFunctions.Keys.adId;
 
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -11,8 +10,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.adcolony.sdk.AdColony;
-import com.adcolony.sdk.AdColonyEventTracker;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -24,7 +21,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
-import com.normurodov_nazar.savol_javob.MyD.ItemClickListener;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.R;
 
@@ -49,10 +45,6 @@ public class ShowAd extends AppCompatActivity {
 
     private void initVars() {
         fullScreenContentCallback = new FullScreenContentCallback() {
-            @Override
-            public void onAdImpression() {
-                super.onAdImpression();
-            }
         };
         button = findViewById(R.id.showAd);button.setOnClickListener(view -> {
             if (!loading) loadRewarded(); else Hey.showToast(this,getString(R.string.wait));

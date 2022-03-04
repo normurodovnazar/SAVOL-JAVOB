@@ -23,7 +23,7 @@ import java.util.Map;
 public class SelectTheme extends AppCompatActivity {
     RecyclerView recycler;
     ProgressBar bar;
-    ArrayList<Map<String,String>> allThemes = new ArrayList<>();
+    final ArrayList<Map<String,String>> allThemes = new ArrayList<>();
     boolean forSelection;
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ImageDecoder;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -28,13 +29,15 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.FileProvider;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.davemorrissey.labs.subscaleview.ImageSource;
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -42,6 +45,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.UploadTask;
@@ -73,7 +78,10 @@ import com.yalantis.ucrop.UCrop;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,14 +103,14 @@ public class Hey {
         ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(CLIPBOARD_SERVICE);
         ClipData clipData = new ClipData(new ClipDescription("a", new String[0]), new ClipData.Item(text));
         clipboardManager.setPrimaryClip(clipData);
-        showToast(context,context.getString(string.copied));
+        showToast(context, context.getString(string.copied));
     }
 
     public static ArrayList<Integer> getDifferenceBetweenMessageChanges(ArrayList<Message> old, ArrayList<Message> newM) {
         ArrayList<Integer> positions = new ArrayList<>();
         for (int i = 0; i < old.size(); i++) {
             String messageType = old.get(i).getType();
-            if ((messageType.equals(Keys.textMessage)||messageType.equals(Keys.question)||messageType.equals(Keys.answer)) && !old.get(i).getMessage().equals(newM.get(i).getMessage())) {
+            if ((messageType.equals(Keys.textMessage) || messageType.equals(Keys.question) || messageType.equals(Keys.answer)) && !old.get(i).getMessage().equals(newM.get(i).getMessage())) {
                 positions.add(i);
             }
         }
@@ -160,7 +168,10 @@ public class Hey {
             for (DocumentSnapshot doc : docs) {
                 if (Long.parseLong(doc.getId()) == id) contains = true;
             }
-            if (!contains) addDocumentToCollection(context, c, String.valueOf(id), new HashMap<>(), doc -> { }, errorMessage -> { });
+            if (!contains)
+                addDocumentToCollection(context, c, String.valueOf(id), new HashMap<>(), doc -> {
+                }, errorMessage -> {
+                });
         }, errorMessage -> {
 
         });
@@ -191,7 +202,7 @@ public class Hey {
     }
 
     public static void getDocument(Context context, DocumentReference doc, SuccessListener documentListener, ErrorListener errorListener) {
-        doc.get().addOnSuccessListener(documentListener::onSuccess).addOnFailureListener(e -> {
+        if (doc!=null) doc.get().addOnSuccessListener(documentListener::onSuccess).addOnFailureListener(e -> {
             Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage());
             errorListener.onError(e.getLocalizedMessage());
         });
@@ -200,7 +211,7 @@ public class Hey {
     /**
      * called listener every updates in this chat
      */
-    public static ListenerRegistration addMessagesListener(Context context, CollectionReference collectionReference,long startAt,CollectionListener collectionListener, ErrorListener errorListener) {
+    public static ListenerRegistration addMessagesListener(Context context, CollectionReference collectionReference, long startAt, CollectionListener collectionListener, ErrorListener errorListener) {
         return collectionReference.orderBy(Keys.time, Query.Direction.ASCENDING).startAt(startAt).addSnapshotListener((value, error) -> {
             if (value != null) {
                 List<DocumentSnapshot> list = value.getDocuments();
@@ -218,7 +229,6 @@ public class Hey {
         });
 
     }
-
 
 
     public static void searchUsersFromServer(Context context, String text, boolean byName, DocumentsListener documentsListener, ErrorListener errorListener) {
@@ -249,7 +259,7 @@ public class Hey {
         });
     }
 
-    public static String getSeenTime(Context context, long time) {
+    public static String getTimeText(Context context, long time) {
         Date date = new Date(time);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -380,7 +390,7 @@ public class Hey {
         loadingDialog.show();
         loadingDialog.setOnDismissListener(dialogInterface -> {
             if (loadingDialog.isFromUser()) {
-                MyDialogWithTwoButtons x = Hey.showDeleteDialog(context,context.getString(string.cancelLoading),null,false);
+                MyDialogWithTwoButtons x = Hey.showDeleteDialog(context, context.getString(string.cancelLoading), null, false);
                 x.setOnDismissListener(dialogInterface1 -> {
                     if (!x.getResult()) loadingDialog.show();
                 });
@@ -389,16 +399,17 @@ public class Hey {
         return loadingDialog;
     }
 
-    public static LoadingDialog showLoadingDialog(Context context,ItemClickListener userCancel) {
+    public static LoadingDialog showLoadingDialog(Context context, ItemClickListener userCancel) {
         LoadingDialog loadingDialog = new LoadingDialog(context);
         loadingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         loadingDialog.setCancelable(true);
         loadingDialog.show();
         loadingDialog.setOnDismissListener(dialogInterface -> {
             if (loadingDialog.isFromUser()) {
-                MyDialogWithTwoButtons x = Hey.showDeleteDialog(context,context.getString(string.cancelLoading),null,false);
+                MyDialogWithTwoButtons x = Hey.showDeleteDialog(context, context.getString(string.cancelLoading), null, false);
                 x.setOnDismissListener(dialogInterface1 -> {
-                    if (!x.getResult()) loadingDialog.show(); else userCancel.onItemClick(0,"");
+                    if (!x.getResult()) loadingDialog.show();
+                    else userCancel.onItemClick(0, "");
                 });
             }
         });
@@ -446,17 +457,20 @@ public class Hey {
 
     public static void setButtonAsLoading(@NonNull Context context, @NonNull Button button) {
         button.setText(context.getText(string.wait));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            button.setBackgroundResource(R.drawable.button_bg_pressed);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            button.setTextColor(context.getColor(color.white));
-        }
+        button.setBackgroundResource(R.drawable.button_bg_pressed);
+        //button.setTextColor(context.getResources().getColor(color.white));
         Animation animation = new AlphaAnimation(0, 1);
         animation.setDuration(600);
         animation.setRepeatCount(Animation.INFINITE);
         animation.setRepeatMode(Animation.REVERSE);
         button.startAnimation(animation);
+    }
+
+    public static void setButtonAsDefault(Context context, @NonNull Button button, @NonNull String title) {
+        button.setBackgroundResource(R.drawable.button_background);
+        //button.setTextColor(context.getResources().getColor(color.black));
+        button.setText(title);
+        button.clearAnimation();
     }
 
     public static void setIconButtonAsLoading(@NonNull View button) {
@@ -468,15 +482,6 @@ public class Hey {
     }
 
     public static void setIconButtonAsDefault(@NonNull View button) {
-        button.clearAnimation();
-    }
-
-    public static void setButtonAsDefault(Context context, @NonNull Button button, @NonNull String title) {
-        button.setBackgroundResource(R.drawable.sss);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            button.setTextColor(context.getColor(color.black));
-        }
-        button.setText(title);
         button.clearAnimation();
     }
 
@@ -543,7 +548,9 @@ public class Hey {
 
     public static int generateID() {
         Random r = new Random();
-        return Math.abs(r.nextInt());
+        int i = Math.abs(r.nextInt());
+        if (i == 0) return generateID();
+        else return i;
     }
 
     public static void deleteDocument(Context context, DocumentReference doc, SuccessListener successListener) {
@@ -569,7 +576,7 @@ public class Hey {
 
             @Override
             public void offline() {
-                showToast(context,context.getString(string.error_connection));
+                showToast(context, context.getString(string.error_connection));
                 errorListener.onError("");
             }
         }, errorListener, context);
@@ -586,19 +593,16 @@ public class Hey {
 
     public static void cropImage(Context context, Activity activity, Uri uri, File targetFile, boolean forProfile, ErrorListener errorListener) {
         UCrop.Options options = new UCrop.Options();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            int blackColor = context.getColor(R.color.black);
-            int whiteColor = context.getColor(R.color.white);
-            options.setRootViewBackgroundColor(blackColor);
-            options.setStatusBarColor(blackColor);
-            options.setLogoColor(blackColor);
-            options.setActiveControlsWidgetColor(whiteColor);
-            options.setToolbarWidgetColor(blackColor);
-            options.setCropFrameColor(blackColor);
-            options.setCropGridColor(blackColor);
-        }
+        int blackColor = context.getResources().getColor(color.onlyBlack);
+        int whiteColor = context.getResources().getColor(color.onlyWhite);
+        options.setRootViewBackgroundColor(blackColor);
+        options.setStatusBarColor(blackColor);
+        options.setLogoColor(blackColor);
+        options.setActiveControlsWidgetColor(whiteColor);
+        options.setToolbarWidgetColor(blackColor);
+        options.setCropFrameColor(blackColor);
+        options.setCropGridColor(blackColor);
         options.setCompressionFormat(Bitmap.CompressFormat.PNG);
-
         if (!targetFile.exists()) {
             Uri target = Uri.fromFile(targetFile);
             if (forProfile) UCrop.of(uri, target).withAspectRatio(1, 1)
@@ -612,22 +616,22 @@ public class Hey {
         }
     }
 
-    public static String getLocalFile(Message message) {
-        return My.folder + message.getId() + ".png";
+    public static File getLocalFile(Message message) {
+        return new File(My.folder + message.getId() + ".png");
     }
 
     public static String getProgress(UploadTask.TaskSnapshot snapshot) {
-        return getMb(snapshot.getBytesTransferred()) + " Mb/" + getMb(snapshot.getTotalByteCount()) + " Mb";
+        return getMb(snapshot.getBytesTransferred()) + "/" + getMb(snapshot.getTotalByteCount());
     }
 
     public static String getProgress(FileDownloadTask.TaskSnapshot snapshot) {
-        return getMb(snapshot.getBytesTransferred()) + " Mb/" + getMb(snapshot.getTotalByteCount()) + " Mb";
+        return getMb(snapshot.getBytesTransferred()) + "/" + getMb(snapshot.getTotalByteCount());
     }
 
     public static String getMb(long bytes) {
         float f = bytes / 1024f / 1024f;
         f = (int) (f * 100f) / 100f;
-        return Float.toString(f);
+        return f + " Mb";
     }
 
     public static String getPercentage(UploadTask.TaskSnapshot snapshot) {
@@ -694,7 +698,7 @@ public class Hey {
     }
 
     public static void workWithImageMessage(Message message, SuccessListener a, ErrorListener b) {
-        File file = new File(My.folder + message.getId() + ".png");
+        File file = Hey.getLocalFile(message);
         if (file.exists() && file.length() == message.getImageSize()) a.onSuccess(null);
         else {
             if (file.exists()) {
@@ -711,13 +715,6 @@ public class Hey {
         }, errorListener);
     }
 
-    public static void setUserNameToMessage(View itemView, Message data, TextView fullName) {
-        Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> fullName.setText(((User) doc).getFullName()), errorMessage -> {
-            fullName.setTextColor(Color.RED);
-            fullName.setText(itemView.getContext().getString(R.string.error) + ":" + errorMessage);
-        });
-    }
-
     public static int getIndexInArray(Message message, ArrayList<Message> messages) {
         for (Message x : messages) {
             if (x.getId().equals(message.getId())) return messages.indexOf(x);
@@ -726,49 +723,49 @@ public class Hey {
     }
 
     public static void updateDocument(Context context, DocumentReference doc, Map<String, Object> data, SuccessListener successListener, ErrorListener errorListener) {
-        doc.update(data).addOnSuccessListener(unused -> successListener.onSuccess(null)).addOnFailureListener(e -> Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(null)));
+        doc.set(data, SetOptions.merge()).addOnSuccessListener(unused -> successListener.onSuccess(null)).addOnFailureListener(e -> Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage()).setOnDismissListener(dialog -> errorListener.onError(null)));
     }
 
-    public static void sendNotification(Context context, String title, String message,String tokenOrTopic,Map<String,String> d,SuccessListener successListener,ErrorListener errorListener) {
-        JSONObject notification = new JSONObject(),body = new JSONObject(),data = new JSONObject();
+    public static void sendNotification(Context context, String title, String message, String tokenOrTopic, Map<String, String> d, SuccessListener successListener, ErrorListener errorListener) {
+        JSONObject notification = new JSONObject(), body = new JSONObject(), data = new JSONObject();
         try {
             String t = d.get(Keys.type);
-            String type = t==null ? "" : t;
-            body.put("title",title);
-            body.put("body",message);
-            notification.put("to",type.equals(Keys.privateChat) ? tokenOrTopic : Keys.topics+tokenOrTopic);
-            notification.put("notification",body);
-            switch (type){
+            String type = t == null ? "" : t;
+            body.put("title", title);
+            body.put("body", message);
+            notification.put("to", type.equals(Keys.privateChat) ? tokenOrTopic : Keys.topics + tokenOrTopic);
+            notification.put("notification", body);
+            switch (type) {
                 case Keys.privateChat:
-                    data.put(Keys.id,d.get(Keys.id));
+                    data.put(Keys.id, d.get(Keys.id));
                     break;
                 case Keys.publicQuestions:
                 case Keys.needQuestions:
-                    data.put(Keys.id,d.get(Keys.id));
-                    data.put(Keys.theme,d.get(Keys.theme));
-                    data.put(Keys.sender,d.get(Keys.sender));
+                    data.put(Keys.id, d.get(Keys.id));
+                    data.put(Keys.theme, d.get(Keys.theme));
+                    data.put(Keys.sender, d.get(Keys.sender));
                     break;
             }
-            data.put(Keys.type,type);
-            notification.put("data",data);
-            Hey.print("notification",notification.toString());
+            data.put(Keys.type, type);
+            notification.put("data", data);
+            Hey.print("notification", notification.toString());
         } catch (JSONException e) {
             errorListener.onError(e.getLocalizedMessage());
-            showToast(context,context.getString(string.error)+":"+e.getLocalizedMessage());
+            showToast(context, context.getString(string.error) + ":" + e.getLocalizedMessage());
         }
-        sendToFirebase(notification,context,successListener,errorListener);
+        sendToFirebase(notification, context, successListener, errorListener);
     }
 
-    static void sendToFirebase(JSONObject notification,Context context,SuccessListener successListener,ErrorListener errorListener){
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST,Keys.fcmApi, notification, response -> successListener.onSuccess(null), error -> {
+    static void sendToFirebase(JSONObject notification, Context context, SuccessListener successListener, ErrorListener errorListener) {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, Keys.fcmApi, notification, response -> successListener.onSuccess(null), error -> {
             errorListener.onError(error.getLocalizedMessage());
-            showToast(context,error.getLocalizedMessage());
-        }){
+            showToast(context, error.getLocalizedMessage());
+        }) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String,String> params = new HashMap<>();
-                params.put("Authorization",My.petName);
-                params.put("Content-Type",Keys.contentType);
+                Map<String, String> params = new HashMap<>();
+                params.put("Authorization", My.petName);
+                params.put("Content-Type", Keys.contentType);
                 return params;
             }
         };
@@ -778,62 +775,274 @@ public class Hey {
     public static String reverseString(String serverKey) {
         String[] a = serverKey.split("");
         StringBuilder leftToRight = new StringBuilder();
-        for (int i=a.length-1;i>=0;i--){
+        for (int i = a.length - 1; i >= 0; i--) {
             leftToRight.append(a[i]);
         }
         return leftToRight.toString();
     }
 
     public static void updateActivity() {
-        if (My.id != 0 && !My.updateSuccess){
-            Hey.print("a","dsa");
-            FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).update(Collections.singletonMap(Keys.seen,Hey.getCurrentTime())).addOnSuccessListener(unused -> My.updateSuccess = true);
+        if (!My.updated) {
+            My.updated = true;
+            Hey.print("a", "Activity updated");
+            FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).update(Collections.singletonMap(Keys.seen, Hey.getCurrentTime())).
+                    addOnSuccessListener(unused -> {
+                    });
+        } else {
+            Hey.print("a", "Activity update called but not required");
         }
     }
 
-    public static boolean isMessageAddedToTop(ArrayList<Message> oldMessages,ArrayList<Message> messages) {
-        return oldMessages.get(0).getTime()>messages.get(0).getTime();
+    public static boolean isMessageAddedToTop(ArrayList<Message> oldMessages, ArrayList<Message> messages) {
+        return oldMessages.get(0).getTime() > messages.get(0).getTime();
     }
 
     public static ArrayList<Message> getMessagesOnTop(ArrayList<Message> oldMessages, ArrayList<Message> messages) {
         ArrayList<Message> temp = new ArrayList<>();
         long limitId = oldMessages.get(0).getTime();
-        for(Message m : messages){
-            if (m.getTime()<limitId) temp.add(m); else break;
+        for (Message m : messages) {
+            if (m.getTime() < limitId) temp.add(m);
+            else break;
         }
         return temp;
     }
 
-    public static boolean isMessagesAddedToBottom(ArrayList<Message> oldMessages,ArrayList<Message> messages) {
-        return oldMessages.get(oldMessages.size()-1).getTime()<messages.get(messages.size()-1).getTime();
+    public static boolean isMessagesAddedToBottom(ArrayList<Message> oldMessages, ArrayList<Message> messages) {
+        return oldMessages.get(oldMessages.size() - 1).getTime() < messages.get(messages.size() - 1).getTime();
     }
 
-    public static void showErrorMessage(Context context,Activity activity,String errorMessage,boolean finish) {
-        showAlertDialog(context,context.getString(string.error)+":"+errorMessage).setOnDismissListener(dialogInterface -> {
+    public static void showErrorMessage(Activity activity, String errorMessage, boolean finish) {
+        showAlertDialog(activity, activity.getString(string.error) + ":" + errorMessage).setOnDismissListener(dialogInterface -> {
             if (finish) activity.finish();
         });
     }
 
-    public static PopupMenu chooseImage(Context context, View view, ActivityResultLauncher<Intent> memoryLauncher,ActivityResultLauncher<Intent> captureLauncher, UriListener listener){
+    public static PopupMenu chooseImage(Context context, View view, ActivityResultLauncher<Intent> memoryLauncher, ActivityResultLauncher<Intent> captureLauncher, UriListener listener) {
         return showPopupMenu(context, view, new ArrayList<>(Arrays.asList(context.getString(string.camera), context.getString(string.memory))), (position, name) -> {
-            if (position==0) {
+            if (position == 0) {
                 Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 File photo = null;
                 try {
                     photo = createTempFile(context);
-                }catch (IOException e){ Hey.showAlertDialog(context,e.getLocalizedMessage());}
-                if (photo !=null){
-                    Uri photoUri = FileProvider.getUriForFile(context,"com.normurodov_nazar.savol_javob.fileProvider",photo);
+                } catch (IOException e) {
+                    Hey.showAlertDialog(context, e.getLocalizedMessage());
+                }
+                if (photo != null) {
+                    Uri photoUri = FileProvider.getUriForFile(context, "com.normurodov_nazar.savol_javob.fileProvider", photo);
                     listener.onUri(photoUri);
-                    pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);
+                    pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                 }
                 captureLauncher.launch(pictureIntent);
-            }else pickImage(memoryLauncher);
-        },true);
+            } else pickImage(memoryLauncher);
+        }, true);
     }
 
-    public static File createTempFile(Context context)throws IOException {
+    public static File createTempFile(Context context) throws IOException {
         File storage = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        return File.createTempFile(String.valueOf(Hey.getCurrentTime()),".jpg",storage);
+        return File.createTempFile(String.valueOf(Hey.getCurrentTime()), ".jpg", storage);
+    }
+
+    public static String getTopicFromTheme(String theme) {
+        return theme.replaceAll(" ", "").replaceAll("ʻ", "").replaceAll("'", "").replaceAll("\\.", "");
+    }
+
+    public static void applyTheme(Context context) {
+        print("h", "apply Theme called");
+        switch (Hey.getPreferences(context).getString(Keys.dayNight, Keys.system)) {
+            case Keys.day:
+                if (AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_NO)
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case Keys.night:
+                if (AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_YES) {
+                    print("a", "mode wasn't night and applying night");
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                } else print("a", "mode was night do nothing");
+                break;
+            case Keys.system:
+                if (AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+        }
+    }
+
+    public static void setBigImage(SubsamplingScaleImageView bigImage, File f) {
+        bigImage.setImage(ImageSource.uri(Uri.fromFile(f)));
+        bigImage.setBackgroundColor(Color.BLACK);
+        bigImage.setMaxScale(15);
+        bigImage.setMinScale(0.1f);
+    }
+
+    public static void publishQuestion(Context context, Question question, int days, String filePath, boolean forActivate, SuccessListener successListener, ErrorListener errorListener) {
+        DocumentReference myDoc = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id));
+        CollectionReference publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions + context.getString(string.lang)),
+                allQuestions = FirebaseFirestore.getInstance().collection(Keys.allQuestions),
+                myQuestions = FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).collection(Keys.allQuestions),
+        chats = FirebaseFirestore.getInstance().collection(Keys.chats).document(question.getQuestionId()).collection(Keys.chats);
+        Hey.amIOnline(new StatusListener() {
+            @Override
+            public void online() {
+                if (My.units >= days * My.unitsForPerDay) {
+                    MyDialogWithTwoButtons x = Hey.showDeleteDialog(context, context.getString(string.confirmUnitDecrease)
+                            .replaceAll("xxx", String.valueOf(days))
+                            .replaceAll("yyy", String.valueOf(My.unitsForPerDay))
+                            .replaceAll("zzz", String.valueOf(days * My.unitsForPerDay)), null, false);
+                    x.setOnDismissListener(z -> {
+                        if (x.getResult()) {
+                            Hey.getCollection(context, publicQuestions, docs -> {
+                                if (My.questionLimit > docs.size()) {
+                                    if (!forActivate)
+                                        Hey.uploadImageToChat(context, filePath, question.getQuestionId(), doc -> {
+                                            Hey.print("newQuestion", "imageUploaded");
+                                            Hey.addDocumentToCollection(context, allQuestions, question.getQuestionId(), question.toMap(), doc1 -> {
+                                                Hey.print("newQuestion", "allQuestions");
+                                                Hey.addDocumentToCollection(context, myQuestions, question.getQuestionId(), question.toMap(), doc2 -> {
+                                                    Hey.print("newQuestion", "myQuestions");
+                                                    Hey.addDocumentToCollection(context, publicQuestions, question.getQuestionId(), question.toMap(), doc3 -> {
+                                                        Hey.print("newQuestion", Keys.publicQuestions);
+                                                        Map<String, Object> data = new HashMap<>();
+                                                        data.put(Keys.time, question.getTime());
+                                                        data.put(Keys.type, Keys.question);
+                                                        data.put(Keys.sender, question.getSender());
+                                                        data.put(Keys.message, question.getMessage());
+                                                        data.put(Keys.read, false);
+                                                        data.put(Keys.imageSize,(new File(filePath)).length());
+                                                        Hey.addDocumentToCollection(context, chats, question.getQuestionId(), data, doc42 -> {
+                                                            Hey.print("newQuestion","added to chat");
+                                                            Map<String, String> notification = new HashMap<>();
+                                                            notification.put(Keys.id, question.getQuestionId());
+                                                            notification.put(Keys.theme, question.getTheme());
+                                                            notification.put(Keys.type, Keys.publicQuestions);
+                                                            notification.put(Keys.sender, String.valueOf(My.id));
+                                                            String theme = question.getTheme().replace(Keys.incorrect, "").replace(Keys.correct, "");
+                                                            Hey.sendNotification(context, My.fullName, context.getString(R.string.newQuestionMessage).replace("aaa", theme), Hey.getTopicFromTheme(theme), notification, doc4 -> {
+                                                            }, errorMessage -> { });
+                                                            FirebaseMessaging.getInstance().subscribeToTopic(Keys.topics + question.getQuestionId());
+                                                            Map<String,Object> x1 = new HashMap<>();
+                                                            x1.put(Keys.numberOfMyPublishedQuestions,My.numberOfMyPublishedQuestions+1);
+                                                            x1.put(Keys.units,My.units-My.unitsForPerDay* days);
+                                                            Hey.updateDocument(context, myDoc, x1, doc43 -> Hey.print("newQuestion",My.unitsForPerDay*days +" gone"), errorMessage -> {
+
+                                                            });
+                                                            successListener.onSuccess("");
+                                                        }, errorMessage -> {
+
+                                                        });
+                                                    }, errorMessage -> {
+
+                                                    });
+                                                }, errorMessage -> {
+
+                                                });
+                                            }, errorMessage -> {
+
+                                            });
+                                        }, (position, name) -> {
+                                        }, errorMessage -> {
+                                        });
+                                    else
+                                        Hey.addDocumentToCollection(context, publicQuestions, question.getQuestionId(), question.toMap(), doc12 -> {
+                                            Map<String, String> notification = new HashMap<>();
+                                            notification.put(Keys.id, question.getQuestionId());
+                                            notification.put(Keys.theme, question.getTheme());
+                                            notification.put(Keys.type, Keys.publicQuestions);
+                                            notification.put(Keys.sender, String.valueOf(My.id));
+                                            String theme = question.getTheme().replace(Keys.incorrect, "").replace(Keys.correct, "");
+                                            Hey.sendNotification(context, My.fullName, context.getString(R.string.newQuestionMessage).replace("aaa", theme), Hey.getTopicFromTheme(theme), notification, doc4 -> {
+                                            }, errorMessage -> {
+                                            });
+                                            Map<String,Object> x1 = new HashMap<>();
+                                            x1.put(Keys.units,My.units-My.unitsForPerDay* days);
+                                            Hey.updateDocument(context, myDoc, x1, doc43 -> Hey.print("newQuestion",My.unitsForPerDay*days +" gone"), errorMessage -> {
+
+                                            });
+                                            FirebaseMessaging.getInstance().subscribeToTopic(Keys.topics + question.getQuestionId());
+                                            successListener.onSuccess(null);
+                                        }, errorMessage -> {
+                                        });
+                                } else {
+                                    errorListener.onError("");
+                                    Hey.showAlertDialog(context, context.getString(R.string.questionLimitError).replace("xxx", String.valueOf(My.questionLimit)));
+                                }
+                            }, errorMessage -> {
+
+                            });
+                        } else errorListener.onError("");
+                    });
+                } else {
+                    errorListener.onError("");
+                    Hey.showAlertDialog(context, context.getString(R.string.notEnoughUnitsForDay)
+                            .replaceAll("xxx", String.valueOf(days))
+                            .replaceAll("yyy", String.valueOf(My.units))
+                            .replaceAll("zzz", String.valueOf(My.unitsForPerDay))
+                            .replaceAll("ttt",String.valueOf(My.unitsForPerDay*days)));
+                }
+            }
+
+            @Override
+            public void offline() {
+                errorListener.onError("");
+                Hey.showToast(context, context.getString(string.error_connection));
+            }
+        }, errorMessage -> errorListener.onError(""), context);
+    }
+
+    public static void compressImage(Context context,File file) {
+        Hey.print("fileSizeWas",Hey.getMb(file.length()));
+        Bitmap bitmap = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(file));
+            } catch (IOException e) {
+                Hey.print("compressImage","IOException");
+            }
+        } else {
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), Uri.fromFile(file));
+            } catch (IOException e) {
+                Hey.print("compressImage","IOException");
+            }
+        }
+        Hey.compressBitmap(file,bitmap);
+    }
+
+    public static void compressBitmap(File file, Bitmap bitmap){
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        if (bitmap != null) {
+            if (bitmap.compress(Bitmap.CompressFormat.JPEG, 10, byteArrayOutputStream)) {
+                byte[] bytes = byteArrayOutputStream.toByteArray();
+                FileOutputStream fileOutputStream = null;
+                try {
+                    fileOutputStream = new FileOutputStream(file);
+                } catch (FileNotFoundException e) {
+                    Hey.print("FileOutputStream", "FileNotFoundException");
+                } catch (SecurityException e) {
+                    Hey.print("FileOutputStream", "SecurityException");
+                }
+                if (fileOutputStream != null) {
+                    try {
+                        fileOutputStream.write(bytes);
+                        fileOutputStream.close();
+                        Hey.print("afterComrpess",getMb(file.length()));
+                    } catch (IOException e) {
+                        Hey.print("FileOutputStream", "IOException");
+                    }
+                }
+            }
+        }
+    }
+
+    public static boolean amIBlocked() {
+        return My.blockTime>getCurrentTime();
+    }
+
+    public static void showYouBlockedDialog(Context context){
+        Hey.showAlertDialog(context,context.getString(string.youBlocked).replaceAll("xxx",Hey.getTimeText(context,My.blockTime)));
+    }
+
+    public static void gotoPrivacy(Context context,TextView privacy) {
+        privacy.setOnClickListener(v->{
+            context.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(context.getString(R.string.privacy))));
+        });
     }
 }

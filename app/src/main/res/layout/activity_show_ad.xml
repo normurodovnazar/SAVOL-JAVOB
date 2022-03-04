@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".Activities.ShowAd">
 
     <TextView
@@ -26,7 +27,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/banner"
         android:layout_marginHorizontal="20sp"
-        android:background="@drawable/sss"
+        android:background="@drawable/button_background"
         android:text="@string/showAd"
         android:layout_width="0dp"
         android:layout_height="wrap_content"/>

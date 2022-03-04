@@ -43,8 +43,8 @@ public class DrawerItemsAdapter extends RecyclerView.Adapter<DrawerItemsAdapter.
     }
 
     static class ItemViewHolder extends RecyclerView.ViewHolder{
-        TextView title;
-        ImageView image;
+        final TextView title;
+        final ImageView image;
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.drawerText);

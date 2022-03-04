@@ -51,7 +51,5 @@ public class NotificationSettings extends AppCompatActivity {
         }).addOnFailureListener(e -> {
 
         });
-
-
     }
 }
