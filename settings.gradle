@@ -1,3 +1,4 @@
 rootProject.name = "SAVOL-JAVOB"
 include ':app'
 include ':adminapp'
+include ':calcuator'
