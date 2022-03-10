@@ -102,7 +102,6 @@
     <string name="themeReq">You must select a theme</string>
     <string name="correct">Correct</string>
     <string name="incorrect">Incorrect</string>
-    <string name="deleteQuestion">The user cannot delete the question</string>
     <string name="explanationAndImage">Comment and select a response image</string>
     <string name="need">I need it too</string>
     <string name="needsUsers">The answer to this question is needed by the xxx user</string>
@@ -112,7 +111,6 @@
     <string name="visibleTime">Closing time:</string>
     <string name="units">Units:</string>
     <string name="needQuestions">Questions you need</string>
-    <string name="logout">Log out</string>
     <string name="searchQuestions">Search for questions</string>
     <string name="ascending">The old ones first</string>
     <string name="descending">New ones first</string>
@@ -127,14 +125,9 @@
     <string name="answered">Correctly answered questions</string>
     <string name="unanswered">Questions without correct answers</string>
     <string name="addUnits">Additional units</string>
-    <string name="showAdText">If you want to have units, you have to answer an optional question and the questioner has to click the correct button on your answer so that you have xxx units. If you can\'t answer any questions right now, you can have an xxx unit by viewing the ad (by clicking the view ad button)</string>
-    <string name="showAd">View ad</string>
-    <string name="addedUnits">xxx unit added</string>
     <string name="policy">User policy</string>
     <string name="notificationSettings">Notification setting</string>
     <string name="hidden">Hidden</string>
-    <string name="makeVisible">Let others see my number</string>
-    <string name="makeInvisible">Don\'t let others see my number</string>
     <string name="changed">Changed</string>
     <string name="lang">eng</string>
     <string name="nPrivate">Private chat notifications</string>

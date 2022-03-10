@@ -110,7 +110,6 @@
     <string name="notEnoughUnitsForDay">You don\'t have enough units to post the question for xxx days because you have yyy unit but you need zzz unit to post the question for 1 day,so post question for xxx day,you need ttt units</string>
     <string name="visibleTime">Closing time:</string>
     <string name="units">Units:</string>
-    <string name="logout">Log out</string>
     <string name="searchQuestions">Search for questions</string>
     <string name="needQuestions">Questions you need</string>
     <string name="ascending">The old ones first</string>
@@ -130,8 +129,6 @@
     <string name="policy">User policy</string>
     <string name="notificationSettings">Notification setting</string>
     <string name="hidden">Hidden</string>
-    <string name="makeVisible">Let others see my number</string>
-    <string name="makeInvisible">Don\'t let others see my number</string>
     <string name="changed">Changed</string>
     <string name="lang">eng</string>
     <string name="nPrivate">Private chat notifications</string>

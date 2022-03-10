@@ -111,7 +111,6 @@
     <string name="visibleTime">O\'chirilish vaqti:</string>
     <string name="units">Unitlari:</string>
     <string name="needQuestions">Kerak savollar</string>
-    <string name="logout">Profildan chiqish</string>
     <string name="searchQuestions">Savollarni qidirish</string>
     <string name="ascending">Eskilari birinchi</string>
     <string name="descending">Yangilari birinchi</string>
@@ -130,8 +129,6 @@
     <string name="policy">Foydalanish shartlari</string>
     <string name="notificationSettings">Bildirishnoma sozlamalari</string>
     <string name="hidden">Yashirin</string>
-    <string name="makeVisible">Raqamimni boshqalar ko\'rsin</string>
-    <string name="makeInvisible">Raqamimni boshqalar ko\'rmasin</string>
     <string name="changed">O\'zgartirildi</string>
     <string name="lang">uz</string>
     <string name="nPrivate">Shaxsiy chat bildirishnomalari</string>

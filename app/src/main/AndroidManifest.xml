@@ -45,11 +45,6 @@
             android:name=".Activities.ShowQuestion"
             android:exported="false" />
         <activity
-            android:name="com.adcolony.sdk.AdColonyInterstitialActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:hardwareAccelerated="true"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
-        <activity
             android:name="com.adcolony.sdk.AdColonyAdViewActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:hardwareAccelerated="true"

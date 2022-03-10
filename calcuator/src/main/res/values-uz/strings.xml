@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Oddiy kalkulyator</string>
+    <string name="ekub" tools:ignore="TypographyOther">EKUB(C)=</string>
+    <string name="arif">O\'rta arifmetik(A)=</string>
+    <string name="geo">O\'rta geometrik(B)=</string>
+    <string name="result">Ifoda qiymati=</string>
+    <string name="ekuk" tools:ignore="TypographyOther">EKUK(C)=</string>
+    <string name="kvadratlari">Kvadratlari(A)=</string>
+    <string name="kvadratlariSum">Kvadratlari yig\'indisi(A)=</string>
+    <string name="kublari">Kublari(A)=</string>
+    <string name="kublariSum">Kublari yig\'indisi(A)=</string>
+    <string name="kvadratIldizlari">Kvadrat ildizlari(B)=</string>
+    <string name="kubIldizlari">Kub ildizlari(B)=</string>
+    <string name="kvadrati">Kvadrati=</string>
+    <string name="kubi">Kubi=</string>
+    <string name="kvadratIldizi">Kvadrat ildizi=</string>
+    <string name="kubIldizi">Kub ildizi=</string>
+    <string name="day">Kun ko\'rinishi</string>
+    <string name="night">Tun ko\'rinishi</string>
+    <string name="system">Tizim tanlovi</string>
+    <string name="nbs" tools:ignore="TypographyOther">NBS(C)=</string>
+    <string name="nby" tools:ignore="TypographyOther">NBY(C)=</string>
+    <string name="r">" C=yozilganlarni hammasini tozalash # B=yozilganlardan oxirgi belgini olib tashlash # * ko'paytirish belgisi # / bo'lish belgisi # EKUB=Eng katta umumiy bo'luvchisi # EKUK=Eng kichik umumiy karralisi # NBS=Natural bo'luvchilari soni # NBY=Natural bo'luvchilari yig'indisi # Ovoz ko'aytirish va pasaytirish tugmalari yordamida yozuvlarni kattalashtirib kichiklashtirishingiz mumkin # EKUB=eng katta umumiy bo'luvchisi # EKUK=eng kichik umumiy karralisi # NBS=Natural bo'luvchilari soni # NBY=natural bo'luvchilari yig'indisi # Natija ustiga bosib u bilan bog'liq amallar qilishingiz mumkin"</string>
+    <string name="help">Yordam</string>
+</resources>

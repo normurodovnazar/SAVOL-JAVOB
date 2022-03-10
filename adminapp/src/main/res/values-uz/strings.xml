@@ -101,7 +101,6 @@
     <string name="themeReq">Siz mavzu tanlashingiz kerak</string>
     <string name="correct">To\'g\'ri</string>
     <string name="incorrect">Noto\'g\'ri</string>
-    <string name="deleteQuestion">Foydalanuvchi savolni o\'chira olmaydi</string>
     <string name="explanationAndImage">Izoh bering va javob rasmini tanlang</string>
     <string name="need">Menga ham kerak</string>
     <string name="needsUsers">Bu savolga javob yana xxx foydalanuvchiga kerak</string>
@@ -111,7 +110,6 @@
     <string name="visibleTime">O\'chirilish vaqti:</string>
     <string name="units">Unitlari:</string>
     <string name="needQuestions">Kerak savollar</string>
-    <string name="logout">Profildan chiqish</string>
     <string name="searchQuestions">Savollarni qidirish</string>
     <string name="ascending">Eskilari birinchi</string>
     <string name="descending">Yangilari birinchi</string>
@@ -124,14 +122,9 @@
     <string name="before">Shu sanadan oldin</string>
     <string name="statusQuestion">Savol holati</string>
     <string name="addUnits">Qo\'shimcha unitlar</string>
-    <string name="showAdText">Agar siz unitlarga ega bo\'lmoqchi bo\'lsangiz siz ixtiyoriy savolga javob berishingiz va savol bervuchi sizning javobingizga to\'g\'ri tugmasini bosishi kerak,shunda siz xxx unitga ega bo\'lasiz.Agar siz hozida hech qanday savolga javob bera olmasangiz reklama ko\'rib(reklama ko\'rish tugmasini bosish bilan) xxx unitga ega bo\'lishingiz mumkin</string>
-    <string name="showAd">Reklama ko\'rish</string>
-    <string name="addedUnits">xxx unit qo\'shildi</string>
     <string name="policy">Foydalanish shartlari</string>
     <string name="notificationSettings">Bildirishnoma sozlamalari</string>
     <string name="hidden">Yashirin</string>
-    <string name="makeVisible">Raqamimni boshqalar ko\'rsin</string>
-    <string name="makeInvisible">Raqamimni boshqalar ko\'rmasin</string>
     <string name="changed">O\'zgartirildi</string>
     <string name="lang">uz</string>
     <string name="nPrivate">Shaxsiy chat bildirishnomalari</string>

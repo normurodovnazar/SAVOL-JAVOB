@@ -112,7 +112,6 @@
     <string name="visibleTime">Closing time:</string>
     <string name="units">Units:</string>
     <string name="needQuestions">Questions you need</string>
-    <string name="logout">Log out</string>
     <string name="searchQuestions">Search for questions</string>
     <string name="ascending">The old ones first</string>
     <string name="descending">New ones first</string>
@@ -133,8 +132,6 @@
     <string name="policy">User policy</string>
     <string name="notificationSettings">Notification setting</string>
     <string name="hidden">Hidden</string>
-    <string name="makeVisible">Let others see my number</string>
-    <string name="makeInvisible">Don\'t let others see my number</string>
     <string name="changed">Changed</string>
     <string name="lang">eng</string>
     <string name="nPrivate">Private chat notifications</string>

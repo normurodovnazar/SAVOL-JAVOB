@@ -1,3 +1,25 @@
-<resources>
-    <string name="app_name">Calcuator</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Simple calculator</string>
+    <string name="ekub" tools:ignore="TypographyOther">GCD(C)=</string>
+    <string name="arif">Average arithmetic(A)=</string>
+    <string name="geo">Average geometric(B)=</string>
+    <string name="result">Expression value=</string>
+    <string name="ekuk" tools:ignore="TypographyOther">LCM(C)=</string>
+    <string name="kvadratlari">Squares(A)=</string>
+    <string name="kvadratlariSum">Sum of squares(A)=</string>
+    <string name="kublari">Cubes(A)=</string>
+    <string name="kublariSum">Sum of the cubes(A)=</string>
+    <string name="kvadratIldizlari">Square roots(B)=</string>
+    <string name="kubIldizlari">Cubic roots(B)=</string>
+    <string name="kvadrati">Square=</string>
+    <string name="kubi">Cube=</string>
+    <string name="kvadratIldizi">Square root=</string>
+    <string name="kubIldizi">Cube root=</string>
+    <string name="day">Day mode</string>
+    <string name="night">Night mode</string>
+    <string name="system">Follow system</string>
+    <string name="nbs" tools:ignore="TypographyOther">NOD(C)=</string>
+    <string name="nby" tools:ignore="TypographyOther">SOD(C)=</string>
+    <string name="r">" C = delete expression # B = delete the last character of the expression # * multiplication sign # / division sign # GCD=Greatest common divisor # LCM=Least common multiple # NOD=Number of natural divisors # SOD=Sum of natural divisors # You can zoom in and out the notes using the volume up and down keys # Click on the result to do something with it"</string>
+    <string name="help">Help</string>
 </resources>

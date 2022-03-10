@@ -76,13 +76,6 @@ public class SearchUsers extends AppCompatActivity {
             } else Hey.showToast(this, getString(R.string.mustBeUpper));
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            return true;
-        } else return super.onKeyDown(keyCode, event);
-    }
-
     private void initState() {
         filter = findViewById(R.id.searchFilter);
         filter.setOnClickListener(v -> onTapFilter());

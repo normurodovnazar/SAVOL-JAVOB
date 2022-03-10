@@ -166,9 +166,16 @@
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/menu/single_chat_menu.xml" value="0.26875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.33" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.28489583333333335" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.13680555555555557" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/drawable/button.xml" value="0.213671875" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/drawable/ic_launcher_background.xml" value="0.21041666666666667" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/drawable/not_pressed.xml" value="0.213671875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/drawable/pressed.xml" value="0.213671875" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/layout/activity_help.xml" value="0.11594202898550725" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/layout/activity_main.xml" value="0.17847222222222223" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/layout/text.xml" value="0.2015625" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.20347222222222222" />
+        <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calcuator/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.13680555555555557" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/calculator/src/main/res/layout/activity_main.xml" value="0.2015625" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/mathquestionandanswersadmin/src/main/res/layout/activity_main.xml" value="0.2015625" />
         <entry key="..\:/Nazar/MyAndroidProjects/SAVOLJAVOB/mathquestionandanswersadmin/src/main/res/layout/sample.xml" value="0.19922779922779923" />
