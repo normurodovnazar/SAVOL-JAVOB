@@ -22,6 +22,7 @@ import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
     final Context context;
     final String theme;
 
-    public QuestionChatAdapter(Context context, ArrayList<Message> messages, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener profileImageLongCLick, RecyclerViewItemLongClickListener longClickListener, ItemClickForQuestion loadMore, String theme) {
+    public QuestionChatAdapter(Context context, ArrayList<Message> messages, String questionId, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick, UserClickListener profileImageLongCLick, RecyclerViewItemLongClickListener longClickListener, ItemClickForQuestion loadMore, String theme) {
         this.questionId = questionId;
         this.textClick = textClick;
         this.messages = messages;
@@ -163,16 +164,16 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             } else {
                 switch (data.getType()) {
                     case Keys.textMessage:
-                        ((TextFromOther) holder).setData(data, profileImageClick,profileImageLongCLick,textClick, position);
+                        ((TextFromOther) holder).setData(data, profileImageClick, profileImageLongCLick, textClick, position);
                         break;
                     case Keys.imageMessage:
-                        ((ImageFromOther) holder).setData(data, longClickListener,imageClick, profileImageClick,profileImageLongCLick, position);
+                        ((ImageFromOther) holder).setData(data, longClickListener, imageClick, profileImageClick, profileImageLongCLick, position);
                         break;
                     case Keys.answer:
-                        ((AnswerFromOther) holder).setData(data, questionId, theme.contains(Keys.correct) ? theme.replace(Keys.correct, "") : theme.replace(Keys.incorrect, ""), textClick, imageClick, profileImageClick,profileImageLongCLick, position, String.valueOf(messages.get(0).getSender()));
+                        ((AnswerFromOther) holder).setData(data, questionId, theme.contains(Keys.correct) ? theme.replace(Keys.correct, "") : theme.replace(Keys.incorrect, ""), textClick, imageClick, profileImageClick, profileImageLongCLick, position, String.valueOf(messages.get(0).getSender()));
                         break;
                     case Keys.question:
-                        ((QuestionFromOther) holder).setData(data,textClick,imageClick, profileImageClick,profileImageLongCLick, position);
+                        ((QuestionFromOther) holder).setData(data, textClick, imageClick, profileImageClick, profileImageLongCLick, position);
                         break;
                 }
             }
@@ -191,9 +192,9 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
         public TextFromMe(@NonNull View itemView) {
             super(itemView);
-            read = itemView.findViewById(R.id.statusOfMessage);
-            message = itemView.findViewById(R.id.messageFromMe);
-            time = itemView.findViewById(R.id.timeMessageFromMeInSingleChat);
+            read = itemView.findViewById(R.id.status);
+            message = itemView.findViewById(R.id.message);
+            time = itemView.findViewById(R.id.time);
         }
 
         void setData(Message data, RecyclerViewItemClickListener listener, int i) {
@@ -212,9 +213,9 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
 
         public ImageFromMe(@NonNull View itemView) {
             super(itemView);
-            time = itemView.findViewById(R.id.timeImageFromMeFromMe);
-            read = itemView.findViewById(R.id.statusOfImageMessage);
-            imageView = itemView.findViewById(R.id.imageMessageByMe);
+            time = itemView.findViewById(R.id.time);
+            read = itemView.findViewById(R.id.status);
+            imageView = itemView.findViewById(R.id.image);
             imageSize = itemView.findViewById(R.id.imageSize);
         }
 
@@ -347,8 +348,8 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             fullName = itemView.findViewById(R.id.fullNameTextFromOther);
         }
 
-        void setData(Message data, UserClickListener profileImageClick,UserClickListener longClick,RecyclerViewItemClickListener textClick, int i) {
-            itemView.setOnClickListener(v-> textClick.onItemClick(data,itemView,i));
+        void setData(Message data, UserClickListener profileImageClick, UserClickListener longClick, RecyclerViewItemClickListener textClick, int i) {
+            itemView.setOnClickListener(v -> textClick.onItemClick(data, itemView, i));
             message.setText(data.getMessage());
             time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> {
@@ -360,13 +361,13 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                 });
                 if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
                 if (user.hasProfileImage()) {
-                    Hey.print(user.getFullName(),"Has profile image");
+                    Hey.print(user.getFullName(), "Has profile image");
                     Hey.workWithProfileImage(user, doc1 -> {
-                        File f = new File(user.getLocalFileName());
+                        File f = user.getLocalFile();
                         imageView.setImageURI(Uri.fromFile(f));
                     }, errorMessage -> {
                     });
-                }else Hey.print(user.getFullName(),"Hasn't profile image");
+                } else Hey.print(user.getFullName(), "Hasn't profile image");
             }, errorMessage -> {
 
             });
@@ -389,33 +390,33 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             profileImage = itemView.findViewById(R.id.profileQ);
         }
 
-        void setData(Message data,RecyclerViewItemLongClickListener longClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener longClickProfile, int i) {
+        void setData(Message data, RecyclerViewItemLongClickListener longClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick, UserClickListener longClickProfile, int i) {
             imageSize.setText(Hey.getMb(data.getImageSize()));
             time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> {
                 User user = (User) doc;
-                profileImage.setOnLongClickListener(z->{
+                profileImage.setOnLongClickListener(z -> {
                     longClickProfile.onUserClick(user);
                     return true;
                 });
                 profileImage.setOnClickListener(v -> profileImageClick.onUserClick(user));
                 if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
-                if (user.hasProfileImage()){
-                    Hey.print(user.getFullName(),"Has profile image");
+                if (user.hasProfileImage()) {
+                    Hey.print(user.getFullName(), "Has profile image");
                     Hey.workWithProfileImage(user, doc1 -> {
-                        File f = new File(user.getLocalFileName());
+                        File f = user.getLocalFile();
                         profileImage.setImageURI(Uri.fromFile(f));
                     }, errorMessage -> {
                     });
-                }else Hey.print(user.getFullName(),"Hasn't profile image");
+                } else Hey.print(user.getFullName(), "Hasn't profile image");
             }, errorMessage -> {
 
             });
             Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
             });
             itemView.setOnClickListener(v -> imageClick.onItemClick(data, itemView, i));
-            itemView.setOnLongClickListener(x-> {
-                longClick.onItemLongClick(data,itemView,i);
+            itemView.setOnLongClickListener(x -> {
+                longClick.onItemLongClick(data, itemView, i);
                 return true;
             });
         }
@@ -452,12 +453,13 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect = itemView.findViewById(R.id.incorrect);
         }
 
-        void setData(Message data, String questionId, String actualTheme,RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener longClickProfile, int i, String senderId) {
+        void setData(Message data, String questionId, String actualTheme, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick, UserClickListener longClickProfile, int i, String senderId) {
             imageSize.setText(Hey.getMb(data.getImageSize()));
             time.setText(Hey.getTimeText(context, data.getTime()));
             message.setText(data.getMessage());
-            message.setOnClickListener(view -> textClick.onItemClick(data,itemView,i));
-            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> { });
+            message.setOnClickListener(view -> textClick.onItemClick(data, itemView, i));
+            Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {
+            });
             imageView.setOnClickListener(v -> imageClick.onItemClick(data, null, i));
             thisQuestionInAll = FirebaseFirestore.getInstance().collection(Keys.allQuestions).document(questionId);
             thisAnswer = FirebaseFirestore.getInstance().collection(Keys.chats).document(questionId).collection(Keys.chats).document(data.getId());
@@ -472,21 +474,29 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
                     senderIN = ll == null ? 0 : ll;
                     senderU = u == null ? 0 : u;
                 }
-                User user = User.fromDoc(doc);
-                profileImage.setOnLongClickListener(z->{
-                    longClickProfile.onUserClick(user);
+                User user = null;
+                try {
+                    user = User.fromDoc(doc);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+                User finalUser = user;
+                profileImage.setOnLongClickListener(z -> {
+                    if (finalUser != null) longClickProfile.onUserClick(finalUser);
                     return true;
                 });
-                profileImage.setOnClickListener(v -> profileImageClick.onUserClick(user));
-                if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
-                if (user.hasProfileImage()) {
-                    Hey.print(user.getFullName(),"Has profile image");
-                    Hey.workWithProfileImage(user, doc1 -> {
-                        File f = new File(user.getLocalFileName());
-                        profileImage.setImageURI(Uri.fromFile(f));
-                    }, errorMessage -> {
-                    });
-                }else Hey.print(user.getFullName(),"Hasn't profile image");
+                if (finalUser != null) {
+                    profileImage.setOnClickListener(v -> profileImageClick.onUserClick(finalUser));
+                    if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
+                    if (user.hasProfileImage()) {
+                        Hey.print(user.getFullName(), "Has profile image");
+                        Hey.workWithProfileImage(user, doc1 -> {
+                            File f = finalUser.getLocalFile();
+                            profileImage.setImageURI(Uri.fromFile(f));
+                        }, errorMessage -> {
+                        });
+                    } else Hey.print(user.getFullName(), "Hasn't profile image");
+                }
             }, errorMessage -> {
             });
             loadingView();
@@ -667,14 +677,14 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
         void incrementCorrectForUser() {
             Map<String, Object> d = new HashMap<>();
             d.put(Keys.numberOfCorrectAnswers, senderCN + 1);
-            d.put(Keys.units, senderU + My.unitsForPerDay*5);
+            d.put(Keys.units, senderU + My.unitsForPerDay * 5);
             senderDoc.set(d, SetOptions.merge());
         }
 
         void decrementCorrectForUser() {
             Map<String, Object> d = new HashMap<>();
             d.put(Keys.numberOfCorrectAnswers, senderCN - 1);
-            d.put(Keys.units, senderU - My.unitsForPerDay < 0 ? 0 : senderU - My.unitsForPerDay*5);
+            d.put(Keys.units, senderU - My.unitsForPerDay < 0 ? 0 : senderU - My.unitsForPerDay * 5);
             senderDoc.set(d, SetOptions.merge());
         }
 
@@ -715,8 +725,8 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect = itemView.findViewById(R.id.incorrect);
         }
 
-        void setData(Message data,RecyclerViewItemClickListener textClick,RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick,UserClickListener longClickProfile, int i) {
-            message.setOnClickListener(view -> textClick.onItemClick(data,itemView,i));
+        void setData(Message data, RecyclerViewItemClickListener textClick, RecyclerViewItemClickListener imageClick, UserClickListener profileImageClick, UserClickListener longClickProfile, int i) {
+            message.setOnClickListener(view -> textClick.onItemClick(data, itemView, i));
             imageSize.setText(Hey.getMb(data.getImageSize()));
             time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
             message.setText(data.getMessage());
@@ -726,20 +736,20 @@ public class QuestionChatAdapter extends RecyclerView.Adapter {
             incorrect.setVisibility(View.INVISIBLE);
             Hey.getUserFromUserId(itemView.getContext(), String.valueOf(data.getSender()), doc -> {
                 User user = (User) doc;
-                profileImage.setOnLongClickListener(z->{
+                profileImage.setOnLongClickListener(z -> {
                     longClickProfile.onUserClick(user);
                     return true;
                 });
                 profileImage.setOnClickListener(v -> profileImageClick.onUserClick(user));
                 if (!user.isHiddenFromQuestionChat()) fullName.setText(user.getFullName());
-                if (user.hasProfileImage()){
-                    Hey.print(user.getFullName(),"Has profile image");
+                if (user.hasProfileImage()) {
+                    Hey.print(user.getFullName(), "Has profile image");
                     Hey.workWithProfileImage(user, doc1 -> {
-                        File f = new File(user.getLocalFileName());
+                        File f = user.getLocalFile();
                         profileImage.setImageURI(Uri.fromFile(f));
                     }, errorMessage -> {
                     });
-                }else Hey.print(user.getFullName(),"Hasn't profile image");
+                } else Hey.print(user.getFullName(), "Hasn't profile image");
             }, errorMessage -> {
 
             });

@@ -1,71 +1,63 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
-import android.content.Intent;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.gotoPrivateChat;
+
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
-import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.MyD.UserListAdapter;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivitySearchUsersBinding;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class SearchUsers extends AppCompatActivity {
-    Button filter;
-    ImageView back, search;
-    TextView noResults;
-    EditText searchField;
-    RecyclerView recyclerView;
-    ProgressBar progressBar;
     boolean byName = true;
+    private ActivitySearchUsersBinding b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search_users);
-        initState();
-        back.setOnClickListener(v -> onBackPressed());
-        search.setOnClickListener(v -> searchResults());
+        b = ActivitySearchUsersBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
+        b.back.setOnClickListener(vx -> onBackPressed());
+        b.search.setOnClickListener(vx -> searchResults());
+        b.filter.setOnClickListener(zx->onTapFilter());
     }
 
     private void setAdapterToRecyclerView(ArrayList<Long> userIds) {
-        UserListAdapter adapter = new UserListAdapter(this, userIds, user -> {
-            Intent i = new Intent(this, SingleChat.class);
-            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id,user.getId()));
-            i.putExtra(Keys.privateChat,false);
-            startActivity(i);
-        }, user -> {
+        UserListAdapter adapter = new UserListAdapter(this, userIds, user -> gotoPrivateChat(this,user.getId()), user -> {
 
         });
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        b.usersRecycler.setAdapter(adapter);
+        b.usersRecycler.setLayoutManager(new LinearLayoutManager(this));
     }
 
     private void searchResults() {
-        String text = searchField.getText().toString();
+        String text = b.textField.getText().toString();
         if (!text.isEmpty())
             if (Hey.withUpper(text)) {
                 viewLoading();
                 Hey.searchUsersFromServer(this, text, byName, docs -> {
                     ArrayList<Long> userIds = new ArrayList<>();
                     for (DocumentSnapshot ds : docs) {
-                        User user = User.fromDoc(ds);
-                        if (user.getId() != My.id) if (!user.isHiddenFromSearch())userIds.add(user.getId());
+                        User user = null;
+                        try {
+                            user = User.fromDoc(ds);
+                        }catch (UnknownHostException ignored){
+
+                        }
+                        if (user!=null) if (user.getId() != My.id) if (!user.isHiddenFromSearch())userIds.add(user.getId());
                     }
                     if (userIds.isEmpty()) noResultsFound();
                     else {
@@ -76,17 +68,6 @@ public class SearchUsers extends AppCompatActivity {
             } else Hey.showToast(this, getString(R.string.mustBeUpper));
     }
 
-    private void initState() {
-        filter = findViewById(R.id.searchFilter);
-        filter.setOnClickListener(v -> onTapFilter());
-        noResults = findViewById(R.id.no_results);
-        searchField = findViewById(R.id.search_users_field);
-        recyclerView = findViewById(R.id.search_results);
-        progressBar = findViewById(R.id.loading);
-        back = findViewById(R.id.back);
-        search = findViewById(R.id.search);
-    }
-
     private void onTapFilter() {
         MyDialogWithTwoButtons d = Hey.showDeleteDialog(this, getString(byName ? R.string.filterBySurname : R.string.filterByName), null, false);
         if (byName) {
@@ -94,7 +75,7 @@ public class SearchUsers extends AppCompatActivity {
                 if (d.getResult()) {
                     byName = false;
                     searchResults();
-                    filter.setText(R.string.bySurname);
+                    b.filter.setText(R.string.bySurname);
                 }
             });
         } else {
@@ -102,27 +83,27 @@ public class SearchUsers extends AppCompatActivity {
                 if (d.getResult()) {
                     byName = true;
                     searchResults();
-                    filter.setText(R.string.byName);
+                    b.filter.setText(R.string.byName);
                 }
             });
         }
     }
 
     private void viewLoading() {
-        noResults.setVisibility(View.INVISIBLE);
-        recyclerView.setVisibility(View.INVISIBLE);
-        progressBar.setVisibility(View.VISIBLE);
+        b.noResult.setVisibility(View.INVISIBLE);
+        b.usersRecycler.setVisibility(View.INVISIBLE);
+        b.loading.setVisibility(View.VISIBLE);
     }
 
     private void viewResults() {
-        noResults.setVisibility(View.INVISIBLE);
-        recyclerView.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.INVISIBLE);
+        b.noResult.setVisibility(View.INVISIBLE);
+        b.usersRecycler.setVisibility(View.VISIBLE);
+        b.loading.setVisibility(View.INVISIBLE);
     }
 
     private void noResultsFound() {
-        noResults.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.INVISIBLE);
-        progressBar.setVisibility(View.INVISIBLE);
+        b.noResult.setVisibility(View.VISIBLE);
+        b.usersRecycler.setVisibility(View.INVISIBLE);
+        b.loading.setVisibility(View.INVISIBLE);
     }
 }

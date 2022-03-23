@@ -1,15 +1,22 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.addToLastChat;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.animateHide;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.animateShow;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.chooseImage;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.getFriendsIdFromChatId;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.getUserReference;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.print;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.lastChat;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -17,11 +24,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -39,11 +43,14 @@ import com.normurodov_nazar.savol_javob.MyD.MessageAdapterInSingleChat;
 import com.normurodov_nazar.savol_javob.MyD.MyDialog;
 import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
+import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivitySingleChatBinding;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,31 +59,27 @@ import java.util.Map;
 
 public class SingleChat extends AppCompatActivity {
 
-    ConstraintLayout main, image;
-    RecyclerView recyclerView;
-    TextView name, seen, centerText,youBlockedBy;
-    EditText editText;
-    ImageView send, sendImage, profileImage, menu;
     String chatId;
     CollectionReference chats;
     DocumentReference extraData;
-    ProgressBar progressBar, barForImageDownload;
     User friend;
-    boolean loading = false, imageIsViewing = false,fromPrivateChat, friendBlocked = false,imBlocked = false;
+    boolean loading = false, imageIsViewing = false, fromPrivateChat, friendBlocked = false, imBlocked = false;
     ListenerRegistration registration;
     MessageAdapterInSingleChat adapter = null;
     ActivityResultLauncher<Intent> memoryImageLauncher, captureLauncher;
     Uri capture;
-    SubsamplingScaleImageView imageItem;
     long i, limit = 0;
     Message message;
     Map<String, Object> d;
     ArrayList<Message> oldMessages = new ArrayList<>();
+    private ActivitySingleChatBinding b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_single_chat);
+        b = ActivitySingleChatBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         memoryImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onResultMemory
@@ -92,34 +95,35 @@ public class SingleChat extends AppCompatActivity {
     private void downloadChatData() {
         Intent i = getIntent();
         chatId = i.getStringExtra(Keys.chatId);
-        fromPrivateChat = i.getBooleanExtra(Keys.privateChat,true);
+        fromPrivateChat = i.getBooleanExtra(Keys.privateChat, true);
         prepareChat();
     }
 
     private void prepareChat() {
         if (chatId != null) {
             My.activeId = chatId;
-            editText.setText(Hey.getPreferences(this).getString(chatId, ""));
+            b.textField.setText(Hey.getPreferences(this).getString(chatId, ""));
             extraData = FirebaseFirestore.getInstance().collection(Keys.chats).document(chatId);
             Hey.addDocumentListener(this, extraData, doc -> {
-                Boolean b = doc.getBoolean(Keys.blockTime+My.id),ib = doc.getBoolean(Keys.blockTime+Hey.getFriendsIdFromChatId(chatId));
-                friendBlocked = b != null && b;
+                Boolean bo = doc.getBoolean(Keys.blockTime + My.id), ib = doc.getBoolean(Keys.blockTime + Hey.getFriendsIdFromChatId(chatId));
+                friendBlocked = bo != null && bo;
                 imBlocked = ib != null && ib;
-                if (imBlocked){
-                    youBlockedBy.setVisibility(View.VISIBLE);
-                    sendImage.setVisibility(View.INVISIBLE);
-                    editText.setVisibility(View.INVISIBLE);
-                    send.setVisibility(View.INVISIBLE);
-                }else {
-                    youBlockedBy.setVisibility(View.INVISIBLE);
-                    sendImage.setVisibility(View.VISIBLE);
-                    editText.setVisibility(View.VISIBLE);
-                    send.setVisibility(View.VISIBLE);
+                if (imBlocked) {
+                    b.youBlockedBy.setVisibility(View.VISIBLE);
+                    b.sendImage.setVisibility(View.INVISIBLE);
+                    b.textField.setVisibility(View.INVISIBLE);
+                    b.send.setVisibility(View.INVISIBLE);
+                } else {
+                    b.youBlockedBy.setVisibility(View.INVISIBLE);
+                    b.sendImage.setVisibility(View.VISIBLE);
+                    b.textField.setVisibility(View.VISIBLE);
+                    b.send.setVisibility(View.VISIBLE);
                 }
-            }, errorMessage -> { });
+            }, errorMessage -> {
+            });
             chats = extraData.collection(chatId);
             loadMessages();
-            loadFriendsData(FirebaseFirestore.getInstance().collection(Keys.users).document(Hey.getFriendsIdFromChatId(chatId)));
+            loadFriendsData(getUserReference(getFriendsIdFromChatId(chatId)));
         } else {
             showError().setOnDismissListener(d -> finish());
         }
@@ -149,7 +153,7 @@ public class SingleChat extends AppCompatActivity {
             }
             if (Hey.isMessagesAddedToBottom(oldMessages, messages)) {
                 adapter.addItems(Hey.getDifferenceOfMessages(messages, oldMessages), messages.size() - oldMessages.size());
-                recyclerView.smoothScrollToPosition(messages.size());
+                b.chatsRecycler.smoothScrollToPosition(messages.size());
                 Hey.getAllUnreadMessagesForMeAndRead(messages, chats);
             }
             if (oldMessages.size() == messages.size()) {
@@ -169,7 +173,12 @@ public class SingleChat extends AppCompatActivity {
     private void loadFriendsData(DocumentReference reference) {
         Hey.getDocument(this, reference, doc -> {
             DocumentSnapshot d = (DocumentSnapshot) doc;
-            friend = User.fromDoc(d);
+            try {
+                friend = User.fromDoc(d);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                Hey.showUnknownError(this).setOnDismissListener(x -> finish());
+            }
             setAllFriendsData();
         }, errorMessage -> {
 
@@ -179,7 +188,7 @@ public class SingleChat extends AppCompatActivity {
     void onResultMemory(ActivityResult result) {
         if (result.getResultCode() == RESULT_OK)
             if (result.getData() != null) {
-                startLoading(sendImage);
+                startLoading(b.sendImage);
                 Uri uri = result.getData().getData();
                 i = Timestamp.now().toDate().getTime();
                 d = new HashMap<>();
@@ -188,13 +197,13 @@ public class SingleChat extends AppCompatActivity {
                 d.put(Keys.sender, My.id);
                 d.put(Keys.read, false);
                 message = new Message(d);
-                Hey.cropImage(this, this, uri, new File(My.folder + message.getId() + ".png"), false, errorMessage -> stopLoading(sendImage));
-            } else stopLoading(sendImage);
+                Hey.cropImage(this, this, uri, new File(My.folder + message.getId() + ".png"), false, errorMessage -> stopLoading(b.sendImage));
+            } else stopLoading(b.sendImage);
     }
 
     void onResultCapture(ActivityResult result) {
         if (result.getResultCode() == RESULT_OK) {
-            startLoading(sendImage);
+            startLoading(b.sendImage);
             i = Timestamp.now().toDate().getTime();
             d = new HashMap<>();
             d.put(Keys.type, Keys.imageMessage);
@@ -202,8 +211,15 @@ public class SingleChat extends AppCompatActivity {
             d.put(Keys.sender, My.id);
             d.put(Keys.read, false);
             message = new Message(d);
-            Hey.cropImage(this, this, capture, new File(My.folder + message.getId() + ".png"), false, errorMessage -> stopLoading(sendImage));
+            Hey.cropImage(this, this, capture, new File(My.folder + message.getId() + ".png"), false, errorMessage -> stopLoading(b.sendImage));
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode==KeyEvent.KEYCODE_VOLUME_UP) addToLastChat(this, friend);
+        if (keyCode==KeyEvent.KEYCODE_VOLUME_DOWN) Hey.getPreferences(this).edit().putString(lastChat,"sdf").apply();
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -214,11 +230,12 @@ public class SingleChat extends AppCompatActivity {
                 Uri res = UCrop.getOutput(data);
                 if (res != null) {
                     File f = new File(res.getPath());
-                    Hey.compressImage(this,f);
+                    Hey.compressImage(this, f);
                     d.put(Keys.imageSize, f.length());
                     message = new Message(d);
                     Hey.uploadImageToChat(this, f.getPath(), message.getId(), doc -> Hey.addDocumentToCollection(getApplicationContext(), chats, message.getId(), message.toMap(),
                             doc1 -> {
+                                addToLastChat(this, friend);
                                 Map<String, String> d = new HashMap<>();
                                 d.put(Keys.type, Keys.privateChat);
                                 d.put(Keys.id, String.valueOf(My.id));
@@ -228,20 +245,20 @@ public class SingleChat extends AppCompatActivity {
 
                                 });
                                 addToExtra();
-                                stopLoading(sendImage);
+                                stopLoading(b.sendImage);
                             },
-                            errorMessage -> stopLoading(sendImage)), (position, name) -> stopLoading(sendImage), errorMessage -> {
+                            errorMessage -> stopLoading(b.sendImage)), (position, name) -> stopLoading(b.sendImage), errorMessage -> {
                     });
-                }
-                else stopLoading(sendImage);
-            } else stopLoading(sendImage);
+                } else stopLoading(b.sendImage);
+            } else stopLoading(b.sendImage);
     }
 
     private void showMessages(ArrayList<Message> messages) {
         oldMessages = messages;
-        adapter = new MessageAdapterInSingleChat(messages, this, (message, itemView, i) -> {
+        adapter = new MessageAdapterInSingleChat(messages, this, chats, (message, itemView, i) -> {
+            print("a",message.toMap().toString());
             if (message.getSender() == My.id) {
-                if (message.getType().equals(Keys.textMessage)) {
+                if (message.getType().equals(Keys.textMessage) || message.getType().equals(Keys.reply)) {
                     itemView.setBackgroundColor(getResources().getColor(R.color.black));
                     Hey.showPopupMenu(this, itemView, new ArrayList<>(Arrays.asList(getString(R.string.delete), getString(R.string.change), getString(R.string.copy))), (position, name) -> {
                         switch (position) {
@@ -262,23 +279,25 @@ public class SingleChat extends AppCompatActivity {
                                 Hey.copyToClipboard(this, message.getMessage());
                                 break;
                         }
-                    }, true)
-                            .setOnDismissListener(m -> itemView.setBackgroundColor(Color.TRANSPARENT));
+                    }, true).setOnDismissListener(m -> itemView.setBackgroundColor(Color.TRANSPARENT));
                 }
-            }else {
-                if (message.getType().equals(Keys.textMessage)){
+
+            } else {
+                if (message.getType().equals(Keys.textMessage)) {
                     itemView.setBackgroundColor(getResources().getColor(R.color.black));
-                    Hey.showPopupMenu(this, itemView, new ArrayList<>(Collections.singletonList(getString(R.string.copy))), (position, name) -> Hey.copyToClipboard(this,message.getMessage()),true)
-                            .setOnDismissListener(x->itemView.setBackgroundColor(Color.TRANSPARENT));
+                    Hey.showPopupMenu(this, itemView, new ArrayList<>(Collections.singletonList(getString(R.string.copy))), (position, name) -> Hey.copyToClipboard(this, message.getMessage()), true)
+                            .setOnDismissListener(x -> itemView.setBackgroundColor(Color.TRANSPARENT));
                 }
             }
             if (message.getType().equals(Keys.imageMessage)) {
                 File f = Hey.getLocalFile(message);
                 Hey.workWithImageMessage(message, doc -> {
-                    Hey.setBigImage(imageItem, f);
-                    main.setVisibility(View.GONE);
-                    image.setVisibility(View.VISIBLE);
-                    imageIsViewing = true;
+                    Hey.setBigImage(b.bigImage, f);
+                    animateHide(b.main,s->{
+                        b.main.setVisibility(View.GONE);
+                        b.bigImage.setVisibility(View.VISIBLE);
+                        imageIsViewing = true;
+                    });
                 }, errorMessage -> Hey.amIOnline(new StatusListener() {
                     @Override
                     public void online() {
@@ -337,26 +356,40 @@ public class SingleChat extends AppCompatActivity {
         }).addOnFailureListener(e -> {
             Hey.showAlertDialog(SingleChat.this, getString(R.string.error) + ":" + e.getLocalizedMessage());
             Hey.setButtonAsDefault(this, button, getString(R.string.loadMore));
-        }));
-        recyclerView.setAdapter(adapter);
+        }), (message, itemView, position) -> {
+            //REPLY LISTENER
+            Hey.showReplyDialog(this, message, chats);
+        }, doc -> {
+            int position = Hey.getIndexInArray(new Message((String) doc), oldMessages);
+            print("m", oldMessages.get(position).toMap().toString());
+            b.chatsRecycler.smoothScrollToPosition(position);
+            //print("s",recyclerView.findViewHolderForLayoutPosition(position).toString());
+        });
+        b.chatsRecycler.setAdapter(adapter);
         LinearLayoutManager x = new LinearLayoutManager(this);
         x.setStackFromEnd(true);
-        recyclerView.setLayoutManager(x);
+        b.chatsRecycler.setLayoutManager(x);
+        b.chatsRecycler.setHasFixedSize(true);
+        b.chatsRecycler.setItemViewCacheSize(25);
+        b.chatsRecycler.setDrawingCacheEnabled(true);
+        b.chatsRecycler.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         Hey.getAllUnreadMessagesForMeAndRead(messages, chats);
     }
 
     @Override
     public void onBackPressed() {
         if (imageIsViewing) {
-            image.setVisibility(View.GONE);
-            main.setVisibility(View.VISIBLE);
-            imageIsViewing = false;
-        } else if(friend!=null) {
-            if (!fromPrivateChat){
-                MyDialogWithTwoButtons d = Hey.showDeleteDialog(this,getString(R.string.confirmAddToChats).replaceAll("xxx",friend.getName()),null,false);
-                d.setOnDismissListener(x->{
-                    if (d.getResult()){
-                        Hey.addToChats(this,My.id,friend.getId());
+            animateHide(b.bigImage, doc -> {
+                b.bigImage.setVisibility(View.GONE);
+                b.main.setVisibility(View.VISIBLE);
+                imageIsViewing = false;
+            });
+        } else if (friend != null) {
+            if (!fromPrivateChat) {
+                MyDialogWithTwoButtons d = Hey.showDeleteDialog(this, getString(R.string.confirmAddToChats).replaceAll("xxx", friend.getName()), null, false);
+                d.setOnDismissListener(x -> {
+                    if (d.getResult()) {
+                        Hey.addToChats(this, My.id, friend.getId());
                     }
                     super.onBackPressed();
                 });
@@ -365,9 +398,9 @@ public class SingleChat extends AppCompatActivity {
     }
 
     private void sendTextMessage() {
-        String m = editText.getText().toString();
+        String m = b.textField.getText().toString();
         if (!loading && chats != null && !m.replaceAll(" ", "").isEmpty()) {
-            startLoading(send);
+            startLoading(b.send);
             Map<String, Object> data = new HashMap<>();
             data.put(Keys.time, Hey.getCurrentTime());
             data.put(Keys.message, m);
@@ -376,8 +409,9 @@ public class SingleChat extends AppCompatActivity {
             data.put(Keys.read, false);
             Message message = new Message(data);
             Hey.sendMessage(this, chats, message, doc -> {
-                editText.setText("");
-                stopLoading(send);
+                addToLastChat(this, friend);
+                b.textField.setText("");
+                stopLoading(b.send);
                 addToExtra();
                 Map<String, String> d = new HashMap<>();
                 d.put(Keys.type, Keys.privateChat);
@@ -387,7 +421,7 @@ public class SingleChat extends AppCompatActivity {
                 }, errorMessage -> {
 
                 });
-            }, errorMessage -> stopLoading(send));
+            }, errorMessage -> stopLoading(b.send));
         }
     }
 
@@ -411,22 +445,23 @@ public class SingleChat extends AppCompatActivity {
     }
 
     private void setAllFriendsData() {
-        name.setText(friend.fullName);
-        seen.setText(Hey.getTimeText(this, friend.getSeen()));
+        b.topItem.setOnClickListener(v->gotoInfo());
+        b.name.setText(friend.fullName);
+        b.seen.setText(Hey.getTimeText(this, friend.getSeen()));
         if (friend.hasProfileImage()) {
-            Hey.print(friend.getFullName(), "Has profile image");
+            print(friend.getFullName(), "Has profile image");
             setImage();
-        } else Hey.print(friend.getFullName(), "Hasn't profile image");
+        } else print(friend.getFullName(), "Hasn't profile image");
     }
 
     private void setImage() {
-        File f = new File(friend.getLocalFileName());
+        File f = friend.getLocalFile();
         Hey.workWithProfileImage(friend, doc -> showImage(f), errorMessage -> {
-            barForImageDownload.setVisibility(View.VISIBLE);
+            b.profileImage.setVisibility(View.VISIBLE);
             Hey.downloadFile(this, Keys.users, String.valueOf(friend.getId()), f, (progress, total) -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    barForImageDownload.setProgress(Hey.getPercentage(progress, total), true);
-                } else barForImageDownload.setProgress(Hey.getPercentage(progress, total));
+                    b.imageProgress.setProgress(Hey.getPercentage(progress, total), true);
+                } else b.imageProgress.setProgress(Hey.getPercentage(progress, total));
             }, doc -> showImage(f), e -> {
 
             });
@@ -434,68 +469,50 @@ public class SingleChat extends AppCompatActivity {
     }
 
     private void showImage(File f) {
-        profileImage.setImageURI(Uri.parse(f.getPath()));
-        barForImageDownload.setVisibility(View.INVISIBLE);
-        profileImage.setVisibility(View.VISIBLE);
+        b.profileImage.setImageURI(Uri.parse(f.getPath()));
+        b.imageProgress.setVisibility(View.INVISIBLE);
+        b.profileImage.setVisibility(View.VISIBLE);
     }
 
     private void showNoMessages() {
-        recyclerView.setVisibility(View.INVISIBLE);
-        progressBar.setVisibility(View.INVISIBLE);
-        centerText.setVisibility(View.VISIBLE);
+        b.chatsRecycler.setVisibility(View.INVISIBLE);
+        b.centerProgress.setVisibility(View.INVISIBLE);
+        b.centerText.setVisibility(View.VISIBLE);
     }
 
     void changeAsNotLoading() {
-        progressBar.setVisibility(View.INVISIBLE);
-        recyclerView.setVisibility(View.VISIBLE);
-        centerText.setVisibility(View.INVISIBLE);
+        b.centerProgress.setVisibility(View.INVISIBLE);
+        b.chatsRecycler.setVisibility(View.VISIBLE);
+        b.centerText.setVisibility(View.INVISIBLE);
     }
 
     private void initVars() {
-        youBlockedBy = findViewById(R.id.youBlockedBy);
-        main = findViewById(R.id.main);
-        image = findViewById(R.id.imageSide);
-        imageItem = findViewById(R.id.imageItem);
-        centerText = findViewById(R.id.center_text);
-        recyclerView = findViewById(R.id.chatsInSingleChat);
-        send = findViewById(R.id.send);
-        send.setOnClickListener(x -> {
+        b.send.setOnClickListener(x -> {
             if (!loading) sendTextMessage();
             else Toast.makeText(this, getString(R.string.wait), Toast.LENGTH_SHORT).show();
         });
-        sendImage = findViewById(R.id.sendImageQuestion);
-        sendImage.setOnClickListener(v -> {
+        b.sendImage.setOnClickListener(v -> {
             if (!loading) sendImage();
             else Toast.makeText(this, getString(R.string.wait), Toast.LENGTH_SHORT).show();
         });
-        menu = findViewById(R.id.menuInSingleChat);
-        menu.setOnClickListener(view -> Hey.showPopupMenu(this, menu = findViewById(R.id.menuInSingleChat), new ArrayList<>(Arrays.asList(getString(R.string.to_top), getString(R.string.to_bottom),getString(friendBlocked ? R.string.unblock : R.string.block))), (position, name) -> {
+        b.menu.setOnClickListener(view -> Hey.showPopupMenu(this, b.menu, new ArrayList<>(Arrays.asList(getString(R.string.to_top), getString(R.string.to_bottom), getString(friendBlocked ? R.string.unblock : R.string.block))), (position, name) -> {
             switch (position) {
                 case 0:
                     if (adapter != null)
-                        if (adapter.getItemCount() != 0) recyclerView.smoothScrollToPosition(0);
+                        if (adapter.getItemCount() != 0) b.chatsRecycler.smoothScrollToPosition(0);
                     break;
                 case 1:
                     if (adapter != null) if (adapter.getItemCount() != 0)
-                        recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+                        b.chatsRecycler.smoothScrollToPosition(adapter.getItemCount() - 1);
                     break;
                 case 2:
-                    extraData.set(Collections.singletonMap(Keys.blockTime+My.id, !friendBlocked),SetOptions.merge())
-                            .addOnFailureListener(v-> Hey.showErrorMessage(this,v.getLocalizedMessage(),false));
+                    extraData.set(Collections.singletonMap(Keys.blockTime + My.id, !friendBlocked), SetOptions.merge())
+                            .addOnFailureListener(v -> Hey.showErrorMessage(this, v.getLocalizedMessage(), false));
                     break;
             }
         }, true));
-        name = findViewById(R.id.nameAndSurnameInSingleChat);
-        name.setOnClickListener(view -> gotoInfo());
-        seen = findViewById(R.id.seenSingleChat);
-        seen.setOnClickListener(view -> gotoInfo());
-        profileImage = findViewById(R.id.profileImageInSingleChat);
-        profileImage.setOnClickListener(view -> gotoInfo());
-        editText = findViewById(R.id.textInSingle);
-        progressBar = findViewById(R.id.progressBarInSingleChat);
-        barForImageDownload = findViewById(R.id.barForImageDownload);
         String draft = getPreferences(MODE_PRIVATE).getString(Keys.message, "");
-        if (!draft.isEmpty()) editText.setText(draft);
+        if (!draft.isEmpty()) b.textField.setText(draft);
     }
 
     private void gotoInfo() {
@@ -509,7 +526,8 @@ public class SingleChat extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         My.activeId = Keys.id;
-        Hey.getPreferences(this).edit().putString(chatId, editText.getText().toString()).apply();
+        My.shortcutCompleted = false;
+        Hey.getPreferences(this).edit().putString(chatId, b.textField.getText().toString()).apply();
         markAsRead();
         if (registration != null) registration.remove();
     }
@@ -531,19 +549,19 @@ public class SingleChat extends AppCompatActivity {
     }
 
     private void sendImage() {
-        startLoading(sendImage);
+        startLoading(b.sendImage);
         Hey.amIOnline(new StatusListener() {
             @Override
             public void online() {
-                Hey.chooseImage(SingleChat.this, sendImage, memoryImageLauncher, captureLauncher, uri -> capture = uri).setOnDismissListener(x -> stopLoading(sendImage));
+                chooseImage(SingleChat.this, b.sendImage, memoryImageLauncher, captureLauncher, uri -> capture = uri).setOnDismissListener(x -> stopLoading(b.sendImage));
             }
 
             @Override
             public void offline() {
-                stopLoading(sendImage);
+                stopLoading(b.sendImage);
                 Hey.showToast(SingleChat.this, getString(R.string.error_connection));
             }
-        }, errorMessage -> stopLoading(sendImage), this);
+        }, errorMessage -> stopLoading(b.sendImage), this);
     }
 
     private MyDialog showError() {

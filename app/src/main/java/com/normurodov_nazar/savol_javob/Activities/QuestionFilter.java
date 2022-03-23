@@ -4,8 +4,6 @@ import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
@@ -15,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivityQuestionFilterBinding;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,35 +21,28 @@ import java.util.Calendar;
 
 public class QuestionFilter extends AppCompatActivity implements View.OnClickListener {
 
-    Button theme,direction,apply,selectDate,divider,statusQuestionB;
-    TextView directionT,themeT,dateT,statusQuestionT;
-
-
     boolean descending = true,before = true, correct = true,hide = false;
     String themeS = "";
     long time = Calendar.getInstance().getTimeInMillis();
-
+    private ActivityQuestionFilterBinding b;
 
     ActivityResultLauncher<Intent> themeR;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_question_filter);
+        b = ActivityQuestionFilterBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         initVars();
         if (hide) {
-            statusQuestionB.setVisibility(View.INVISIBLE);
-            statusQuestionT.setVisibility(View.INVISIBLE);
+            b.statusOfQuestion.setVisibility(View.INVISIBLE);
+            b.status.setVisibility(View.INVISIBLE);
         }
         showChanges();
     }
 
     private void initVars() {
         themeR = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onResult);
-        directionT = findViewById(R.id.directionT);
-        themeT = findViewById(R.id.themeT);
-        dateT = findViewById(R.id.dateT);
-        statusQuestionT = findViewById(R.id.statusT);
-
         Intent data = getIntent();
         themeS = data.getStringExtra(Keys.theme);
         correct = data.getBooleanExtra(Keys.correct,true);
@@ -58,12 +50,12 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
         before = data.getBooleanExtra(Keys.divider,true);
         time = data.getLongExtra(Keys.time,Hey.getCurrentTime());
         hide = data.getBooleanExtra(Keys.hidden,false);
-        theme = findViewById(R.id.themeF);theme.setOnClickListener(this);
-        direction = findViewById(R.id.direction);direction.setOnClickListener(this);
-        selectDate = findViewById(R.id.datePickerF);selectDate.setOnClickListener(this);
-        divider = findViewById(R.id.divider);divider.setOnClickListener(this);
-        statusQuestionB = findViewById(R.id.statusAnswerB);statusQuestionB.setOnClickListener(this);
-        apply = findViewById(R.id.apply);apply.setOnClickListener(this);
+        b.selectTheme.setOnClickListener(this);
+        b.direction.setOnClickListener(this);
+        b.selectDate.setOnClickListener(this);
+        b.divider.setOnClickListener(this);
+        b.statusOfQuestion.setOnClickListener(this);
+        b.apply.setOnClickListener(this);
     }
 
 
@@ -78,7 +70,7 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public void onClick(View v) {
-        if (apply.equals(v)) {
+        if (b.apply.equals(v)) {
             if (!themeS.isEmpty()) {
                 Intent i = new Intent();
                 i.putExtra(Keys.theme,themeS).putExtra(Keys.order,descending).
@@ -88,16 +80,16 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
                 finish();
             } else Hey.showToast(this, getString(R.string.selectThemeAtLeast));
         } else {
-            if (theme.equals(v)) {
+            if (b.selectTheme.equals(v)) {
                 themeR.launch(new Intent(this, SelectTheme.class).putExtra("s",true));
             }
-            if (direction.equals(v)) {
-                Hey.showPopupMenu(this, direction, new ArrayList<>(Arrays.asList(getString(R.string.ascending), getString(R.string.descending))), (position, name) -> {
+            if (b.direction.equals(v)) {
+                Hey.showPopupMenu(this, b.direction, new ArrayList<>(Arrays.asList(getString(R.string.ascending), getString(R.string.descending))), (position, name) -> {
                     descending = position == 1;
                     showChanges();
                 }, true);
             }
-            if (selectDate.equals(v)) {
+            if (b.selectDate.equals(v)) {
                 Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(time);
                 DatePickerDialog dialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
@@ -109,14 +101,14 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
                 }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
                 dialog.show();
             }
-            if (divider.equals(v)) {
-                Hey.showPopupMenu(this, divider, new ArrayList<>(Arrays.asList(getString(R.string.after), getString(R.string.before))), (position, name) -> {
+            if (b.divider.equals(v)) {
+                Hey.showPopupMenu(this, b.divider, new ArrayList<>(Arrays.asList(getString(R.string.after), getString(R.string.before))), (position, name) -> {
                     before = position==1;
                     showChanges();
                 }, true);
             }
-            if (statusQuestionB.equals(v)) {
-                Hey.showPopupMenu(this, statusQuestionB, new ArrayList<>(Arrays.asList(getString(R.string.answered), getString(R.string.unanswered))), (position, name) -> {
+            if (b.statusOfQuestion.equals(v)) {
+                Hey.showPopupMenu(this, b.statusOfQuestion, new ArrayList<>(Arrays.asList(getString(R.string.answered), getString(R.string.unanswered))), (position, name) -> {
                     correct = position==0;
                     showChanges();
                 },true);
@@ -125,10 +117,10 @@ public class QuestionFilter extends AppCompatActivity implements View.OnClickLis
     }
 
     void showChanges(){
-        if (!themeS.isEmpty()) themeT.setText(getString(R.string.theme)+themeS);
-        directionT.setText(getString(R.string.order)+getString(descending ? R.string.descending : R.string.ascending));
-        dateT.setText(getString(R.string.date)+Hey.getTimeText(this,time));
-        statusQuestionT.setText(getString(R.string.statusQuestion)+":"+getString(correct ? R.string.answered : R.string.unanswered));
-        divider.setText(before ? R.string.before : R.string.after);
+        if (!themeS.isEmpty()) b.theme.setText(getString(R.string.theme)+themeS);
+        b.direction.setText(getString(R.string.order)+getString(descending ? R.string.descending : R.string.ascending));
+        b.date.setText(getString(R.string.date)+Hey.getTimeText(this,time));
+        b.status.setText(getString(R.string.statusQuestion)+":"+getString(correct ? R.string.answered : R.string.unanswered));
+        b.divider.setText(before ? R.string.before : R.string.after);
     }
 }

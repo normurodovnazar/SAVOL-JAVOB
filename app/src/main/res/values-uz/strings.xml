@@ -194,4 +194,11 @@
     <string name="unitValues">Unit qiymatlari</string>
     <string name="rulesFull">Savol bir kun umumiy bo\'lishi uchun:xxx unit nnn Savol beruvchi tomonidan to\'g\'ri deb belgilangan javob uchun:yyy unit nnn Agar savollarga javob bera olmasangiz va unit olmoqchi bo\'lsangiz  zzz bo\'limidan foydalaning</string>
     <string name="privacy">https://sites.google.com/view/matematikadan-savol-javob-f/home</string>
+    <string name="langFirst">Bu tugma yordamida ilovadan boshqa tilda foydalanayotgan foydalanuvchilar joylagan savollarni ko\'rishingiz mumkin.Hozir sizda ko\'rinayotgan savollar ilovadan xxx tilda foydalanayotgan foydalanuvchilar tomonidan joylangan</string>
+    <string name="uz">O\'zbek</string>
+    <string name="eng">Ingliz</string>
+    <string name="errorMessageVersion">Bu yangi turdagi xabar uni o\'qishingiz uchun ilovani yangilang</string>
+    <string name="typeReply">Javobni shu yerga yozing</string>
+    <string name="send">Jo\'natish</string>
+    <string name="newQuestion">Yangi savol joylash</string>
 </resources>

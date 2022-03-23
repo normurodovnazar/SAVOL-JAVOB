@@ -10,10 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -36,23 +32,23 @@ import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.Exists;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivityAuthUserBinding;
 
 import java.util.concurrent.TimeUnit;
 
 public class AuthUser extends AppCompatActivity implements View.OnClickListener {
 
     ActivityResultLauncher<Intent> launcher;
-    TextView text,privacy;
-    CheckBox checkBox;
-    EditText phone;
-    Button button;
     SharedPreferences preferences;
     boolean loading = false;
+    private ActivityAuthUserBinding b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth_user);
+        b = ActivityAuthUserBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -87,22 +83,18 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     }
 
     private void initVars() {
-        checkBox = findViewById(R.id.checkbox);
-        privacy = findViewById(R.id.privacy);Hey.gotoPrivacy(this,privacy);
+        Hey.gotoPrivacy(this,b.privacy);
         preferences = getPreferences(MODE_PRIVATE);
-        text = findViewById(R.id.textView);
-        phone = findViewById(R.id.phone);
-        button = findViewById(R.id.button);
-        Hey.animateFadeOut(text,300);
-        Hey.animateHorizontally(phone,400,500);
-        Hey.animateVertically(button,350,800);
-        button.setOnClickListener(this);
+        Hey.animateShow(b.text);
+        Hey.animateHorizontally(b.phoneNumber,400,500);
+        Hey.animateVertically(b.verify,350,800);
+        b.verify.setOnClickListener(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        preferences.edit().putString(p,phone.getText().toString()).apply();
+        preferences.edit().putString(p,b.phoneNumber.getText().toString()).apply();
     }
 
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks callBacks(FirebaseAuth auth) {
@@ -225,7 +217,7 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
 
     private void codeSend(String id) {
         Intent i = new Intent(this, SmsCode.class);
-        My.number=phone.getText().toString();
+        My.number=b.phoneNumber.getText().toString();
         i.putExtra(Keys.verificationId,id);
         launcher.launch(i);
     }
@@ -233,12 +225,12 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     @Override
     public void onClick(View view) {
        if(!loading) {
-           if (checkBox.isChecked()) onButtonClicked(); else Hey.showToast(this,getString(R.string.dontAgree));
+           if (b.checkBox.isChecked()) onButtonClicked(); else Hey.showToast(this,R.string.dontAgree);
        }
     }
 
     private void onButtonClicked() {
-        String p = phone.getText().toString();
+        String p = b.phoneNumber.getText().toString();
         if(p.contains("+")){
             setButtonAsLoading();
             FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -256,14 +248,14 @@ public class AuthUser extends AppCompatActivity implements View.OnClickListener 
     }
 
     private void setButtonAsDefault(){
-        phone.setEnabled(true);
-        Hey.setButtonAsDefault(this,button,getString(R.string.verify));
+        b.phoneNumber.setEnabled(true);
+        Hey.setButtonAsDefault(this,b.verify,getString(R.string.verify));
         loading = false;
     }
 
     private void setButtonAsLoading(){
-        phone.setEnabled(false);
-        Hey.setButtonAsLoading(this,button);
+        b.phoneNumber.setEnabled(false);
+        Hey.setButtonAsLoading(this,b.verify);
         loading = true;
     }
 

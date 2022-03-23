@@ -194,4 +194,9 @@
     <string name="dontAgree">If you do not agree to the terms of use, you will not be able to use the app</string>
     <string name="agreePrivacy">I agree to the terms of use</string>
     <string name="privacy">https://sites.google.com/view/mathquestionsandanswersuserpol/home</string>
+    <string name="uz">Uzbek</string>
+    <string name="eng">English</string>
+    <string name="typeReply">Type reply here</string>
+    <string name="send">Send</string>
+    <string name="newQuestion">Post new question</string>
 </resources>

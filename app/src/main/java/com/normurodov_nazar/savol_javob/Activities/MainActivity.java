@@ -1,5 +1,9 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.print;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.lastChat;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.newQuestion;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         Hey.applyTheme(this);
         super.onCreate(savedInstanceState);
-        Hey.print("onCreate","a");
+        print("onCreate","a");
         setContentView(R.layout.activity_main);
         preferences = Hey.getPreferences(this);
         id = Hey.getId(preferences);
@@ -62,18 +66,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void start() {
         My.id = id;
-        String type = getIntent().getStringExtra(Keys.type) == null ? "" : getIntent().getStringExtra(Keys.type);
-        i.putExtra(Keys.type, type);
-        switch (type) {
-            case Keys.privateChat:
-                i.putExtra(Keys.id, getIntent().getStringExtra(Keys.id));
-                break;
-            case Keys.publicQuestions:
-            case Keys.needQuestions:
-                Hey.print("id and theme",getIntent().getStringExtra(Keys.id)+" "+getIntent().getStringExtra(Keys.theme));
-                i.putExtra(Keys.id,getIntent().getStringExtra(Keys.id))
-                        .putExtra(Keys.theme,getIntent().getStringExtra(Keys.theme));
-                break;
+        String type = getIntent().getStringExtra(Keys.type) == null ? "" : getIntent().getStringExtra(Keys.type),action = getIntent().getAction();
+        if (action.equals(lastChat)){
+            i.putExtra(Keys.type, Keys.privateChat);
+            i.putExtra(Keys.id, preferences.getString(lastChat,null));
+            i.setAction(lastChat);
+        }
+        if (action.equals(newQuestion)){
+            i.setAction(newQuestion);
+        } else {
+            i.putExtra(Keys.type, type);
+            switch (type) {
+                case Keys.privateChat:
+                    i.putExtra(Keys.id, getIntent().getStringExtra(Keys.id));
+                    break;
+                case Keys.publicQuestions:
+                case Keys.needQuestions:
+                    print("id and theme",getIntent().getStringExtra(Keys.id)+" "+getIntent().getStringExtra(Keys.theme));
+                    i.putExtra(Keys.id,getIntent().getStringExtra(Keys.id))
+                            .putExtra(Keys.theme,getIntent().getStringExtra(Keys.theme));
+                    break;
+            }
         }
         if (!My.applied) {
             My.applied = true;
@@ -85,6 +98,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Hey.print("onDestroy","a");
+        print("onDestroy","a");
     }
 }

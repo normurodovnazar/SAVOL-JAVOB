@@ -1,6 +1,8 @@
 package com.normurodov_nazar.savol_javob.MFunctions;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.lastChat;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.users;
 import static com.normurodov_nazar.savol_javob.R.color;
 import static com.normurodov_nazar.savol_javob.R.string;
 
@@ -25,17 +27,24 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.FileProvider;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.bumptech.glide.Glide;
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.Timestamp;
@@ -46,10 +55,15 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.Source;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.UploadTask;
+import com.normurodov_nazar.savol_javob.Activities.MainActivity;
+import com.normurodov_nazar.savol_javob.Activities.NewQuestionActivity;
+import com.normurodov_nazar.savol_javob.Activities.ShowAd;
+import com.normurodov_nazar.savol_javob.Activities.SingleChat;
 import com.normurodov_nazar.savol_javob.MyD.CollectionListener;
 import com.normurodov_nazar.savol_javob.MyD.DocumentSnapshotListener;
 import com.normurodov_nazar.savol_javob.MyD.DocumentsListener;
@@ -68,6 +82,7 @@ import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
 import com.normurodov_nazar.savol_javob.MyD.MySingleton;
 import com.normurodov_nazar.savol_javob.MyD.ProgressListener;
 import com.normurodov_nazar.savol_javob.MyD.Question;
+import com.normurodov_nazar.savol_javob.MyD.ReplyDialog;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.MyD.SuccessListener;
 import com.normurodov_nazar.savol_javob.MyD.UriListener;
@@ -83,6 +98,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -110,7 +126,8 @@ public class Hey {
         ArrayList<Integer> positions = new ArrayList<>();
         for (int i = 0; i < old.size(); i++) {
             String messageType = old.get(i).getType();
-            if ((messageType.equals(Keys.textMessage) || messageType.equals(Keys.question) || messageType.equals(Keys.answer)) && !old.get(i).getMessage().equals(newM.get(i).getMessage())) {
+            print("message",old.get(i).toMap().toString());
+            if ((messageType.equals(Keys.textMessage) || messageType.equals(Keys.question) || messageType.equals(Keys.answer) || messageType.equals(Keys.reply)) && !old.get(i).getMessage().equals(newM.get(i).getMessage())) {
                 positions.add(i);
             }
         }
@@ -203,6 +220,13 @@ public class Hey {
 
     public static void getDocument(Context context, DocumentReference doc, SuccessListener documentListener, ErrorListener errorListener) {
         if (doc!=null) doc.get().addOnSuccessListener(documentListener::onSuccess).addOnFailureListener(e -> {
+            Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage());
+            errorListener.onError(e.getLocalizedMessage());
+        });
+    }
+
+    public static void getDocumentFromCache(Context context, DocumentReference doc, SuccessListener documentListener, ErrorListener errorListener) {
+        if (doc!=null) doc.get(Source.CACHE).addOnSuccessListener(documentListener::onSuccess).addOnFailureListener(e -> {
             Hey.showAlertDialog(context, context.getString(string.error) + ":" + e.getLocalizedMessage());
             errorListener.onError(e.getLocalizedMessage());
         });
@@ -355,8 +379,16 @@ public class Hey {
         else return b + "+" + a;
     }
 
-    public static void showToast(Context context, String message) {
+    public static void showToast(Context context,@StringRes int id) {
+        Toast.makeText(context, context.getString(id), Toast.LENGTH_LONG).show();
+    }
+
+    public static void showToast(Context context,String message) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
+
+    public static void showToast(Context context,@StringRes int id,String message) {
+        Toast.makeText(context, context.getString(id)+":"+message, Toast.LENGTH_LONG).show();
     }
 
     public static void print(String tag, String message) {
@@ -370,9 +402,24 @@ public class Hey {
         dialog.show();
         return dialog;
     }
+    public static MyDialog showAlertDialog(Context context, @StringRes int id) {
+        MyDialog dialog = new MyDialog(context, context.getString(id));
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
+    }
+
+    public static MyDialog showAlertDialog(Context context, @StringRes int id,String message) {
+        MyDialog dialog = new MyDialog(context, context.getString(id)+":"+message);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setCancelable(false);
+        dialog.show();
+        return dialog;
+    }
 
     public static MyDialog showUnknownError(Context context) {
-        return showAlertDialog(context, context.getString(string.error_unknown) + context.getString(string.unknown));
+        return showAlertDialog(context, context.getString(string.error_unknown));
     }
 
     public static MyDialogWithTwoButtons showDeleteDialog(Context context, String info, Message message, boolean forDeleteMessage) {
@@ -458,7 +505,7 @@ public class Hey {
     public static void setButtonAsLoading(@NonNull Context context, @NonNull Button button) {
         button.setText(context.getText(string.wait));
         button.setBackgroundResource(R.drawable.button_bg_pressed);
-        //button.setTextColor(context.getResources().getColor(color.white));
+        button.setTextColor(context.getResources().getColor(color.white));
         Animation animation = new AlphaAnimation(0, 1);
         animation.setDuration(600);
         animation.setRepeatCount(Animation.INFINITE);
@@ -468,7 +515,13 @@ public class Hey {
 
     public static void setButtonAsDefault(Context context, @NonNull Button button, @NonNull String title) {
         button.setBackgroundResource(R.drawable.button_background);
-        //button.setTextColor(context.getResources().getColor(color.black));
+        button.setTextColor(context.getResources().getColor(color.black));
+        button.setText(title);
+        button.clearAnimation();
+    }
+    public static void setButtonAsDefault(Context context, @NonNull Button button, @StringRes int title) {
+        button.setBackgroundResource(R.drawable.button_background);
+        button.setTextColor(context.getResources().getColor(color.black));
         button.setText(title);
         button.clearAnimation();
     }
@@ -479,6 +532,14 @@ public class Hey {
         animation.setRepeatCount(Animation.INFINITE);
         animation.setRepeatMode(Animation.REVERSE);
         button.startAnimation(animation);
+    }
+
+    public static void notifyView(View view){
+        Animation animation = new AlphaAnimation(0, 1);
+        animation.setDuration(600);
+        animation.setRepeatCount(2);
+        animation.setRepeatMode(Animation.REVERSE);
+        view.startAnimation(animation);
     }
 
     public static void setIconButtonAsDefault(@NonNull View button) {
@@ -497,9 +558,50 @@ public class Hey {
         view.animate().alpha(1f).translationY(0).setDuration(1000).setStartDelay(startAfter).start();
     }
 
-    public static void animateFadeOut(@NonNull View view, long startAfter) {
-        view.setAlpha(0f);
-        view.animate().alpha(1f).setDuration(1500).setStartDelay(startAfter).start();
+    public static void animateShow(@NonNull View view, SuccessListener successListener) {
+        AlphaAnimation animation = new AlphaAnimation(0,1);
+        animation.setDuration(500);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) { }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                successListener.onSuccess(null);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        view.startAnimation(animation);
+    }
+
+    public static void animateShow(@NonNull View view) {
+        AlphaAnimation animation = new AlphaAnimation(0,1);
+        animation.setDuration(500);
+        view.startAnimation(animation);
+    }
+
+    public static void animateHide(View view,SuccessListener successListener){
+        AlphaAnimation animation = new AlphaAnimation(1,0);
+        animation.setDuration(60);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) { }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                successListener.onSuccess(null);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        view.startAnimation(animation);
     }
 
     public static void myNumberExists(Exists exists) {
@@ -553,6 +655,13 @@ public class Hey {
         else return i;
     }
 
+    public static DocumentReference getUserReference(String userId){
+        return FirebaseFirestore.getInstance().collection(users).document(userId);
+    }
+    public static DocumentReference getUserReference(long userId){
+        return FirebaseFirestore.getInstance().collection(users).document(String.valueOf(userId));
+    }
+
     public static void deleteDocument(Context context, DocumentReference doc, SuccessListener successListener) {
         doc.delete().addOnFailureListener(e -> showAlertDialog(context, context.getString(string.error_deleting) + e.getLocalizedMessage()))
                 .addOnSuccessListener(unused -> successListener.onSuccess(null));
@@ -569,7 +678,7 @@ public class Hey {
             @Override
             public void online() {
                 chats.document(message.getId()).set(message.toMap()).addOnSuccessListener(unused -> successListener.onSuccess(null)).addOnFailureListener(e -> {
-                    showToast(context, context.getString(string.error) + ":" + e.getLocalizedMessage());
+                    showToast(context, string.error,e.getLocalizedMessage());
                     errorListener.onError(e.getLocalizedMessage());
                 });
             }
@@ -652,12 +761,6 @@ public class Hey {
         return temp;
     }
 
-    public static ArrayList<Question> getDifferenceOfQuestions(ArrayList<Question> newQ, ArrayList<Question> oldQ) {
-        ArrayList<Question> temp = new ArrayList<>();
-        for (int i = oldQ.size(); i < newQ.size(); i++) temp.add(newQ.get(i));
-        return temp;
-    }
-
     public static boolean withUpper(String text) {
         return text.charAt(0) == text.toUpperCase().charAt(0);
     }
@@ -684,7 +787,7 @@ public class Hey {
      *             returns
      */
     public static void workWithProfileImage(User user, SuccessListener a, ErrorListener b) {
-        File file = new File(user.getLocalFileName());
+        File file = user.getLocalFile();
         if (file.exists()) {
             if (file.length() == user.getImageSize()) {
                 a.onSuccess(null);
@@ -709,9 +812,14 @@ public class Hey {
     }
 
     public static void getUserFromUserId(Context context, String id, SuccessListener listener, ErrorListener errorListener) {
-        Hey.getDocument(context, FirebaseFirestore.getInstance().collection(Keys.users).document(id), doc -> {
+        Hey.getDocument(context, getUserReference(id), doc -> {
             DocumentSnapshot documentSnapshot = (DocumentSnapshot) doc;
-            listener.onSuccess(User.fromDoc(documentSnapshot));
+            try {
+                listener.onSuccess(User.fromDoc(documentSnapshot));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                errorListener.onError(e.getLocalizedMessage());
+            }
         }, errorListener);
     }
 
@@ -1041,8 +1149,95 @@ public class Hey {
     }
 
     public static void gotoPrivacy(Context context,TextView privacy) {
-        privacy.setOnClickListener(v->{
-            context.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(context.getString(R.string.privacy))));
-        });
+        privacy.setOnClickListener(v-> context.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(context.getString(string.privacy)))));
+    }
+
+    public static void showReplyDialog(Context context,Message message,CollectionReference chats) {
+        ReplyDialog replyDialog = new ReplyDialog(context,message,chats);
+        replyDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        replyDialog.setCancelable(false);
+        replyDialog.show();
+    }
+
+
+
+    public static void addToLastChat(Context context,User user) {
+        String otherId = String.valueOf(user.getId());
+        SharedPreferences preferences = Hey.getPreferences(context);
+        if (!preferences.getString(lastChat,"").equals(otherId)){
+            print("addToLastChat","work");
+            preferences.edit().putString(lastChat,otherId).apply();
+            workWithProfileImage(user, doc -> addShortcut(context,lastChat,user.getName(),user.getFullName(),Uri.fromFile(user.getLocalFile())), errorMessage -> addShortcut(context,lastChat,user.getName(),user.getFullName(),R.drawable.user_icon));
+        }else {
+            print("pref",preferences.getString(lastChat,"EMPTY"));
+            print("user", String.valueOf(user.getId()));
+        }
+    }
+
+    public static void addShortcut(Context context, String id, String shortLabel, String longLabel,@DrawableRes int res){
+        ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context,id)
+                .setShortLabel(shortLabel)
+                .setLongLabel(longLabel)
+                .setIcon(IconCompat.createWithResource(context,res))
+                .setIntent(new Intent(context, MainActivity.class).setAction(id))
+                .build();
+        ShortcutManagerCompat.pushDynamicShortcut(context,shortcut);
+    }
+
+    public static void addShortcut(Context context,String id,String shortLabel,String longLabel,Uri image){
+        ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context,id)
+                .setShortLabel(shortLabel)
+                .setLongLabel(longLabel)
+                .setIcon(IconCompat.createWithContentUri(image))
+                .setIntent(new Intent(context, MainActivity.class).setAction(lastChat))
+                .build();
+        ShortcutManagerCompat.pushDynamicShortcut(context,shortcut);
+    }
+
+    public static void gotoPrivateChat(Context context,String otherId) {
+            Intent i = new Intent(context, SingleChat.class);
+            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, Long.parseLong(otherId)));
+            context.startActivity(i);
+    }
+    public static void gotoPrivateChat(Context context,long otherId) {
+            Intent i = new Intent(context, SingleChat.class);
+            i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, otherId));
+            context.startActivity(i);
+    }
+
+    public static void checkPostQ(Context context) {
+        if (My.unitsForPerDay <= My.units) {
+            CollectionReference publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions);
+            LoadingDialog d = Hey.showLoadingDialog(context);
+            Hey.getCollection(context, publicQuestions, docs -> {
+                if (My.questionLimit > docs.size()) {
+                    Intent i = new Intent(context, NewQuestionActivity.class);
+                    context.startActivity(i);
+                } else {
+                    My.shortcutCompleted = false;
+                    Hey.showAlertDialog(context, context.getString(R.string.questionLimitError).replace("xxx", String.valueOf(My.questionLimit)));
+                }
+                d.closeDialog();
+            }, errorMessage -> d.closeDialog());
+        } else {
+            My.shortcutCompleted = false;
+            MyDialogWithTwoButtons d = Hey.showDeleteDialog(context, context.getString(R.string.noEnoughUnits).replace("xxx", String.valueOf(My.units)).replace("yyy", String.valueOf(My.unitsForPerDay)), null, false);
+            d.setOnDismissListener(dialogInterface -> {
+                if (d.getResult()) {
+                    context.startActivity(new Intent(context, ShowAd.class));
+                }
+            });
+        }
+    }
+
+    public static void loadImage(Context context, File file, ImageView imageView) {
+        Glide.with(context).load(file).into(imageView);
+    }
+    public static void loadImage(Context context, Uri uri, ImageView imageView) {
+        Glide.with(context).load(uri).into(imageView);
+    }
+    public static void loadImage(Context context, Message message, ImageView imageView) {
+
+        Glide.with(context).load(Uri.fromFile(Hey.getLocalFile(message))).into(imageView);
     }
 }

@@ -82,7 +82,7 @@ public class AccountSettings extends AppCompatActivity {
                         @Override
                         public void offline() {
                             x.closeDialog();
-                            Hey.showToast(AccountSettings.this, getString(R.string.error_connection));
+                            Hey.showToast(AccountSettings.this,R.string.error_connection);
                         }
                     }, errorMessage -> x.closeDialog(), this);
                     break;
@@ -103,7 +103,7 @@ public class AccountSettings extends AppCompatActivity {
                         @Override
                         public void offline() {
                             ld.closeDialog();
-                            Hey.showToast(AccountSettings.this, getString(R.string.error_connection));
+                            Hey.showToast(AccountSettings.this, R.string.error_connection);
                         }
                     }, errorMessage -> ld.closeDialog(), this);
                     break;
@@ -114,13 +114,13 @@ public class AccountSettings extends AppCompatActivity {
                         public void online() {
                             Hey.updateDocument(AccountSettings.this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), Collections.singletonMap(Keys.hiddenFromSearch, !hiddenFromSearch), doc -> {
                                 setItems();
-                                Hey.showToast(AccountSettings.this, getString(R.string.changed));
+                                Hey.showToast(AccountSettings.this,R.string.changed);
                                 l.closeDialog();
                             }, errorMessage -> l.closeDialog());
                         }
                         @Override
                         public void offline() {
-                            Hey.showToast(AccountSettings.this,getString(R.string.error_connection));
+                            Hey.showToast(AccountSettings.this,R.string.error_connection);
                             l.closeDialog();
                         }
                     }, errorMessage -> l.closeDialog(),this);
@@ -132,14 +132,14 @@ public class AccountSettings extends AppCompatActivity {
                         public void online() {
                             Hey.updateDocument(AccountSettings.this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), Collections.singletonMap(Keys.hiddenFromQuestionChat, !hiddenFromQC), doc -> {
                                 setItems();
-                                Hey.showToast(AccountSettings.this, getString(R.string.changed));
+                                Hey.showToast(AccountSettings.this,R.string.changed);
                                 lx.closeDialog();
                             }, errorMessage -> lx.closeDialog());
                         }
 
                         @Override
                         public void offline() {
-                            Hey.showToast(AccountSettings.this,getString(R.string.error_connection));
+                            Hey.showToast(AccountSettings.this,R.string.error_connection);
                             lx.closeDialog();
                         }
                     }, errorMessage -> lx.closeDialog(),this);
@@ -151,14 +151,14 @@ public class AccountSettings extends AppCompatActivity {
                         public void online() {
                             Hey.updateDocument(AccountSettings.this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), Collections.singletonMap(Keys.hidden, !hiddenNumber), doc -> {
                                 setItems();
-                                Hey.showToast(AccountSettings.this, getString(R.string.changed));
+                                Hey.showToast(AccountSettings.this, R.string.changed);
                                 ln.closeDialog();
                             }, errorMessage -> ln.closeDialog());
                         }
 
                         @Override
                         public void offline() {
-                            Hey.showToast(AccountSettings.this,getString(R.string.error_connection));
+                            Hey.showToast(AccountSettings.this,R.string.error_connection);
                             ln.closeDialog();
                         }
                     }, errorMessage -> ln.closeDialog(),this);

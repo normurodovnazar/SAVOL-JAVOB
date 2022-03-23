@@ -7,11 +7,19 @@ import java.util.Map;
 
 public class Message {
 
-    final Map<String,Object> data;
-    final String message;
-    String id;
-    long sender,time,incorrect,correct,imageSize;
+    Map<String,Object> data;
+    String message;
+    String id, toType,to;
+    Long sender,time,incorrect,correct,imageSize;
     boolean read;
+
+    public String getToType() {
+        return toType;
+    }
+
+    public String getTo() {
+        return to;
+    }
 
     /**
      * Used for sending messages
@@ -19,6 +27,8 @@ public class Message {
      */
     public Message(Map<String, Object> data) {
         this.data = data;
+        to = (String) data.get(Keys.to);
+        toType = (String) data.get(Keys.toType);
         message = (String) data.get(Keys.message);
         sender = (long) data.get(Keys.sender);
         time = (long) data.get(Keys.time);
@@ -29,6 +39,10 @@ public class Message {
         Long a = (Long) data.get(Keys.imageSize);
         imageSize = a==null ? -1 : a;
         id = sender+""+time;
+    }
+
+    public Message(String id){
+        this.id = id;
     }
 
     public Message(Map<String, Object> data,String a){
@@ -67,6 +81,7 @@ public class Message {
     }
 
     public String getType(){return (String) data.get(Keys.type);}
+    public void setType(){data.put(Keys.type,Keys.privateChat);}
 
     public boolean isRead(){return read;}
 }

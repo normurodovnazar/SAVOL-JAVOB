@@ -41,7 +41,7 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        android:id="@+id/barForImageDownload"
+                        android:id="@+id/imageProgress"
                         style="@android:style/Widget.ProgressBar.Horizontal"
                         android:max="100"
                         android:progressTint="@color/black"
@@ -51,7 +51,7 @@
                     <ImageView
                         android:background="@color/onlyWhite"
                         android:src="@drawable/black_user_icon"
-                        android:id="@+id/profileImageInSingleChat"
+                        android:id="@+id/profileImage"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -61,11 +61,11 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 app:layout_constraintStart_toEndOf="@id/profileImageCard"
-                app:layout_constraintEnd_toStartOf="@id/menuInSingleChat"
+                app:layout_constraintEnd_toStartOf="@id/menu"
                 app:layout_constraintTop_toTopOf="@id/profileImageCard"
                 app:layout_constraintBottom_toBottomOf="parent">
                 <TextView
-                    android:id="@+id/nameAndSurnameInSingleChat"
+                    android:id="@+id/name"
                     android:layout_marginHorizontal="5dp"
                     android:gravity="center"
                     android:textSize="20sp"
@@ -74,7 +74,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
                 <TextView
-                    android:id="@+id/seenSingleChat"
+                    android:id="@+id/seen"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
@@ -84,7 +84,7 @@
             </LinearLayout>
 
             <ImageButton
-                android:id="@+id/menuInSingleChat"
+                android:id="@+id/menu"
                 android:layout_marginHorizontal="10dp"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
@@ -115,7 +115,7 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"/>
             <ImageButton
-                android:id="@+id/sendImageQuestion"
+                android:id="@+id/sendImage"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -130,14 +130,14 @@
                 android:textColor="@color/onlyWhite"
                 android:lineSpacingExtra="1dp"
                 android:textCursorDrawable="@drawable/only_white_cursor"
-                android:id="@+id/textInSingle"
+                android:id="@+id/textField"
                 android:paddingVertical="2dp"
                 android:paddingHorizontal="5dp"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                app:layout_constraintTop_toTopOf="@id/sendImageQuestion"
-                app:layout_constraintBottom_toBottomOf="@id/sendImageQuestion"
-                app:layout_constraintStart_toEndOf="@id/sendImageQuestion"
+                app:layout_constraintTop_toTopOf="@id/sendImage"
+                app:layout_constraintBottom_toBottomOf="@id/sendImage"
+                app:layout_constraintStart_toEndOf="@id/sendImage"
                 app:layout_constraintEnd_toStartOf="@id/send"
                 android:layout_marginHorizontal="5dp"
                 android:background="@drawable/text_field_bg"
@@ -150,8 +150,8 @@
                 android:id="@+id/send"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                app:layout_constraintTop_toTopOf="@id/sendImageQuestion"
-                app:layout_constraintBottom_toBottomOf="@id/sendImageQuestion"
+                app:layout_constraintTop_toTopOf="@id/sendImage"
+                app:layout_constraintBottom_toBottomOf="@id/sendImage"
                 android:padding="4dp"
                 android:layout_marginHorizontal="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -160,7 +160,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
-            android:id="@+id/center_text"
+            android:id="@+id/centerText"
             android:visibility="invisible"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -175,7 +175,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:visibility="invisible"
             app:stackFromEnd="true"
-            android:id="@+id/chatsInSingleChat"
+            android:id="@+id/chatsRecycler"
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintTop_toBottomOf="@id/topItem"
@@ -185,7 +185,7 @@
 
         <ProgressBar
             android:indeterminateTint="@color/black"
-            android:id="@+id/progressBarInSingleChat"
+            android:id="@+id/centerProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/topItem"
@@ -194,15 +194,11 @@
             app:layout_constraintBottom_toTopOf="@id/bottomItem"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/imageSide"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+
         <com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-            android:id="@+id/imageItem"
+            android:id="@+id/bigImage"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

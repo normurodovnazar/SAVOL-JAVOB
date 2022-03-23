@@ -8,7 +8,7 @@
     tools:context=".Activities.ShowAd">
 
     <TextView
-        android:id="@+id/textInAd"
+        android:id="@+id/text"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"/>
     <Button
         android:id="@+id/showAd"
-        app:layout_constraintTop_toBottomOf="@id/textInAd"
+        app:layout_constraintTop_toBottomOf="@id/text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/banner"

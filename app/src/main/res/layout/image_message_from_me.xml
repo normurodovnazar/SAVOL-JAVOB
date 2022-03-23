@@ -6,7 +6,7 @@
     android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardMessageFromMe"
+        android:id="@+id/ca"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginEnd="10dp"
@@ -24,7 +24,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:id="@+id/imageMessageByMe"
+                android:id="@+id/image"
                 android:background="@color/black"
                 android:src="@drawable/download_white_ic"
                 android:layout_width="match_parent"
@@ -40,25 +40,25 @@
         app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintVertical_bias="1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/cardMessageFromMe"
-        app:layout_constraintTop_toTopOf="@id/cardMessageFromMe"
-        app:layout_constraintBottom_toBottomOf="@id/cardMessageFromMe"/>
+        app:layout_constraintEnd_toStartOf="@id/ca"
+        app:layout_constraintTop_toTopOf="@id/ca"
+        app:layout_constraintBottom_toBottomOf="@id/ca"/>
 
     <ImageView
-        android:id="@+id/statusOfImageMessage"
+        android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:src="@drawable/ic_unread"
-        app:layout_constraintTop_toBottomOf="@id/cardMessageFromMe"
-        app:layout_constraintEnd_toEndOf="@id/cardMessageFromMe"
-        app:layout_constraintBottom_toBottomOf="@id/timeImageFromMeFromMe"/>
+        app:layout_constraintTop_toBottomOf="@id/ca"
+        app:layout_constraintEnd_toEndOf="@id/ca"
+        app:layout_constraintBottom_toBottomOf="@id/time"/>
 
     <TextView
-        android:id="@+id/timeImageFromMeFromMe"
+        android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="11sp"
-        app:layout_constraintEnd_toStartOf="@id/statusOfImageMessage"
-        app:layout_constraintTop_toBottomOf="@id/cardMessageFromMe"
+        app:layout_constraintEnd_toStartOf="@id/status"
+        app:layout_constraintTop_toBottomOf="@id/ca"
         android:layout_marginEnd="8dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

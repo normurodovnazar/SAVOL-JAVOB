@@ -65,4 +65,12 @@ public class Keys {
     public static final String blockTime = "BlockTime";
     public static final String hiddenFromSearch = "hiddenFromSearch";
     public static final String hiddenFromQuestionChat = "hiddenFromQuestionChat";
+    public static final String first = "First";
+    public static final String reply = "Reply";
+    public static final String to = "To";
+    public static final String toType = "ToType";
+    public static final String lastChat = "LastChat";
+    public static String lastChatShort = "lastChatShort";
+    public static String lastChatLong = "lastChatLong";
+    public static final String newQuestion = "newQuestion";
 }

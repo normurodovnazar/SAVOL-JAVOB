@@ -27,6 +27,7 @@ public class My {
     public static boolean updated = false;
     public static boolean applied = false;
     public static long blockTime = 0;
+    public static boolean shortcutCompleted = false;
 
     public static void setDataFromDoc(DocumentSnapshot doc){
         Long SN = doc.getLong(Keys.seen),iU = doc.getLong(Keys.imageSize),mQO = doc.getLong(Keys.units),nOMPQ = doc.getLong(Keys.numberOfMyPublishedQuestions),

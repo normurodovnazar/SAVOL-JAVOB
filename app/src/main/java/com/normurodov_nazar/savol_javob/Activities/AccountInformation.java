@@ -1,73 +1,56 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.gotoPrivateChat;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivityAccauntInformationBinding;
 
 import java.io.File;
 import java.util.ArrayList;
 
 public class AccountInformation extends AppCompatActivity {
-    ListView listView;
-    ImageView profileImage;
-    TextView fullName, seen;
     Intent i;
     String id;
     User user;
-    ConstraintLayout main, imageSide;
     File f;
-    SubsamplingScaleImageView bigImage;
     boolean imageViewing = false, fromChat, canScale = false;
-    Button gotoChat;
+
+    private ActivityAccauntInformationBinding binding;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_accaunt_information);
+        binding = ActivityAccauntInformationBinding.inflate(getLayoutInflater());
+        View view = binding.getRoot();
+        setContentView(view);
         initVars();
     }
 
     private void initVars() {
+        binding.bigImage.setOnClickListener(v-> onTapImage());
         i = getIntent();
         id = i.getStringExtra(Keys.id);
         fromChat = i.getBooleanExtra(Keys.fromChat, false);
-        gotoChat = findViewById(R.id.gotoChatButton);
-        gotoChat.setOnClickListener(v -> {
+        binding.gotoChat.setOnClickListener(v -> {
             if (fromChat) finish();
             else {
-                Intent singleChat = new Intent(this, SingleChat.class);
-                singleChat.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, user.getId()));
-                startActivity(singleChat);
+                gotoPrivateChat(this,user.getId());
             }
         });
-        bigImage = findViewById(R.id.bigImage);
-        main = findViewById(R.id.mainInfo);
-        imageSide = findViewById(R.id.imageSideInfo);
-
-        listView = findViewById(R.id.infoList);
-        profileImage = findViewById(R.id.profile_image);
-        profileImage.setOnClickListener(view -> onTapImage());
-        fullName = findViewById(R.id.fullName);
-        seen = findViewById(R.id.seenTime);
-
         if (id == null)
             Hey.showAlertDialog(this, getString(R.string.error) + ":" + getString(R.string.unknown)).setOnDismissListener(dialogInterface -> finish());
         else downloadData();
@@ -78,9 +61,9 @@ public class AccountInformation extends AppCompatActivity {
             if (user.hasProfileImage())
                 if (canScale) {
                     if (!imageViewing) {
-                        main.setVisibility(View.INVISIBLE);
-                        imageSide.setVisibility(View.VISIBLE);
-                        Hey.setBigImage(bigImage,f);
+                        binding.main.setVisibility(View.INVISIBLE);
+                        binding.bigImage.setVisibility(View.VISIBLE);
+                        Hey.setBigImage(binding.bigImage,f);
                     }
                     imageViewing = !imageViewing;
                 }
@@ -89,8 +72,8 @@ public class AccountInformation extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (imageViewing) {
-            main.setVisibility(View.VISIBLE);
-            imageSide.setVisibility(View.GONE);
+            binding.main.setVisibility(View.VISIBLE);
+            binding.bigImage.setVisibility(View.GONE);
             imageViewing = false;
         } else super.onBackPressed();
     }
@@ -100,18 +83,19 @@ public class AccountInformation extends AppCompatActivity {
         Hey.getUserFromUserId(this, id, doc -> {
             d.closeDialog();
             user = (User) doc;
-            fullName.setText(user.isHiddenFromQuestionChat() ? getString(R.string.hidden) : user.getFullName());
-            seen.setText(user.isHiddenFromQuestionChat() ? getString(R.string.hidden) : Hey.getTimeText(this, user.getSeen()));
+            binding.fullName.setText(user.isHiddenFromQuestionChat() ? getString(R.string.hidden) : user.getFullName());
+            binding.seen.setText(user.isHiddenFromQuestionChat() ? getString(R.string.hidden) : Hey.getTimeText(this, user.getSeen()));
             if (user.getId() == My.id) {
-                gotoChat.setVisibility(View.INVISIBLE);
+                binding.gotoChat.setVisibility(View.INVISIBLE);
             } else {
-                gotoChat.setVisibility(user.isHiddenFromQuestionChat() ? View.INVISIBLE : View.VISIBLE);
+                binding.gotoChat.setVisibility(user.isHiddenFromQuestionChat() ? View.INVISIBLE : View.VISIBLE);
             }
-            f = new File(user.getLocalFileName());
+
+            f = user.getLocalFile();
             if (user.hasProfileImage()){
                 Hey.print(user.getFullName(),"Has profile image");
                 Hey.workWithProfileImage(user, doc1 -> {
-                    profileImage.setImageURI(Uri.fromFile(f));
+                    binding.profileImage.setImageURI(Uri.fromFile(f));
                     canScale = true;
                 }, errorMessage -> {
                 });
@@ -128,15 +112,15 @@ public class AccountInformation extends AppCompatActivity {
             a.add(getString(R.string.status) + " " + s + " %");
             a.add(getString(R.string.id)+" "+user.getId());
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item, a);
-            listView.setAdapter(adapter);
-            listView.setOnItemClickListener((parent, view, position, id) -> {
+            binding.list.setAdapter(adapter);
+            binding.list.setOnItemClickListener((parent, view, position, id) -> {
                 if (!user.isNumberHidden() && position == 0) {
                     Intent ph = new Intent(Intent.ACTION_DIAL);
                     ph.setData(Uri.parse("tel:" + user.getNumber()));
                     startActivity(ph);
                 }
             });
-            listView.setOnItemLongClickListener((parent, view, position, id) -> {
+            binding.list.setOnItemLongClickListener((parent, view, position, id) -> {
                 if (!user.isNumberHidden() && position == 0) Hey.copyToClipboard(AccountInformation.this, user.getNumber());
                 if (position==7) Hey.copyToClipboard(this, String.valueOf(user.getId()));
                 return true;

@@ -5,18 +5,13 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -28,16 +23,11 @@ import com.normurodov_nazar.savol_javob.MyD.Question;
 import com.normurodov_nazar.savol_javob.MyD.QuestionAdapter;
 import com.normurodov_nazar.savol_javob.MyD.QuestionFrom;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivitySearchQuestionsBinding;
 
 import java.util.ArrayList;
 
 public class SearchQuestions extends AppCompatActivity {
-    TextView noResult;
-    RecyclerView recyclerView;
-    ProgressBar bar;
-    ImageView back, filter;
-    TextInputEditText byId;
-
     final int loadCount = 6;
 
     QuestionAdapter adapter;
@@ -50,10 +40,14 @@ public class SearchQuestions extends AppCompatActivity {
     long time = Hey.getCurrentTime();
     DocumentSnapshot limit;
 
+    private ActivitySearchQuestionsBinding b;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search_questions);
+        b = ActivitySearchQuestionsBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         initVars();
         loadLastQuestions();
     }
@@ -65,8 +59,7 @@ public class SearchQuestions extends AppCompatActivity {
     }
 
     private void initVars() {
-        byId = findViewById(R.id.searchById);
-        byId.addTextChangedListener(new TextWatcher() {
+        b.searchById.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -74,9 +67,9 @@ public class SearchQuestions extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Editable b = byId.getText();
-                if (b != null)
-                    filter.setImageResource(b.toString().isEmpty() ? R.drawable.ic_filter : R.drawable.search_glass);
+                Editable bx = b.searchById.getText();
+                if (bx != null)
+                    b.filter.setImageResource(bx.toString().isEmpty() ? R.drawable.ic_filter : R.drawable.search_glass);
             }
 
             @Override
@@ -84,18 +77,13 @@ public class SearchQuestions extends AppCompatActivity {
 
             }
         });
-        noResult = findViewById(R.id.no_resultsQ);
-        recyclerView = findViewById(R.id.searchResultsQ);
-        bar = findViewById(R.id.barQ);
-        back = findViewById(R.id.backQ);
-        back.setOnClickListener(v -> finish());
+        b.back.setOnClickListener(v -> finish());
         launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onResult
         );
-        filter = findViewById(R.id.filter);
-        filter.setOnClickListener(view -> {
-            Editable d = byId.getText();
+        b.filter.setOnClickListener(view -> {
+            Editable d = b.searchById.getText();
             if (d != null) if (d.toString().isEmpty()) {
                 Intent i = new Intent(this, QuestionFilter.class);
                 i.putExtra(Keys.theme, theme);
@@ -179,27 +167,27 @@ public class SearchQuestions extends AppCompatActivity {
                 }).addOnFailureListener(this::showError);
             }
         });
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        b.recycler.setAdapter(adapter);
+        b.recycler.setLayoutManager(new LinearLayoutManager(this));
         showResult();
     }
 
     private void showResult() {
-        recyclerView.setVisibility(View.VISIBLE);
-        bar.setVisibility(View.INVISIBLE);
-        noResult.setVisibility(View.INVISIBLE);
+        b.recycler.setVisibility(View.VISIBLE);
+        b.bar.setVisibility(View.INVISIBLE);
+        b.noResult.setVisibility(View.INVISIBLE);
     }
 
     private void showNoQuestions() {
-        recyclerView.setVisibility(View.INVISIBLE);
-        bar.setVisibility(View.INVISIBLE);
-        noResult.setVisibility(View.VISIBLE);
+        b.recycler.setVisibility(View.INVISIBLE);
+        b.bar.setVisibility(View.INVISIBLE);
+        b.noResult.setVisibility(View.VISIBLE);
     }
 
     private void showLoading() {
-        recyclerView.setVisibility(View.INVISIBLE);
-        bar.setVisibility(View.VISIBLE);
-        noResult.setVisibility(View.INVISIBLE);
+        b.recycler.setVisibility(View.INVISIBLE);
+        b.bar.setVisibility(View.VISIBLE);
+        b.noResult.setVisibility(View.INVISIBLE);
     }
 
     private void showError(Exception e) {

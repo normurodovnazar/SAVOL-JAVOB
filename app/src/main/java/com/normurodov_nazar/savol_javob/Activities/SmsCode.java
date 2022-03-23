@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,27 +17,26 @@ import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivitySmsCodeBinding;
 
 public class SmsCode extends AppCompatActivity {
 
-    TextView t;
-    EditText e;
-    Button b;
     String number,id;
     FirebaseAuth auth;
     CountDownTimer timer,time;
     boolean loading = false;
+    private ActivitySmsCodeBinding b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sms_code);
+        b = ActivitySmsCodeBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         Intent i = getIntent();
         id = i.getStringExtra(Keys.verificationId);
         number = My.number;
-        t = findViewById(R.id.smsSent);e = findViewById(R.id.smsCode);
-        b = findViewById(R.id.checkButton);
-        t.setText(getString(R.string.smsSent).replace("xxx",number));
+        b.smsSent.setText(getString(R.string.smsSent).replace("xxx",number));
         auth = My.auth;
         time = new CountDownTimer(120*1000L,1L) {
             @Override
@@ -74,8 +71,8 @@ public class SmsCode extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        b.setOnClickListener(v -> {
-            if(!e.getText().toString().equals("")){
+        b.checkButton.setOnClickListener(v -> {
+            if(!b.smsCode.getText().toString().equals("")){
                 if(!loading) check();
             }else Toast.makeText(this, getString(R.string.write_code), Toast.LENGTH_SHORT).show();
         });
@@ -86,8 +83,8 @@ public class SmsCode extends AppCompatActivity {
     }
 
     private void check() {
-        Hey.setButtonAsLoading(this,b);loading = true;
-        PhoneAuthCredential authCredential = PhoneAuthProvider.getCredential(id,e.getText().toString().trim());
+        Hey.setButtonAsLoading(this,b.checkButton);loading = true;
+        PhoneAuthCredential authCredential = PhoneAuthProvider.getCredential(id,b.smsCode.getText().toString().trim());
         auth.signInWithCredential(authCredential).addOnCompleteListener(this,
                 task -> {
                     if(task.isSuccessful()){
@@ -116,14 +113,14 @@ public class SmsCode extends AppCompatActivity {
                                     Hey.showAlertDialog(this,getString(R.string.error_connection));
                                     break;
                                 case Keys.errorVerificationCode:
-                                    Hey.showAlertDialog(this,getString(R.string.error_code)).setOnDismissListener(dialog -> this.e.setText(""));
+                                    Hey.showAlertDialog(this,getString(R.string.error_code)).setOnDismissListener(dialog -> this.b.smsCode.setText(""));
                                     break;
                                 default:
                                     Hey.showAlertDialog(this,getString(R.string.error_unknown)+e);
                                 break;
                         } else showUnknownErrorAndExit();
                     }
-                    Hey.setButtonAsDefault(this,b,getString(R.string.check));loading = false;
+                    Hey.setButtonAsDefault(this,b.checkButton,getString(R.string.check));loading = false;
                 }
         );
     }

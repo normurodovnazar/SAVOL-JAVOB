@@ -5,6 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+        classpath "com.android.tools.build:gradle:4.2.1"
         classpath "com.android.tools.build:gradle:4.2.2"
         classpath 'com.google.gms:google-services:4.3.10'
 
@@ -18,7 +19,7 @@ allprojects {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
-         // Warning: this repository is going to shut down soon
+        // Warning: this repository is going to shut down soon
     }
 }
 

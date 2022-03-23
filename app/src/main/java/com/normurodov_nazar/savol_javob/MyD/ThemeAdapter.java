@@ -87,33 +87,33 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeHolder>
                         case 0:
                             if (preferences.getBoolean(Keys.sound,true)) {
                                 preferences.edit().putBoolean(Keys.sound,false).apply();
-                                Hey.showToast(c,c.getString(R.string.soundsDisabled));
+                                Hey.showToast(c,R.string.soundsDisabled);
                                 removeStar();
                             } else {
                                 preferences.edit().putBoolean(Keys.sound,true).apply();
-                                Hey.showToast(c,c.getString(R.string.soundsEnabled));
+                                Hey.showToast(c,R.string.soundsEnabled);
                                 setStar();
                             }
                             break;
                         case 1:
                             if (preferences.getBoolean(Keys.vibrate,true)){
                                 preferences.edit().putBoolean(Keys.vibrate,false).apply();
-                                Hey.showToast(c,c.getString(R.string.vibrateDisabled));
+                                Hey.showToast(c,R.string.vibrateDisabled);
                                 removeStar();
                             }else {
                                 preferences.edit().putBoolean(Keys.vibrate,true).apply();
-                                Hey.showToast(c,c.getString(R.string.vibrateEnabled));
+                                Hey.showToast(c,R.string.vibrateEnabled);
                                 setStar();
                             }
                             break;
                         case 2:
                             if (preferences.getBoolean(Keys.privateChat,true)){
                                 preferences.edit().putBoolean(Keys.privateChat,false).apply();
-                                Hey.showToast(c,c.getString(R.string.privateDisabled));
+                                Hey.showToast(c,R.string.privateDisabled);
                                 removeStar();
                             }else {
                                 preferences.edit().putBoolean(Keys.privateChat,true).apply();
-                                Hey.showToast(c,c.getString(R.string.privateEnabled));
+                                Hey.showToast(c,R.string.privateEnabled);
                                 setStar();
                             }
                             break;
@@ -147,7 +147,7 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeHolder>
 
                                 @Override
                                 public void offline() {
-                                    Hey.showToast(itemView.getContext(), itemView.getContext().getString(R.string.error_connection));
+                                    Hey.showToast(itemView.getContext(), R.string.error_connection);
                                     dialog.closeDialog();
                                 }
                             }, errorMessage -> dialog.closeDialog(), itemView.getContext());

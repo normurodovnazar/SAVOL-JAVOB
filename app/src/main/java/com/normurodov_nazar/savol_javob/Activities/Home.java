@@ -1,11 +1,19 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.checkPostQ;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.gotoPrivateChat;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.print;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.lastChat;
+import static com.normurodov_nazar.savol_javob.MFunctions.Keys.newQuestion;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -27,7 +35,6 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -38,12 +45,13 @@ import com.normurodov_nazar.savol_javob.MyD.DrawerItem;
 import com.normurodov_nazar.savol_javob.MyD.DrawerItemsAdapter;
 import com.normurodov_nazar.savol_javob.MyD.HomeFragmentStateAdapter;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
-import com.normurodov_nazar.savol_javob.MyD.MyDialogWithTwoButtons;
 import com.normurodov_nazar.savol_javob.MyD.User;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivityHomeBinding;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -64,11 +72,15 @@ public class Home extends AppCompatActivity {
     File f;
     ActivityResultLauncher<Intent> p;
     ListenerRegistration numbers, my;
+    SharedPreferences preferences;
+    private ActivityHomeBinding b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        b = ActivityHomeBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         My.activeId = Keys.id;
         initVars();
         setTabs();
@@ -78,31 +90,42 @@ public class Home extends AppCompatActivity {
 
     private void downloadMyData() {
         if (My.id == 0)
-            Hey.showAlertDialog(this, getString(R.string.error) + ":" + getString(R.string.unknown)).setOnDismissListener(dialog -> finish());
+            Hey.showAlertDialog(this, R.string.error, getString(R.string.unknown)).setOnDismissListener(dialog -> finish());
         else {
             my = Hey.addDocumentListener(this, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)), doc -> {
                 Hey.print("updated", "my document");
                 My.setDataFromDoc(doc);
-                My.user = User.fromDoc(doc);
+                try {
+                    My.user = User.fromDoc(doc);
+                } catch (UnknownHostException e) {
+                    Hey.showUnknownError(this).setOnDismissListener(x -> finish());
+                }
                 Long bT = doc.getLong(Keys.blockTime);
                 My.blockTime = bT == null ? 0 : bT;
                 if (!My.noProblem)
                     Hey.showAlertDialog(this, getString(R.string.error) + ":" + getString(R.string.unknown)).setOnDismissListener(dialog -> finish());
                 setMyData();
                 String type = getIntent().getStringExtra(Keys.type);
-                Intent i;
+                String action = getIntent().getAction();
+                if (action == null) action = "A";
+                print("action", "ac:" + action);
                 String x = getIntent().getStringExtra(Keys.id) == null ? "asd" : getIntent().getStringExtra(Keys.id);
-                if (type != null && !My.actionCompleted) {
-                    My.actionCompleted = true;
+                if (action.equals(lastChat)) {
+                    if (!x.equals("asd") && !My.shortcutCompleted) {
+                        My.shortcutCompleted = true;
+                        gotoPrivateChat(this, x);
+                    }
+                } else if (action.equals(newQuestion) && !My.shortcutCompleted) {
+                    My.shortcutCompleted = true;
+                    checkPostQ(this);
+                } else if (type != null && !My.actionCompleted) {
+                    Intent i;
                     My.activeId = x;
-                    Hey.print("called", "AA");
+                    My.actionCompleted = true;
                     switch (type) {
                         case Keys.privateChat:
-                            String id = getIntent().getStringExtra(Keys.id);
-                            if (id != null) {
-                                i = new Intent(this, SingleChat.class);
-                                i.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, Long.parseLong(id)));
-                                startActivity(i);
+                            if (!x.equals("asd")) {
+                                gotoPrivateChat(this, x);
                             }
                             break;
                         case Keys.publicQuestions:
@@ -114,6 +137,7 @@ public class Home extends AppCompatActivity {
                             break;
                     }
                 }
+                print("type", " asd " + type);
                 Hey.updateActivity();
             }, errorMessage -> finish());
             numbers = Hey.addDocumentListener(this, FirebaseFirestore.getInstance().collection(Keys.appNumbers).document(Keys.appNumbers), doc -> {
@@ -126,6 +150,12 @@ public class Home extends AppCompatActivity {
             }, errorMessage -> {
             });
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        preferences.edit().putBoolean("shortcutAdded",false).apply();
+        return super.onKeyDown(keyCode, event);
     }
 
     private void setMyData() {
@@ -143,12 +173,12 @@ public class Home extends AppCompatActivity {
                 Hey.getPreferences(this).edit().putString(Keys.token, s).apply();
                 d.put(Keys.token, s);
                 FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(My.id)).update(d);
-            }).addOnFailureListener(e -> Hey.showToast(this, getString(R.string.error) + ":" + e.getLocalizedMessage()));
+            }).addOnFailureListener(e -> Hey.showToast(this, R.string.error, e.getLocalizedMessage()));
         }
         nameDrawer.setText(My.fullName);
         name.setText(My.fullName);
         numberDrawer.setText(My.number);
-        f = new File(My.user.getLocalFileName());
+        f = My.user.getLocalFile();
         if (My.user.hasProfileImage()) {
             Hey.print(My.user.getFullName(), "Has profile image");
             Hey.workWithProfileImage(My.user, doc -> {
@@ -182,27 +212,31 @@ public class Home extends AppCompatActivity {
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onResult
         );
-        privacy = findViewById(R.id.privacy);Hey.gotoPrivacy(this,privacy);
+        privacy = findViewById(R.id.privacy);
+        Hey.gotoPrivacy(this, privacy);
         items = findViewById(R.id.items);
         workWithRecycler();
         progressBar = findViewById(R.id.progressHome);
         nameDrawer = findViewById(R.id.nameDrawer);
         numberDrawer = findViewById(R.id.numberDrawer);
-        name = findViewById(R.id.nameHome);
-        addIcon = findViewById(R.id.home_search_icon);
+        name = findViewById(R.id.name);
+        addIcon = findViewById(R.id.addIcon);
         addIcon.setOnClickListener(v -> workWithAddIcon());
-        menuDrawer = findViewById(R.id.menuDrawer);
+        menuDrawer = findViewById(R.id.menuIcon);
         menuDrawer.setOnClickListener(v -> doWithDrawer());
         backDrawer = findViewById(R.id.backDrawer);
         backDrawer.setOnClickListener(v -> doWithDrawer());
+        preferences = Hey.getPreferences(this);
         if (!Hey.isLoggedIn(Hey.getPreferences(this))) {
-            Hey.getPreferences(this).edit().putBoolean(Keys.logged, true).putLong(Keys.id, My.id).apply();
+            preferences.edit().putBoolean(Keys.logged, true).putLong(Keys.id, My.id).apply();
         }
-
+        if (!preferences.getBoolean("shortcutAdded", false)) {
+            Hey.addShortcut(this, newQuestion, getString(R.string.newQuestion), getString(R.string.newQuestion), R.drawable.ic_new_question);
+        }
         viewPager2 = findViewById(R.id.viewPager2);
         tabLayout = findViewById(R.id.tabLayout);
 
-        main = findViewById(R.id.aaaaa);
+        main = findViewById(R.id.main);
         drawer = findViewById(R.id.drawer);
         imageSide = findViewById(R.id.bigImageSide);
         DisplayMetrics metrics = new DisplayMetrics();
@@ -240,7 +274,7 @@ public class Home extends AppCompatActivity {
                 new DrawerItem(R.string.searchQuestions, R.drawable.search_question),//2
                 new DrawerItem(R.string.addUnits, R.drawable.ic_units),//3
                 new DrawerItem(R.string.notificationSettings, R.drawable.ic_notification),//4
-                new DrawerItem(R.string.unitValues,R.drawable.ic_unit_values)
+                new DrawerItem(R.string.unitValues, R.drawable.ic_unit_values)
                 //new DrawerItem(R.string.logout, R.drawable.logout_ic)
         ));
         DrawerItemsAdapter adapter = new DrawerItemsAdapter(this, drawerItems, (message, itemView, position) -> {
@@ -249,7 +283,7 @@ public class Home extends AppCompatActivity {
                     startActivity(new Intent(this, AccountInformation.class).putExtra(Keys.id, String.valueOf(My.id)).putExtra(Keys.fromChat, true));
                     break;
                 case 1:
-                    startActivity(new Intent(this,AccountSettings.class));
+                    startActivity(new Intent(this, AccountSettings.class));
                     break;
                 case 2:
                     startActivity(new Intent(this, SearchQuestions.class));
@@ -263,10 +297,10 @@ public class Home extends AppCompatActivity {
                 case 5:
                     String s = getString(R.string.rulesFull)
                             .replaceAll("xxx", String.valueOf(My.unitsForPerDay))
-                            .replaceAll("yyy", String.valueOf(My.unitsForPerDay*5))
-                            .replaceAll("zzz",getString(R.string.addUnits))
-                            .replaceAll("nnn","\n");
-                    Hey.showAlertDialog(this,s);
+                            .replaceAll("yyy", String.valueOf(My.unitsForPerDay * 5))
+                            .replaceAll("zzz", getString(R.string.addUnits))
+                            .replaceAll("nnn", "\n");
+                    Hey.showAlertDialog(this, s);
                     break;
                 default:
                     FirebaseAuth.getInstance().signOut();
@@ -338,25 +372,7 @@ public class Home extends AppCompatActivity {
             if (viewPager2.getCurrentItem() == 0) {
                 Intent i = new Intent(this, SearchUsers.class);
                 startActivity(i);
-            } else if (My.unitsForPerDay <= My.units) {
-                CollectionReference publicQuestions = FirebaseFirestore.getInstance().collection(Keys.publicQuestions);
-                LoadingDialog d = Hey.showLoadingDialog(this);
-                Hey.getCollection(this, publicQuestions, docs -> {
-                    if (My.questionLimit > docs.size()) {
-                        Intent i = new Intent(this, NewQuestionActivity.class);
-                        startActivity(i);
-                    } else
-                        Hey.showAlertDialog(this, getString(R.string.questionLimitError).replace("xxx", String.valueOf(My.questionLimit)));
-                    d.closeDialog();
-                }, errorMessage -> d.closeDialog());
-            } else {
-                MyDialogWithTwoButtons d = Hey.showDeleteDialog(this, getString(R.string.noEnoughUnits).replace("xxx", String.valueOf(My.units)).replace("yyy", String.valueOf(My.unitsForPerDay)), null, false);
-                d.setOnDismissListener(dialogInterface -> {
-                    if (d.getResult()) {
-                        startActivity(new Intent(this, ShowAd.class));
-                    }
-                });
-            }
+            } else Hey.checkPostQ(this);
         } else Hey.showYouBlockedDialog(this);
     }
 

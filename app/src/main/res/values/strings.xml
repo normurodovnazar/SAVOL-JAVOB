@@ -196,4 +196,12 @@
     <string name="unitValues">Unit values</string>
     <string name="rulesFull">To make the question public one day: xxx unit nnn For your correct answer by the questioner: yyy unit nnn If you can\'t answer the questions and want to get a unit, use the zzz section</string>
     <string name="privacy">https://sites.google.com/view/mathquestionsandanswersuserpol/home</string>
+    <string name="langFirst">Bu tugma yordamida ilovadan boshqa tilda foydalanayotgan foydalanuvchilar joylagan savollarni ko\'rishingiz mumkin.Hozir sizda ko\'rinayotgan savollar ilovadan xxx tilda foydalanayotgan foydalanuvchilar tomonidan joylangan</string>
+    <string name="uz">Uzbek</string>
+    <string name="eng">English</string>
+    <string name="errorMessageVersion">Bu yangi turdagi xabar uni o\'qishingiz uchun ilovani yangilang</string>
+    <string name="typeReply">Type reply here</string>
+    <string name="send">Send</string>
+    <string name="image">Image</string>
+    <string name="newQuestion">Post new question</string>
 </resources>

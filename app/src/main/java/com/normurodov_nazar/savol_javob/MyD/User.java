@@ -1,10 +1,14 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
+import android.content.res.Resources;
+
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 
+import java.io.File;
 import java.io.Serializable;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +25,11 @@ public class User implements Serializable {
         return localFileName;
     }
 
-    public User(String name, String surname,Long imageSize, Long seen, String number, String id, Long numberOfMyPublishedQuestions, Long numberOfMyAnswers, Long numberOfCorrectAnswers, Long numberOfIncorrectAnswers, Long questionOpportunity,String token,boolean numberHidden,boolean hideFromSearch,boolean hideFromQuestionChat) {
+    public File getLocalFile(){
+        return new File(localFileName);
+    }
+
+    public User(String name, String surname,Long imageSize, Long seen, String number, String id, Long numberOfMyPublishedQuestions, Long numberOfMyAnswers, Long numberOfCorrectAnswers, Long numberOfIncorrectAnswers, Long questionOpportunity,String token,boolean numberHidden,boolean hideFromSearch,boolean hideFromQuestionChat) throws UnknownHostException {
         this.token = token;
         this.imageSize = imageSize;
         if (imageSize!=null) hasProfileImage = imageSize != -1;
@@ -40,16 +48,21 @@ public class User implements Serializable {
         this.hiddenFromQuestionChat = hideFromQuestionChat;
         fullName = name+" "+surname;
         localFileName = My.folder + id + imageSize +".png";
-        if (name==null || surname==null || number==null || seen==null || imageSize==null ||id==null||numberOfMyPublishedQuestions==null||numberOfMyAnswers==null|| numberOfCorrectAnswers==null||numberOfIncorrectAnswers==null||questionOpportunity==null|| token.equals("a"))
-            My.noProblem = false;
+        if (name==null || surname==null || number==null || seen==null || imageSize==null ||id==null||numberOfMyPublishedQuestions==null||numberOfMyAnswers==null|| numberOfCorrectAnswers==null||numberOfIncorrectAnswers==null||questionOpportunity==null)
+          throw new Resources.NotFoundException();
     }
 
     public String getFullName() {
         return fullName;
     }
 
-    public static User fromDoc(DocumentSnapshot doc){
-        return new User(doc.getString(Keys.name),doc.getString(Keys.surname),doc.getLong(Keys.imageSize),doc.getLong(Keys.seen),doc.getString(Keys.number),doc.getId(),doc.getLong(Keys.numberOfMyPublishedQuestions),doc.getLong(Keys.numberOfMyAnswers),doc.getLong(Keys.numberOfCorrectAnswers),doc.getLong(Keys.numberOfIncorrectAnswers),doc.getLong(Keys.units),doc.getString(Keys.token),doc.getBoolean(Keys.hidden),doc.getBoolean(Keys.hiddenFromSearch),doc.getBoolean(Keys.hiddenFromQuestionChat));
+    public static User fromDoc(DocumentSnapshot doc) throws UnknownHostException {
+        Boolean numberHidden = doc.getBoolean(Keys.hidden),hiddenSearch = doc.getBoolean(Keys.hiddenFromSearch),hiddenChat = doc.getBoolean(Keys.hiddenFromQuestionChat);
+        if (numberHidden==null) numberHidden = true;
+        if (hiddenSearch==null) hiddenSearch = false;
+        if (hiddenChat == null) hiddenChat = true;
+        return new User(doc.getString(Keys.name),doc.getString(Keys.surname),doc.getLong(Keys.imageSize),doc.getLong(Keys.seen),doc.getString(Keys.number),doc.getId(),doc.getLong(Keys.numberOfMyPublishedQuestions),doc.getLong(Keys.numberOfMyAnswers),doc.getLong(Keys.numberOfCorrectAnswers),doc.getLong(Keys.numberOfIncorrectAnswers),doc.getLong(Keys.units),doc.getString(Keys.token),
+                numberHidden,hiddenSearch,hiddenChat);
     }
 
     public Map<String,Object> toMap(){

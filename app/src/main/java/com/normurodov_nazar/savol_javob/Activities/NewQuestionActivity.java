@@ -61,6 +61,12 @@ public class NewQuestionActivity extends AppCompatActivity {
         initVars();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        My.shortcutCompleted = false;
+    }
+
     private void publishQuestion() {
         String n = message.getText().toString(), x = number.getText().toString();
         int i = -1;

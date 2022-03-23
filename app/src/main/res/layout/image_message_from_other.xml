@@ -6,7 +6,7 @@
     android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardMessageFromMe"
+        android:id="@+id/ca"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginStart="10dp"
@@ -18,7 +18,7 @@
         <ImageView
             android:background="@color/white"
             android:src="@drawable/download_black_ic"
-            android:id="@+id/imageMessageByOther"
+            android:id="@+id/image"
             android:scaleType="fitXY"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -35,16 +35,24 @@
         android:textColor="@color/black"
         app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintVertical_bias="1"
-        app:layout_constraintStart_toEndOf="@id/cardMessageFromMe"
+        app:layout_constraintStart_toEndOf="@id/ca"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/cardMessageFromMe"
-        app:layout_constraintBottom_toBottomOf="@id/cardMessageFromMe"/>
+        app:layout_constraintTop_toTopOf="@id/ca"
+        app:layout_constraintBottom_toBottomOf="@id/ca"/>
 
     <TextView
-        android:id="@+id/timeImageMessageFromOtherInSingleChat"
+        android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@id/cardMessageFromMe"
-        app:layout_constraintTop_toBottomOf="@id/cardMessageFromMe"
+        app:layout_constraintStart_toStartOf="@id/ca"
+        app:layout_constraintTop_toBottomOf="@id/ca"
         android:layout_marginStart="8dp" />
+
+    <ImageView
+        android:id="@+id/reply"
+        app:layout_constraintStart_toEndOf="@id/time"
+        app:layout_constraintTop_toBottomOf="@id/ca"
+        android:src="@drawable/ic_reply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,7 @@
 package com.normurodov_nazar.savol_javob.Fragments;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.gotoPrivateChat;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -16,7 +18,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.normurodov_nazar.savol_javob.Activities.AccountInformation;
-import com.normurodov_nazar.savol_javob.Activities.SingleChat;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -68,11 +69,7 @@ public class PersonalChat extends Fragment {
     }
 
     private void showData() {
-        adapter = new UserListAdapter(getContext(), userIds, user -> {
-            Intent i = new Intent(getContext(), SingleChat.class);
-            i.putExtra(Keys.chatId,Hey.getChatIdFromIds(My.id,user.getId()));
-            startActivity(i);
-        }, user -> Hey.showPopupMenu(getContext(), bar, new ArrayList<>(Arrays.asList(getString(R.string.delete), getString(R.string.profileInfo))), (position1, name) -> {
+        adapter = new UserListAdapter(getContext(), userIds, user -> gotoPrivateChat(getContext(),user.getId()), user -> Hey.showPopupMenu(getContext(), bar, new ArrayList<>(Arrays.asList(getString(R.string.delete), getString(R.string.profileInfo))), (position1, name) -> {
             if (position1==0){
                 MyDialogWithTwoButtons t = Hey.showDeleteDialog(getContext(),getString(R.string.deleteChatRequest).replace("xxx",user.getName()),null,false);
                 t.setOnDismissListener(dialog -> {

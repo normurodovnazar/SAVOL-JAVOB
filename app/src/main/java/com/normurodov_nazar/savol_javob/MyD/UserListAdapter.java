@@ -20,6 +20,7 @@ import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.R;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewHolder> {
@@ -82,29 +83,38 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.MViewH
         }
 
         void setUser(Context context, long id, long n, UserClickListener userClickListener, UserClickListener longClick){
-            Hey.getDocument(context, FirebaseFirestore.getInstance().collection(Keys.users).document(String.valueOf(id)), doc -> {
+            Hey.getDocument(context, Hey.getUserReference(id), doc -> {
                 Hey.setIconButtonAsDefault(itemView);
-                User user = User.fromDoc((DocumentSnapshot) doc);
-                MViewHolder.this.name.setText(user.getFullName());
-                changeSubtitle(context,user.getSeen(),n);
-                File file = new File(user.getLocalFileName());
-                if (user.hasProfileImage()) {
-                    Hey.print(user.getFullName(),"Has profile image");
-                    Hey.workWithProfileImage(user, doc0 -> imageView.setImageURI(Uri.fromFile(file)), errorMessage -> { });
-                }else Hey.print(user.getFullName(),"Hasn't profile image");
-                DocumentReference ref = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(My.id,id));
-                view.setOnClickListener(v -> userClickListener.onUserClick(user));
-                view.setOnLongClickListener(v -> {
-                    longClick.onUserClick(user);
-                    return true;
-                });
-                Hey.addDocumentListener(context, ref, doc1 -> {
-                    Object o = doc1.get(Keys.newMessagesTo+My.id);
-                    long l = o==null ? 0 : (long) o;
-                    changeSubtitle(context,user.getSeen(),l);
-                }, errorMessage -> {
+                User user = null;
+                try {
+                    user = User.fromDoc((DocumentSnapshot) doc);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+                if (user!=null){
+                    MViewHolder.this.name.setText(user.getFullName());
+                    changeSubtitle(context, user.getSeen(), n);
+                    File file = user.getLocalFile();
+                    if (user.hasProfileImage()) {
+                        Hey.print(user.getFullName(), "Has profile image");
+                        Hey.workWithProfileImage(user, doc0 -> imageView.setImageURI(Uri.fromFile(file)), errorMessage -> {
+                        });
+                    } else Hey.print(user.getFullName(), "Hasn't profile image");
+                    DocumentReference ref = FirebaseFirestore.getInstance().collection(Keys.chats).document(Hey.getChatIdFromIds(My.id, id));
+                    User finalUser = user;
+                    view.setOnClickListener(v -> userClickListener.onUserClick(finalUser));
+                    view.setOnLongClickListener(v -> {
+                        longClick.onUserClick(finalUser);
+                        return true;
+                    });
+                    Hey.addDocumentListener(context, ref, doc1 -> {
+                        Object o = doc1.get(Keys.newMessagesTo + My.id);
+                        long l = o == null ? 0 : (long) o;
+                        changeSubtitle(context, finalUser.getSeen(), l);
+                    }, errorMessage -> {
 
-                });
+                    });
+                }else Hey.setIconButtonAsDefault(view);
             }, errorMessage -> { });
         }
 

@@ -1,5 +1,7 @@
 package com.normurodov_nazar.savol_javob.Activities;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.gotoPrivateChat;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -212,10 +214,7 @@ public class QuestionChat extends AppCompatActivity {
                     if (Hey.amIBlocked()) Hey.showYouBlockedDialog(this);
                     else {
                         if (!user.isHiddenFromQuestionChat()) {
-                            Intent s = new Intent(this, SingleChat.class);
-                            s.putExtra(Keys.chatId, Hey.getChatIdFromIds(My.id, message.getSender()));
-                            s.putExtra(Keys.privateChat, false);
-                            startActivity(s);
+                            gotoPrivateChat(this,message.getSender());
                         } else Hey.showToast(this, getString(R.string.hiddenUser));
                     }
                 },
@@ -279,6 +278,10 @@ public class QuestionChat extends AppCompatActivity {
         LinearLayoutManager x = new LinearLayoutManager(this);
         x.setStackFromEnd(true);
         recyclerView.setLayoutManager(x);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setItemViewCacheSize(25);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         bar.setVisibility(View.GONE);
         Hey.getAllUnreadMessagesForMeAndRead(messages, chats);
     }

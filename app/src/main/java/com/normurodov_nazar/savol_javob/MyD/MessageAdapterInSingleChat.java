@@ -1,7 +1,9 @@
 package com.normurodov_nazar.savol_javob.MyD;
 
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.getDocumentFromCache;
+import static com.normurodov_nazar.savol_javob.MFunctions.Hey.print;
+
 import android.content.Context;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,8 +12,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
 import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
@@ -24,173 +29,318 @@ public class MessageAdapterInSingleChat extends RecyclerView.Adapter {
     final Context context;
     final RecyclerViewItemClickListener listener;
     final RecyclerViewItemLongClickListener longClickListener;
+    final RecyclerViewItemClickListener replyListener;
     final ItemClickForQuestion loadMore;
+    final CollectionReference chats;
+    final SuccessListener scrollToListener;
 
-    public MessageAdapterInSingleChat(ArrayList<Message> messages, Context context, RecyclerViewItemClickListener listener, RecyclerViewItemLongClickListener longClickListener,ItemClickForQuestion loadMore) {
+    public MessageAdapterInSingleChat(ArrayList<Message> messages, Context context,CollectionReference chats, RecyclerViewItemClickListener listener, RecyclerViewItemLongClickListener longClickListener, ItemClickForQuestion loadMore,RecyclerViewItemClickListener replyListener,SuccessListener scrollToListener) {
         this.messages = messages;
         this.context = context;
         this.listener = listener;
-        this.longClickListener=longClickListener;
+        this.chats = chats;
+        this.longClickListener = longClickListener;
+        this.replyListener = replyListener;
         this.loadMore = loadMore;
+        this.scrollToListener = scrollToListener;
     }
 
-    public void removeItem(Message message){
+    public void removeItem(Message message) {
         int i = Hey.getIndexInArray(message, messages);
-        Hey.print("i", String.valueOf(i));
-        if (i!=-1){
+        print("i", String.valueOf(i));
+        if (i != -1) {
             messages.remove(i);
-            notifyItemRemoved(i+1);
+            notifyItemRemoved(i + 1);
         }
     }
 
-    public void addItems(ArrayList<Message> newMessages, int itemCount){
+    public void addItems(ArrayList<Message> newMessages, int itemCount) {
         int startPosition = this.messages.size();
         this.messages.addAll(newMessages);
-        notifyItemRangeInserted(startPosition+2,itemCount);
+        notifyItemRangeInserted(startPosition + 2, itemCount);
     }
 
-    public void addItemsToTop(ArrayList<Message> newMessages){
-        messages.addAll(0,newMessages);
-        notifyItemRangeInserted(1,newMessages.size());
+    public void addItemsToTop(ArrayList<Message> newMessages) {
+        messages.addAll(0, newMessages);
+        notifyItemRangeInserted(1, newMessages.size());
     }
 
-    public void changeItem(int position, Message message){
+    public void changeItem(int position, Message message) {
         messages.set(position, message);
-        notifyItemChanged(position+1);
+        notifyItemChanged(position + 1);
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        switch (viewType){
+        switch (viewType) {
             case 0:
-                View loadMore = LayoutInflater.from(context).inflate(R.layout.load_more_button,parent,false);
+                View loadMore = LayoutInflater.from(context).inflate(R.layout.load_more_button, parent, false);
                 return new LoadMore(loadMore);
             case 1:
-                View meT = LayoutInflater.from(context).inflate(R.layout.message_from_me,parent,false);
-                return new MessageFromMeHolder(meT,true);
+                View meT = LayoutInflater.from(context).inflate(R.layout.message_from_me, parent, false);
+                return new TextFromMeHolder(meT);
             case 3:
-                View meI = LayoutInflater.from(context).inflate(R.layout.image_message_from_me,parent,false);
-                return new MessageFromMeHolder(meI,false);
+                View meI = LayoutInflater.from(context).inflate(R.layout.image_message_from_me, parent, false);
+                return new ImageFromMe(meI);
+
             case 2:
-                View otherT = LayoutInflater.from(context).inflate(R.layout.message_from_other,parent,false);
-                return new MessageFromOtherHolder(otherT,true);
+                View otherT = LayoutInflater.from(context).inflate(R.layout.message_from_other, parent, false);
+                return new TextFromOther(otherT);
+            case 4:
+                View otherI = LayoutInflater.from(context).inflate(R.layout.image_message_from_other, parent, false);
+                return new ImageFromOther(otherI);
+            case -1:
+                View replyMe = LayoutInflater.from(context).inflate(R.layout.reply_from_me,parent,false);
+                return new ReplyFromMe(replyMe);
+            case -2:
+                View replyOther = LayoutInflater.from(context).inflate(R.layout.reply_form_other,parent,false);
+                return new ReplyFromOther(replyOther);
             default:
-                View otherI = LayoutInflater.from(context).inflate(R.layout.image_message_from_other,parent,false);
-                return new MessageFromOtherHolder(otherI,false);
+                View versionM = LayoutInflater.from(context).inflate(R.layout.version_message, parent, false);
+                return new VersionMessage(versionM);
         }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Message messageSingleChat = messages.get(position==0 ? 0 : position-1);
-        if (position==0) ((LoadMore) holder).setData(loadMore,messages.size()>=50); else if(messageSingleChat.sender==My.id){
-            ((MessageFromMeHolder) holder).setChatItem(messageSingleChat,listener,longClickListener,position-1);
-        }else {
-            ((MessageFromOtherHolder) holder).setChatItem(messageSingleChat,listener,position-1);
+        Message message = messages.get(position == 0 ? 0 : position - 1);
+        if (position == 0) ((LoadMore) holder).setData(loadMore, messages.size() >= 50);
+        else {
+            if (message.sender == My.id) {
+                switch (message.getType()) {
+                    case Keys.textMessage:
+                        ((TextFromMeHolder) holder).setChatItem(message, listener, position);
+                        break;
+                    case Keys.imageMessage:
+                        ((ImageFromMe) holder).setChatItem(message, listener, longClickListener, position);
+                        break;
+                    case Keys.reply:
+                        ((ReplyFromMe) holder).setData(message,chats,listener,scrollToListener,position);
+                        break;
+                }
+            } else {
+                switch (message.getType()){
+                    case Keys.textMessage:
+                        ((TextFromOther) holder).setChatItem(message,listener,replyListener,position);
+                        break;
+                    case Keys.imageMessage:
+                        ((ImageFromOther)holder).setChatItem(message,listener,replyListener,position);
+                        break;
+                    case Keys.reply:
+                        ((ReplyFromOther) holder).setData(message,chats,listener,scrollToListener,position);
+                        break;
+                }
+            }
         }
     }
 
     @Override
     public int getItemViewType(int position) {
-        Message message = messages.get(position==0 ? 0 : position-1);
-        if (position==0) return 0; else if(message.sender==My.id) {
-            if(message.getType().equals(Keys.textMessage)) return 1; else return 3;
+        Message message = messages.get(position == 0 ? 0 : position - 1);
+        if (position == 0) return 0;
+        else if (message.sender == My.id) {
+            switch (message.getType()) {
+                case Keys.textMessage:
+                    return 1;
+                case Keys.imageMessage:
+                    return 3;
+                case Keys.reply:
+                    return -1;
+                default:
+                    return -10;
+            }
         } else {
-            if(message.getType().equals(Keys.textMessage)) return 2; else return 4;
+            switch (message.getType()) {
+                case Keys.textMessage:
+                    return 2;
+                case Keys.imageMessage:
+                    return 4;
+                case Keys.reply:
+                    return -2;
+                default:
+                    return -20;
+            }
         }
     }
 
     @Override
     public int getItemCount() {
-        return messages.size()+1;
+        return messages.size() + 1;
     }
 
-    static class MessageFromMeHolder extends RecyclerView.ViewHolder{
-        TextView message;
-        final TextView time;
-        TextView imageSize;
-        ImageView imageView;
-        final ImageView read;
-        final boolean isTextMessage;
 
-        public MessageFromMeHolder(View itemView, boolean isTextMessage) {
+
+    static class ReplyFromOther extends RecyclerView.ViewHolder{
+        final ConstraintLayout nested;
+        final ConstraintLayout parent;
+        final TextView message;
+        final TextView time;
+        final TextView original;
+        public ReplyFromOther(@NonNull View itemView) {
             super(itemView);
-            this.isTextMessage = isTextMessage;
-            if(isTextMessage){
-                read = itemView.findViewById(R.id.statusOfMessage);
-                message = itemView.findViewById(R.id.messageFromMe);
-                time = itemView.findViewById(R.id.timeMessageFromMeInSingleChat);
-            }else {
-                imageSize = itemView.findViewById(R.id.imageSize);
-                read = itemView.findViewById(R.id.statusOfImageMessage);
-                imageView = itemView.findViewById(R.id.imageMessageByMe);
-                time = itemView.findViewById(R.id.timeImageFromMeFromMe);
-            }
+            original = itemView.findViewById(R.id.original);
+            parent = itemView.findViewById(R.id.parent);
+            time = itemView.findViewById(R.id.time);
+            nested = itemView.findViewById(R.id.nested);
+            message = itemView.findViewById(R.id.message);
         }
 
-        void setChatItem(Message data, RecyclerViewItemClickListener listener, RecyclerViewItemLongClickListener longClickListener, int position){
-            time.setText(Hey.getTimeText(itemView.getContext(), data.time));
-            itemView.setOnClickListener(v -> listener.onItemClick(data,itemView,position));
-            if(isTextMessage) {
-                message.setText(data.message);
-            } else {
-                imageSize.setText(Hey.getMb(data.getImageSize()));
-                itemView.setOnLongClickListener(v -> {
-                    longClickListener.onItemLongClick(data,itemView,position);
-                    return true;
+        void setData(Message data,CollectionReference chats,RecyclerViewItemClickListener listener,SuccessListener originalLister,int i){
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
+            message.setText(data.getMessage());
+            message.setOnClickListener(c->listener.onItemClick(data,message,i));
+            if (data.getToType().equals(Keys.textMessage)){
+                getDocumentFromCache(itemView.getContext(), chats.document(data.getTo()), doc -> original.setText(Message.fromDoc((DocumentSnapshot) doc).getMessage()), errorMessage -> {
+
                 });
-                Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> {});
-            }
+            }else original.setText(R.string.image);
+            original.setOnClickListener(c->originalLister.onSuccess(data.getTo()));
+        }
+    }
+
+    static class ReplyFromMe extends RecyclerView.ViewHolder{
+        final ImageView status;
+        final ConstraintLayout nested;
+        final ConstraintLayout parent;
+        final TextView message;
+        final TextView time;
+        final TextView original;
+        public ReplyFromMe(@NonNull View itemView) {
+            super(itemView);
+            original = itemView.findViewById(R.id.original);
+            parent = itemView.findViewById(R.id.parent);
+            status = itemView.findViewById(R.id.status);
+            time = itemView.findViewById(R.id.time);
+            nested = itemView.findViewById(R.id.nested);
+            message = itemView.findViewById(R.id.message);
+        }
+
+        void setData(Message data,CollectionReference chats,RecyclerViewItemClickListener listener,SuccessListener originalLister,int i){
+            time.setText(Hey.getTimeText(itemView.getContext(), data.getTime()));
+            if (data.isRead()) status.setImageResource(R.drawable.ic_read);
+            message.setText(data.getMessage());
+            message.setOnClickListener(c->listener.onItemClick(data,message,i));
+            if (data.getToType().equals(Keys.textMessage)){
+                getDocumentFromCache(itemView.getContext(), chats.document(data.getTo()), doc -> original.setText(Message.fromDoc((DocumentSnapshot) doc).getMessage()), errorMessage -> {
+
+                });
+            }else original.setText(R.string.image);
+            original.setOnClickListener(c->originalLister.onSuccess(data.getTo()));
+        }
+    }
+
+    static class TextFromMeHolder extends RecyclerView.ViewHolder {
+        final TextView message;
+        final TextView time;
+        final ImageView read;
+
+        public TextFromMeHolder(@NonNull View itemView) {
+            super(itemView);
+            read = itemView.findViewById(R.id.status);
+            message = itemView.findViewById(R.id.message);
+            time = itemView.findViewById(R.id.time);
+        }
+
+        void setChatItem(Message data, RecyclerViewItemClickListener listener, int position) {
+            time.setText(Hey.getTimeText(itemView.getContext(), data.time));
+            itemView.setOnClickListener(v -> listener.onItemClick(data, itemView, position));
+            message.setText(data.message);
             read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
         }
     }
 
-    static class MessageFromOtherHolder extends RecyclerView.ViewHolder{
-        TextView message;
+    static class ImageFromMe extends RecyclerView.ViewHolder {
         final TextView time;
-        TextView imageSize;
-        ImageView imageView;
-        final boolean isTextMessage;
+        final TextView imageSize;
+        final ImageView imageView;
+        final ImageView read;
 
-        public MessageFromOtherHolder(@NonNull View itemView,boolean isTextMessage) {
+        public ImageFromMe(@NonNull View itemView) {
             super(itemView);
-            this.isTextMessage = isTextMessage;
-            if (isTextMessage) {
-                time = itemView.findViewById(R.id.timeMessageFromOtherInSingleChat);
-                message = itemView.findViewById(R.id.messageFromOtherInSingleChat);
-            } else {
-                imageSize = itemView.findViewById(R.id.imageSize);
-                time = itemView.findViewById(R.id.timeImageMessageFromOtherInSingleChat);
-                imageView = itemView.findViewById(R.id.imageMessageByOther);
-            }
+            imageSize = itemView.findViewById(R.id.imageSize);
+            read = itemView.findViewById(R.id.status);
+            imageView = itemView.findViewById(R.id.image);
+            time = itemView.findViewById(R.id.time);
         }
 
-        void setChatItem(Message data, RecyclerViewItemClickListener itemClickListener, int position){
+        void setChatItem(Message data, RecyclerViewItemClickListener listener, RecyclerViewItemLongClickListener longClickListener, int position) {
             time.setText(Hey.getTimeText(itemView.getContext(), data.time));
-            if (isTextMessage){
-                message.setText(data.message);
-            }else {
-                imageSize.setText(Hey.getMb(data.getImageSize()));
-                Hey.workWithImageMessage(data, doc -> imageView.setImageURI(Uri.fromFile(Hey.getLocalFile(data))), errorMessage -> imageView.setImageResource(R.drawable.download_black_ic));
-            }
-            itemView.setOnClickListener(v -> itemClickListener.onItemClick(data,itemView,position));
+            itemView.setOnClickListener(v -> listener.onItemClick(data, itemView, position));
+            imageSize.setText(Hey.getMb(data.getImageSize()));
+            itemView.setOnLongClickListener(v -> {
+                longClickListener.onItemLongClick(data, itemView, position);
+                return true;
+            });
+            Hey.workWithImageMessage(data, doc -> Hey.loadImage(itemView.getContext(),data,imageView), errorMessage -> { });
+            read.setImageResource(data.isRead() ? R.drawable.ic_read : R.drawable.ic_unread);
         }
     }
 
-    static class LoadMore extends RecyclerView.ViewHolder{
+    static class TextFromOther extends RecyclerView.ViewHolder {
+        final TextView message;
+        final TextView time;
+        final ImageView reply;
+
+        public TextFromOther(@NonNull View itemView) {
+            super(itemView);
+            reply = itemView.findViewById(R.id.reply);
+            time = itemView.findViewById(R.id.time);
+            message = itemView.findViewById(R.id.message);
+        }
+
+        void setChatItem(Message data, RecyclerViewItemClickListener itemClickListener,RecyclerViewItemClickListener replyListener, int position) {
+            time.setText(Hey.getTimeText(itemView.getContext(), data.time));
+            message.setText(data.message);
+            itemView.setOnClickListener(v -> itemClickListener.onItemClick(data, itemView, position));
+            reply.setOnClickListener(x-> replyListener.onItemClick(data,itemView,position));
+        }
+    }
+
+    static class ImageFromOther extends RecyclerView.ViewHolder {
+        final TextView time;
+        final TextView imageSize;
+        final ImageView imageView;
+        final ImageView reply;
+        public ImageFromOther(@NonNull View itemView) {
+            super(itemView);
+            imageSize = itemView.findViewById(R.id.imageSize);
+            time = itemView.findViewById(R.id.time);
+            imageView = itemView.findViewById(R.id.image);
+            reply = itemView.findViewById(R.id.reply);
+        }
+
+        void setChatItem(Message data, RecyclerViewItemClickListener itemClickListener,RecyclerViewItemClickListener replyListener,int position) {
+            reply.setOnClickListener(c-> replyListener.onItemClick(data,itemView,position));
+            time.setText(Hey.getTimeText(itemView.getContext(), data.time));
+            imageSize.setText(Hey.getMb(data.getImageSize()));
+            Hey.workWithImageMessage(data, doc -> Hey.loadImage(itemView.getContext(), data,imageView), errorMessage -> imageView.setImageResource(R.drawable.download_black_ic));
+            itemView.setOnClickListener(v -> itemClickListener.onItemClick(data, itemView, position));
+        }
+    }
+
+    static class LoadMore extends RecyclerView.ViewHolder {
         final Button button;
+
         public LoadMore(@NonNull View itemView) {
             super(itemView);
             button = itemView.findViewById(R.id.loadMore);
         }
 
-        void setData(ItemClickForQuestion listener,boolean showButton){
+        void setData(ItemClickForQuestion listener, boolean showButton) {
             button.setVisibility(showButton ? View.VISIBLE : View.GONE);
             button.setOnClickListener(view -> {
                 Hey.setButtonAsLoading(itemView.getContext(), button);
-                listener.onItemClick(0,"",button);
+                listener.onItemClick(0, "", button);
             });
+        }
+    }
+
+    static class VersionMessage extends RecyclerView.ViewHolder{
+        final TextView t;
+        public VersionMessage(@NonNull View itemView) {
+            super(itemView);
+            t = itemView.findViewById(R.id.versionMessage);
         }
     }
 }

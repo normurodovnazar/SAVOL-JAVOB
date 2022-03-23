@@ -4,15 +4,12 @@ import static com.normurodov_nazar.savol_javob.MFunctions.Keys.adId;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.rewarded.RewardedAd;
@@ -23,22 +20,22 @@ import com.normurodov_nazar.savol_javob.MFunctions.Keys;
 import com.normurodov_nazar.savol_javob.MFunctions.My;
 import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivityShowAdBinding;
 
 import java.util.Collections;
 
 public class ShowAd extends AppCompatActivity {
-    AdView banner;
-    TextView textView;
-    Button button;
-
     FullScreenContentCallback fullScreenContentCallback;
     RewardedAd rewarded;
     boolean loading = false;
     LoadingDialog d;
+    private ActivityShowAdBinding b;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_show_ad);
+        b = ActivityShowAdBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         d = Hey.showLoadingDialog(this, (position, name) -> finish());
         initVars();
     }
@@ -46,12 +43,11 @@ public class ShowAd extends AppCompatActivity {
     private void initVars() {
         fullScreenContentCallback = new FullScreenContentCallback() {
         };
-        button = findViewById(R.id.showAd);button.setOnClickListener(view -> {
+        b.showAd.setOnClickListener(view -> {
             if (!loading) loadRewarded(); else Hey.showToast(this,getString(R.string.wait));
         });
-        textView = findViewById(R.id.textInAd);textView.setText(getString(R.string.showAdText).replaceAll("xxx", String.valueOf(My.unitsForAd)).replaceAll("aaa",getString(R.string.showAd)));
-        banner = findViewById(R.id.banner);
-        banner.setAdListener(new AdListener() {
+        b.text.setText(getString(R.string.showAdText).replaceAll("xxx", String.valueOf(My.unitsForAd)).replaceAll("aaa",getString(R.string.showAd)));
+        b.banner.setAdListener(new AdListener() {
             @Override
             public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                 super.onAdFailedToLoad(loadAdError);
@@ -60,7 +56,7 @@ public class ShowAd extends AppCompatActivity {
                 if (loadAdError.getCode()==0) {
                     Hey.showAlertDialog(ShowAd.this,getString(R.string.error_connection)).setOnDismissListener(dialogInterface -> finish());
                 }else {
-                    banner.setVisibility(View.INVISIBLE);
+                    b.banner.setVisibility(View.INVISIBLE);
                 }
             }
             @Override
@@ -69,7 +65,7 @@ public class ShowAd extends AppCompatActivity {
                 d.closeDialog();
             }
         });
-        banner.loadAd(new AdRequest.Builder().build());
+        b.banner.loadAd(new AdRequest.Builder().build());
     }
 
     private void loadRewarded() {
@@ -104,11 +100,11 @@ public class ShowAd extends AppCompatActivity {
 
     private void showNotLoading() {
         loading = false;
-        Hey.setButtonAsDefault(this,button,getString(R.string.showAd));
+        Hey.setButtonAsDefault(this,b.showAd,getString(R.string.showAd));
     }
 
     private void showLoading() {
         loading = true;
-        Hey.setButtonAsLoading(this,button);
+        Hey.setButtonAsLoading(this,b.showAd);
     }
 }

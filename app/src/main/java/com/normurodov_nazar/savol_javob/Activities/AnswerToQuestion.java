@@ -5,20 +5,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.normurodov_nazar.savol_javob.MFunctions.Hey;
@@ -28,6 +21,7 @@ import com.normurodov_nazar.savol_javob.MyD.LoadingDialog;
 import com.normurodov_nazar.savol_javob.MyD.Message;
 import com.normurodov_nazar.savol_javob.MyD.StatusListener;
 import com.normurodov_nazar.savol_javob.R;
+import com.normurodov_nazar.savol_javob.databinding.ActivityAnswerToQuestionBinding;
 import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
@@ -36,13 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AnswerToQuestion extends AppCompatActivity {
-    EditText explanation;
-    Button image, publish;
-    CheckBox checkBox;
-    TextView privacy;
-    ImageView imageView;
-    ConstraintLayout main;
-    SubsamplingScaleImageView scaleImageView;
 
     ActivityResultLauncher<Intent> memoryLauncher,captureLauncher;
     Uri capture;
@@ -52,16 +39,18 @@ public class AnswerToQuestion extends AppCompatActivity {
     CollectionReference chats;
     boolean imageShowing = false;
 
+    private ActivityAnswerToQuestionBinding b;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_answer_to_question);
+        b = ActivityAnswerToQuestionBinding.inflate(getLayoutInflater());
+        View v = b.getRoot();
+        setContentView(v);
         initVars();
     }
 
     private void initVars() {
-        checkBox = findViewById(R.id.checkbox);
-        privacy = findViewById(R.id.privacy);Hey.gotoPrivacy(this,privacy);
+        Hey.gotoPrivacy(this,b.privacy);
         chatId = getIntent().getStringExtra(Keys.id);
         questionId = getIntent().getStringExtra(Keys.question);
         theme = getIntent().getStringExtra(Keys.theme);
@@ -71,19 +60,13 @@ public class AnswerToQuestion extends AppCompatActivity {
         }else {
             chats = FirebaseFirestore.getInstance().collection(Keys.chats).document(chatId).collection(Keys.chats);
         }
-        main = findViewById(R.id.mainPart);
-        scaleImageView = findViewById(R.id.bigImageQ);
-        explanation = findViewById(R.id.explanation);
-        image = findViewById(R.id.imageAnswer);
-        image.setOnClickListener(v -> getImage());
-        publish = findViewById(R.id.answerQuestion);
-        publish.setOnClickListener(v -> {
-            if (checkBox.isChecked()){
+        b.chooseImage.setOnClickListener(c->getImage());
+        b.answerQuestion.setOnClickListener(v -> {
+            if (b.checkBox.isChecked()){
                 publishQ();
             }else Hey.showToast(this,getString(R.string.dontAgree));
         });
-        imageView = findViewById(R.id.imageOfAnswer);
-        imageView.setOnClickListener(v -> showImage());
+        b.imageOfAnswer.setOnClickListener(v -> showImage());
         memoryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onResultMemory
@@ -97,9 +80,9 @@ public class AnswerToQuestion extends AppCompatActivity {
     private void showImage() {
         if (file != null)
             if (!imageShowing) {
-                Hey.setBigImage(scaleImageView,file);
-                scaleImageView.setVisibility(View.VISIBLE);
-                main.setVisibility(View.INVISIBLE);
+                Hey.setBigImage(b.bigImage,file);
+                b.bigImage.setVisibility(View.VISIBLE);
+                b.main.setVisibility(View.INVISIBLE);
                 imageShowing = true;
             }
     }
@@ -108,8 +91,8 @@ public class AnswerToQuestion extends AppCompatActivity {
     public void onBackPressed() {
         if (imageShowing) {
             imageShowing = false;
-            scaleImageView.setVisibility(View.GONE);
-            main.setVisibility(View.VISIBLE);
+            b.bigImage.setVisibility(View.GONE);
+            b.main.setVisibility(View.VISIBLE);
         }
         else super.onBackPressed();
     }
@@ -138,7 +121,7 @@ public class AnswerToQuestion extends AppCompatActivity {
                 if (res != null) {
                     file = new File(res.getPath());
                     Hey.compressImage(this,file);
-                    imageView.setImageURI(Uri.fromFile(file));
+                    b.imageOfAnswer.setImageURI(Uri.fromFile(file));
                 }
             }
         else if (data != null) {
@@ -152,11 +135,11 @@ public class AnswerToQuestion extends AppCompatActivity {
     }
 
     private void getImage() {
-        Hey.chooseImage(this,image,memoryLauncher,captureLauncher,uri-> capture = uri);
+        Hey.chooseImage(this,b.chooseImage,memoryLauncher,captureLauncher,uri-> capture = uri);
     }
 
     private void publishQ() {
-        String t = explanation.getText().toString();
+        String t = b.explanation.getText().toString();
         if (!t.isEmpty() && !t.replaceAll(" ","").isEmpty() && file!=null){
             LoadingDialog a = Hey.showLoadingDialog(AnswerToQuestion.this);
             Hey.amIOnline(new StatusListener() {

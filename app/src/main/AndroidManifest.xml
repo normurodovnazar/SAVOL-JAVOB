@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.normurodov_nazar.savol_javob">
+<!--    Cannot load settings from file 'E:\Nazar\MyAndroidProjects\SAVOLJAVOB\.idea\modules\app\SAVOL-JAVOB.app.iml': ParseError at [row,col]:[1,1] -->
+<!--    Message: Content is not allowed in prolog. Please correct the file content-->
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />

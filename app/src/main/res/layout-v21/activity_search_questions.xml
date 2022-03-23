@@ -18,7 +18,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/backQ"
+            android:id="@+id/back"
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:layout_marginStart="10dp"
@@ -33,8 +33,8 @@
             android:id="@+id/searchById"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/filter"
-            app:layout_constraintStart_toEndOf="@id/backQ"
-            app:layout_constraintTop_toTopOf="@id/backQ"
+            app:layout_constraintStart_toEndOf="@id/back"
+            app:layout_constraintTop_toTopOf="@id/back"
             android:background="@drawable/text_field_bg"
             android:layout_marginHorizontal="10dp"
             android:paddingHorizontal="5dp"
@@ -54,14 +54,14 @@
             android:background="@drawable/icon_button_bg"
             android:padding="4dp"
             android:src="@drawable/ic_filter"
-            app:layout_constraintBottom_toBottomOf="@id/backQ"
+            app:layout_constraintBottom_toBottomOf="@id/back"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/backQ" />
+            app:layout_constraintTop_toTopOf="@id/back" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/searchResultsQ"
+        android:id="@+id/recycler"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -70,7 +70,7 @@
         app:layout_constraintTop_toBottomOf="@id/appBar" />
 
     <TextView
-        android:id="@+id/no_resultsQ"
+        android:id="@+id/noResult"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -85,7 +85,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ProgressBar
-        android:id="@+id/barQ"
+        android:id="@+id/bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"

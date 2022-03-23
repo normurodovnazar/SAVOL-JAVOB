@@ -29,6 +29,7 @@ import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 public class NewUser extends AppCompatActivity implements View.OnClickListener {
     ImageView i;
@@ -63,7 +64,7 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         Hey.animateVertically(name, 400, 1200);
         Hey.animateVertically(surname, 400, 1500);
 
-        Hey.animateFadeOut(next, 1800);
+        Hey.animateShow(next);
         imagePickLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::memoryResult
@@ -175,19 +176,35 @@ public class NewUser extends AppCompatActivity implements View.OnClickListener {
         if (imageSize!=-1){
             Hey.uploadImageForProfile(this, mFilePath, String.valueOf(My.id), doc -> {
                 imageSize = new File(mFilePath).length();
-                User me = new User(mName.replaceAll(" ",""), mSurname.replaceAll(" ",""),imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true,false,true);
-                Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.users), String.valueOf(My.id), me.toMap(), doc0 -> {
-                    Intent intent = new Intent(NewUser.this, Home.class);
-                    My.setDataFromUser(me);
-                    startActivity(intent);
-                    finish();
-                }, errorMessage -> changeNextButtonAsDefault());
+                User me = null;
+                try {
+                    me = new User(mName.replaceAll(" ",""), mSurname.replaceAll(" ",""),imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true,false,true);
+                } catch (UnknownHostException e) {
+                    Hey.showToast(this,R.string.unknown);
+                }
+
+                if (me!=null) {
+                    User finalMe = me;
+                    Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.users), String.valueOf(My.id), me.toMap(), doc0 -> {
+                        Intent intent = new Intent(NewUser.this, Home.class);
+                        My.setDataFromUser(finalMe);
+                        startActivity(intent);
+                        finish();
+                    }, errorMessage -> changeNextButtonAsDefault());
+                }
             }, (position, name) -> changeNextButtonAsDefault(), errorMessage -> changeNextButtonAsDefault());
         }else {
-            User me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true,false,true);
+            User me = null;
+            try {
+                me = new User(mName, mSurname,imageSize , Hey.getCurrentTime(), My.number, String.valueOf(My.id), 0L, 0L, 0L, 0L, 5L, mToken,true,false,true);
+            } catch (UnknownHostException e) {
+                Hey.showToast(this,R.string.error_unknown);
+            }
+
+            User finalMe = me;
             Hey.addDocumentToCollection(this, FirebaseFirestore.getInstance().collection(Keys.users), String.valueOf(My.id), me.toMap(), doc0 -> {
                 Intent intent = new Intent(NewUser.this, Home.class);
-                My.setDataFromUser(me);
+                if (finalMe !=null) My.setDataFromUser(finalMe);
                 startActivity(intent);
                 finish();
             }, errorMessage -> changeNextButtonAsDefault());
