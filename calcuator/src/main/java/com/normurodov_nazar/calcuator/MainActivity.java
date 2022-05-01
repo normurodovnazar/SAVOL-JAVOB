@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dot = findViewById(R.id.dot);
         dot.setOnClickListener(this);
         tm(preferences.getString("t",""));
-        float f = preferences.getFloat("s", 20);
+        float f = preferences.getFloat("s", 65);
         Hey.size = f;
         text.setTextSize(TypedValue.COMPLEX_UNIT_PX,f);
         if (adapter!=null)adapter.setTextSize(f);

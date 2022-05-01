@@ -43,7 +43,7 @@ public class HelpActivity extends AppCompatActivity {
         t = findViewById(R.id.h);
         t.setText(getString(R.string.r)
         .replaceAll("#","\n"));
-        t.setTextSize(TypedValue.COMPLEX_UNIT_PX,preferences.getFloat("bx",20));
+        t.setTextSize(TypedValue.COMPLEX_UNIT_PX,preferences.getFloat("bx",50));
     }
 
     @Override
