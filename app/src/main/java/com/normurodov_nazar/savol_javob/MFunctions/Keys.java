@@ -52,7 +52,7 @@ public class Keys {
     public static final String divider = "Divider";
     public static final String status = "Status";
     public static final String unitsForAd = "UnitsForAd";
-    public static final String adId = "ca-app-pub-5231072471693036/3823152799";
+    public static final String adId = "hidden for you";
     public static final String hidden = "Hidden";
     public static final String sound = "Sound";
     public static final String vibrate = "Vibrate";
